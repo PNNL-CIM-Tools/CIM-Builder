@@ -1,5 +1,5 @@
 from __future__ import annotations
-import importlib
+import uuid
 import logging
 
 from cimgraph import GraphModel
@@ -9,6 +9,10 @@ import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 _log = logging.getLogger(__name__)
 
+
+def new_mrid():
+    mRID = str(uuid.uuid4())
+    return mRID
 
 def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.ConnectivityNode):
     if node.__class__ == str:

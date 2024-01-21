@@ -1,2 +1,5 @@
-from cimbuilder.object_builder.new_breaker import new_breaker
-from cimbuilder.object_builder.new_disconnector import new_disconnector
+from cimbuilder.object_builder.new_breaker import new_breaker as new_breaker
+from cimbuilder.object_builder.new_disconnector import new_disconnector as new_disconnector
+
+from cimbuilder.object_builder.new_one_terminal_obj import new_one_terminal_object as new_one_terminal_object
+from cimbuilder.object_builder.new_two_terminal_obj import new_two_terminal_object as new_two_terminal_object
