@@ -3,3 +3,7 @@ from cimbuilder.object_builder.new_disconnector import new_disconnector as new_d
 
 from cimbuilder.object_builder.new_one_terminal_obj import new_one_terminal_object as new_one_terminal_object
 from cimbuilder.object_builder.new_two_terminal_obj import new_two_terminal_object as new_two_terminal_object
+
+from cimbuilder.object_builder.new_analog import create_analog as create_analog
+from cimbuilder.object_builder.new_analog import create_all_analog as create_all_analog
+from cimbuilder.object_builder.new_discrete import new_discrete as new_discrete
