@@ -17,7 +17,7 @@ def new_mrid():
 def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.ConnectivityNode):
     if node.__class__ == str:
         for node_obj in network.graph[cim.ConnectivityNode].values():
-            if node_obj.name == node:
+            if node_obj.name == node or node_obj.aliasName == node:
                 terminal.ConnectivityNode = node_obj
                 node_obj.Terminals.append(terminal)
     else:
