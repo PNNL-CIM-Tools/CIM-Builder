@@ -7,7 +7,7 @@ from cimgraph.databases import ConnectionInterface
 from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
-from cimbuilder.object_builder import new_breaker, new_disconnector
+import cimbuilder.object_builder as object_builder
 
 _log = logging.getLogger(__name__)
 
@@ -26,6 +26,8 @@ def new_single_bus(connection:ConnectionInterface, network:GraphModel = None, na
     main_bus = cim.ConnectivityNode(name="main_bus", mRID=new_mrid())
     main_bus.ConnectivityNodeContainer = substation
     network.add_to_graph(main_bus)
+    network.add_to_graph(substation)
+    object_builder.new_bus_bar_section(network, main_bus)
 
     return network
 
@@ -34,7 +36,7 @@ def new_branch(network:GraphModel, substation:cim.Substation, main_bus:cim.Conne
 
     junction1 = cim.ConnectivityNode(name=f"{substation.name}_{sequenceNumber}_j1", mRID = new_mrid(), ConnectivityNodeContainer=substation)
    
-    breaker = new_breaker(network, substation, name = f"{substation.name}_{sequenceNumber}", node1 = main_bus, node2 = junction1)
+    breaker = object_builder.new_breaker(network, substation, name = f"{substation.name}_{sequenceNumber}", node1 = main_bus, node2 = junction1)
 
     for terminal in branch.Terminals:
         if int(terminal.sequenceNumber) == 1:
