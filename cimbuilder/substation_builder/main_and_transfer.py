@@ -36,7 +36,7 @@ def new_main_and_transfer(connection:ConnectionInterface, network:GraphModel = N
     object_builder.new_bus_bar_section(network, transfer_bus)
 
     # create bus_tie
-    object_builder.new_bus_tie(network, substation, main_bus, transfer_bus)
+    new_bus_tie(network, substation, main_bus, transfer_bus)
 
     return network
 
