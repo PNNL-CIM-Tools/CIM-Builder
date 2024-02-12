@@ -49,9 +49,6 @@ def new_bus_tie(network:GraphModel, substation:cim.Substation, main_bus:cim.Conn
     network.add_to_graph(junction2)
     
 
-from cimgraph import GraphModel
-import cimgraph.data_profile.cimhub_2023 as cim
-
 def new_main_trans_branch(network:GraphModel, substation:cim.Substation, main_bus:cim.ConnectivityNode, transfer_bus:cim.ConnectivityNode, 
                branch:cim.ConductingEquipment, sequenceNumber:int):
 
