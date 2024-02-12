@@ -9,7 +9,7 @@ import cimbuilder.utils as utils
 
 _log = logging.getLogger(__name__)
 
-def create_analog(network:GraphModel, equipment:object, measurementType:str, terminal:object = None) -> object:
+def new_analog(network:GraphModel, equipment:object, measurementType:str, terminal:object = None) -> object:
 
     # Use first terminal by default
     if terminal is None:
