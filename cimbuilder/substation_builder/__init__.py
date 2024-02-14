@@ -1,2 +1,5 @@
 from cimbuilder.substation_builder.main_and_transfer import MainAndTransferSubstation
+from cimbuilder.substation_builder.ring_bus import RingBusSubstation
+
+
 from cimbuilder.substation_builder.single_bus import new_single_bus

@@ -11,7 +11,7 @@ import logging
 _log = logging.getLogger(__name__)
 
 @dataclass
-class MainAndTransferSubstation(GraphModel):
+class MainAndTransferSubstation():
     connection:ConnectionInterface
     network:GraphModel = field(default=None)
     name:str = field(default='new_main_transfer_sub')
