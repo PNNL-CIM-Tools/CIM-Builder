@@ -8,7 +8,7 @@ import cimbuilder.utils as utils
  
 def new_disconnector(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode,
-                open:bool=False, normalOpen:bool=False, retained:bool=False) -> None:
+                open:bool=False, normalOpen:bool=False, retained:bool=False) -> cim.Disconnector:
 
     disconnector = cim.Disconnector(name = name, mRID = utils.new_mrid())
     t1 = cim.Terminal(name=f"{name}_1", mRID = utils.new_mrid(), sequenceNumber=1)

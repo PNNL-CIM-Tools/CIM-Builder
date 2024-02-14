@@ -1,113 +1,130 @@
-from __future__ import annotations
-import importlib
-import logging
+from dataclasses import dataclass, field
 
 from cimgraph.models import GraphModel, DistributedArea
 from cimgraph.databases import ConnectionInterface
-from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
-import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
+import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 import cimbuilder.object_builder as object_builder
+import cimbuilder.utils as utils
 
+import logging
 _log = logging.getLogger(__name__)
 
-
-def new_main_and_transfer(connection:ConnectionInterface, network:GraphModel = None, name:str = 'new_sub'):
-    # cim = connection.cim_profile
-    # create substation
-    substation_mrid = new_mrid()
-    substation = cim.Substation(mRID = substation_mrid, name=name)
-
-    if not network:
-        network = DistributedArea(connection=connection, container=substation, distributed=False)
-
-       
-
-    # main bus
-    main_bus = cim.ConnectivityNode(name=f'{name}_main_bus', mRID=new_mrid())
-    main_bus.ConnectivityNodeContainer = substation
-    network.add_to_graph(main_bus)
-    object_builder.new_bus_bar_section(network, main_bus)
-
-    # transfer bus
-    transfer_bus = cim.ConnectivityNode(name=f'{name}_transfer_bus', mRID=new_mrid())
-    transfer_bus.ConnectivityNodeContainer = substation
-    network.add_to_graph(transfer_bus)
-    object_builder.new_bus_bar_section(network, transfer_bus)
-
-    # create bus_tie
-    new_bus_tie(network, substation, main_bus, transfer_bus)
-
-    return network, substation, main_bus, transfer_bus
-
-def new_bus_tie(network:GraphModel, substation:cim.Substation, main_bus:cim.ConnectivityNode, transfer_bus:cim.ConnectivityNode):
-    #cim = network.connection.cim_profile
-    junction1 = cim.ConnectivityNode(name=f'{substation.name}_bt_j1', mRID = new_mrid(), ConnectivityNodeContainer=substation)
-    junction2 = cim.ConnectivityNode(name=f'{substation.name}_bt_j2', mRID = new_mrid(), ConnectivityNodeContainer=substation)
-    airgap1 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_bt1', node1 = main_bus, node2 = junction1)
-    bus_tie = object_builder.new_breaker(network, substation, name = f'{substation.name}_bus_tie', node1 = junction1, node2 = junction2)
-    airgap2 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_bt1', node1 = junction2, node2 = transfer_bus)
-    network.add_to_graph(junction1)
-    network.add_to_graph(junction2)
+@dataclass
+class MainAndTransferSubstation(GraphModel):
+    connection:ConnectionInterface
+    network:GraphModel = field(default=None)
+    name:str = field(default='new_main_transfer_sub')
+    base_voltage:int|cim.BaseVoltage = field(default=115000)
     
-def new_main_trans_branch(network:GraphModel, substation:cim.Substation, main_bus:cim.ConnectivityNode, transfer_bus:cim.ConnectivityNode, 
-               series_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
-    cim_profile = network.connection.connection_params.cim_profile
-    cim = importlib.import_module(f'cimgraph.data_profile.{cim_profile}')
+    def __post_init__(self):
+        
+        self.cim = utils.get_cim_profile(self.connection) # Import CIM profile
 
-    junction1 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j1', mRID = new_mrid(), ConnectivityNodeContainer=substation)
-    junction2 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j2', mRID = new_mrid(), ConnectivityNodeContainer=substation)
-    junction3 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j3', mRID = new_mrid(), ConnectivityNodeContainer=substation)
+        # Create new substation class
+        self.substation = self.cim.Substation(mRID = utils.new_mrid(), name=self.name)
+        
+        # If no network defined, create substation as a DistributedArea
+        if not self.network:
+            self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
+        
+        # If base voltage not defined, create a new BaseVoltage object
+        self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
 
-    breaker = object_builder.new_breaker(network, substation, name = f'{substation.name}_{series_number}', node1 = junction1, node2 = junction2)
+        # main bus
+        self.main_bus = self.cim.ConnectivityNode(name=f'{self.name}_main_bus', mRID=utils.new_mrid())
+        self.main_bus.ConnectivityNodeContainer = self.substation
+        self.network.add_to_graph(self.main_bus)
+        object_builder.new_bus_bar_section(self.network, self.main_bus)
 
-    airgap1 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_{series_number+1}', node1 = main_bus, node2 = junction1)
-    airgap2 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_{series_number+2}', node1 = junction2, node2 = junction3)
-    airgap3 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_{series_number+3}', node1 = junction3, node2 = transfer_bus)
+        # transfer bus
+        self.transfer_bus = self.cim.ConnectivityNode(name=f'{self.name}_transfer_bus', mRID=utils.new_mrid())
+        self.transfer_bus.ConnectivityNodeContainer = self.substation
+        self.network.add_to_graph(self.transfer_bus)
+        object_builder.new_bus_bar_section(self.network, self.transfer_bus)
 
-    if type(branch_terminal) == cim.Terminal:
-        branch_terminal.ConnectivityNode = junction3
-    
-    network.add_to_graph(junction1)
-    network.add_to_graph(junction2)
-    network.add_to_graph(junction3)
+        # create bus_tie
+        self.new_bus_tie()
 
-       
-def new_main_trans_feeder(network:GraphModel, substation:cim.Substation, feeder:cim.Feeder, series_number:int,
-                          main_bus:cim.ConnectivityNode = None, transfer_bus:cim.ConnectivityNode = None, 
-                          sourcebus:cim.ConnectivityNode=None) -> None:
-    
-    cim_profile = network.connection.connection_params.cim_profile
-    cim = importlib.import_module(f'cimgraph.data_profile.{cim_profile}')
+        return self.network
 
-    if not main_bus: # If node not specified, look for something named main_bus
-        for node in network.graph[cim.ConnectivityNode].values():
-            if node.name == 'main_bus' or node.name == f'{substation.name}_main_bus':
-                main_bus = node
+    def new_bus_tie(self):
 
-    if not transfer_bus: # If node not specified, look for something named main_bus
-        for node in network.graph[cim.ConnectivityNode].values():
-            if node.name == 'main_bus' or node.name == f'{substation.name}_main_bus':
-                main_bus = node
+        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_bt_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_bt_j2', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_bt1', node1 = self.main_bus, node2 = junction1)
+        airgap1.BaseVoltage = self.base_voltage
+        bus_tie = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_bus_tie', node1 = junction1, node2 = junction2)
+        bus_tie.BaseVoltage = self.base_voltage
+        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_bt1', node1 = junction2, node2 = self.transfer_bus)
+        airgap2.BaseVoltage = self.base_voltage
+        self.network.add_to_graph(junction1)
+        self.network.add_to_graph(junction2)
+        
+    def new_main_trans_branch(self, series_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
 
-    if not sourcebus:
-        pass
 
-    junction1 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j1', mRID = new_mrid(), ConnectivityNodeContainer=substation)
-    junction2 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j2', mRID = new_mrid(), ConnectivityNodeContainer=substation)
-    # junction3 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j3', mRID = new_mrid(), ConnectivityNodeContainer=substation)
+        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction3 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j3', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
 
-    breaker = object_builder.new_breaker(network, substation, name = f'{substation.name}_{series_number}', node1 = junction1, node2 = junction2)
-    airgap1 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_{series_number+1}', node1 = main_bus, node2 = junction1)
-    airgap2 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_{series_number+2}', node1 = junction2, node2 = sourcebus)
-    airgap3 = object_builder.new_disconnector(network, substation, name = f'{substation.name}_{series_number+3}', node1 = sourcebus, node2 = transfer_bus)
-    airgap3.open = True
-    airgap3.normalOpen = True
+        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{series_number}', node1 = junction1, node2 = junction2)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+1}', node1 = self.main_bus, node2 = junction1)
+        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+2}', node1 = junction2, node2 = junction3)
+        airgap3 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+3}', node1 = junction3, node2 = self.transfer_bus)
 
-    feeder.NormalEnergizingSubstation = substation
-    sourcebus.AdditionalEquipmentContainer = substation
+        breaker.BaseVoltage = self.base_voltage
+        airgap1.BaseVoltage = self.base_voltage
+        airgap2.BaseVoltage = self.base_voltage
+        airgap3.BaseVoltage = self.base_voltage
 
-    network.add_to_graph(junction1)
-    network.add_to_graph(junction2)
-    network.add_to_graph(sourcebus)
-    network.add_to_graph(feeder)
+        if type(branch_terminal) == cim.Terminal:
+            branch_terminal.ConnectivityNode = junction3
+        
+        self.network.add_to_graph(junction1)
+        self.network.add_to_graph(junction2)
+        self.network.add_to_graph(junction3)
+
+        
+    def new_main_trans_feeder(self, series_number:int, feeder_network:GraphModel, feeder:cim.Feeder, 
+                            sourcebus:cim.ConnectivityNode=None) -> None:
+        
+
+        feeder_network.get_all_edges(cim.Feeder)
+
+        # If sourcebus of feeder not specified, look for something named sourcebus
+        if not sourcebus: 
+            found = False
+            feeder_network.get_all_edges(cim.EnergySource)
+            feeder_network.get_all_edges(cim.Terminal)
+            feeder_network.get_all_edges(cim.ConnectivityNode)
+            for source in feeder_network.graph[cim.EnergySource].values():
+                if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
+                    sourcebus = source.Terminals[0].ConnectivityNode
+                    found = True
+            if not found:
+                _log.error(f'Could not find sourcebus for {feeder.name}')
+
+        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        # junction3 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j3', mRID = new_mrid(), ConnectivityNodeContainer=substation)
+
+        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{series_number}', node1 = junction1, node2 = junction2)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+1}', node1 = self.main_bus, node2 = junction1)
+        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+2}', node1 = junction2, node2 = sourcebus)
+        airgap3 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+3}', node1 = sourcebus, node2 = self.transfer_bus)
+        
+        breaker.BaseVoltage = self.base_voltage
+        airgap1.BaseVoltage = self.base_voltage
+        airgap2.BaseVoltage = self.base_voltage
+        airgap3.BaseVoltage = self.base_voltage
+        airgap3.open = True
+        airgap3.normalOpen = True
+
+        feeder.NormalEnergizingSubstation = self.substation
+        sourcebus.AdditionalEquipmentContainer = self.substation
+
+        self.network.add_to_graph(junction2)
+        self.network.add_to_graph(sourcebus)
+        self.network.add_to_graph(feeder)
+        feeder_network.add_to_graph(self.substation)
