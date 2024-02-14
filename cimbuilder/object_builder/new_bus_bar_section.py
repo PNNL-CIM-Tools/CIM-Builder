@@ -15,7 +15,7 @@ def new_bus_bar_section(network:GraphModel, node:cim.ConnectivityNode) -> cim.Bu
     busbar.EquipmentContainer = node.ConnectivityNodeContainer
     
     terminal = cim.Terminal(mRID = utils.new_mrid())
-    terminal.name = node.name + '.1'
+    terminal.name = node.name + 'busbar_t1'
     terminal.ConnectivityNode = node
     terminal.ConductingEquipment = busbar
     terminal.sequenceNumber = 1

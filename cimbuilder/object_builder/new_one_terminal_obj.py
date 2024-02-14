@@ -14,7 +14,7 @@ def new_one_terminal_object(network:GraphModel, container:cim.EquipmentContainer
 
     new_object = class_type(name = name, mRID = utils.new_mrid())
 
-    t1 = cim.Terminal(name=f"{name}.1", mRID = utils.new_mrid(), sequenceNumber=1)
+    t1 = cim.Terminal(name=f"{name}_t1", mRID = utils.new_mrid(), sequenceNumber=1)
     t1.ConductingEquipment = new_object
     utils.terminal_to_node(network, t1, node)
 
