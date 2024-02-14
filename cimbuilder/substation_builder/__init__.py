@@ -1,2 +1,2 @@
-from cimbuilder.substation_builder.main_and_transfer import new_main_and_transfer, new_main_trans_branch, new_main_trans_feeder
+from cimbuilder.substation_builder.main_and_transfer import MainAndTransferSubstation
 from cimbuilder.substation_builder.single_bus import new_single_bus

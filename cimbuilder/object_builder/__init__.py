@@ -1,3 +1,4 @@
+# from cimbuilder.object_builder.new_base_voltage import new_base_voltage as new_base_voltage
 from cimbuilder.object_builder.new_breaker import new_breaker as new_breaker
 from cimbuilder.object_builder.new_disconnector import new_disconnector as new_disconnector
 from cimbuilder.object_builder.new_bus_bar_section import new_bus_bar_section as new_bus_bar_section
