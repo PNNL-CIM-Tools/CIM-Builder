@@ -52,8 +52,8 @@ class RingBusSubstation():
 
     def new_bus_tie(self, from_bus, to_bus, series_number):
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_bt_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_bt_j2', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
         
         bus_tie = object_builder.new_breaker(self.network, self.substation, name = f'{self.name}_{series_number}', node1 = junction1, node2 = junction2)
         airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.name}_{series_number+1}', node1 = from_bus, node2 = junction1)
@@ -98,11 +98,10 @@ class RingBusSubstation():
             if not found:
                 _log.error(f'Could not find sourcebus for {feeder.name}')
 
-        junction1 = cim.ConnectivityNode(name=f'{self.name}_{bus_number}_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
 
         bus_name = f'{self.name}_bus_{bus_number}'
 
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_d{bus_number}', node1 = bus_name, node2 = junction1)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_d{bus_number}', node1 = bus_name, node2 = sourcebus)
         airgap1.BaseVoltage = self.base_voltage
 
 

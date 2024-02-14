@@ -14,8 +14,8 @@ def new_two_terminal_object(network:GraphModel, container:cim.EquipmentContainer
                             name:str, node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode) -> object:
 
     new_object = class_type(name = name, mRID = utils.new_mrid())
-    t1 = cim.Terminal(name=f"{name}.1", mRID = utils.new_mrid(), sequenceNumber=1)
-    t2 = cim.Terminal(name=f"{name}.2", mRID = utils.new_mrid(), sequenceNumber=2)
+    t1 = cim.Terminal(name=f"{name}_t1", mRID = utils.new_mrid(), sequenceNumber=1)
+    t2 = cim.Terminal(name=f"{name}_t2", mRID = utils.new_mrid(), sequenceNumber=2)
 
     utils.terminal_to_node(network, t1, node1)
     utils.terminal_to_node(network, t2, node2)

@@ -11,8 +11,8 @@ def new_disconnector(network:GraphModel, container:cim.EquipmentContainer, name:
                 open:bool=False, normalOpen:bool=False, retained:bool=False) -> cim.Disconnector:
 
     disconnector = cim.Disconnector(name = name, mRID = utils.new_mrid())
-    t1 = cim.Terminal(name=f"{name}_1", mRID = utils.new_mrid(), sequenceNumber=1)
-    t2 = cim.Terminal(name=f"{name}_2", mRID = utils.new_mrid(), sequenceNumber=2)
+    t1 = cim.Terminal(name=f"{name}_t1", mRID = utils.new_mrid(), sequenceNumber=1)
+    t2 = cim.Terminal(name=f"{name}_t2", mRID = utils.new_mrid(), sequenceNumber=2)
 
     utils.terminal_to_node(network, t1, node1)
     utils.terminal_to_node(network, t2, node2)
