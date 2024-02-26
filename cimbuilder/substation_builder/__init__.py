@@ -2,3 +2,5 @@ from cimbuilder.substation_builder.main_and_transfer import MainAndTransferSubst
 from cimbuilder.substation_builder.ring_bus import RingBusSubstation
 from cimbuilder.substation_builder.double_bus_single_breaker import DoubleBusSingleBreakerSubstation
 from cimbuilder.substation_builder.single_bus import SingleBusSubstation
+from cimbuilder.substation_builder.sectionalized_bus import SectionalizedBusSubstation
+from cimbuilder.substation_builder.breaker_and_a_half import BreakerAndHalfSubstation
