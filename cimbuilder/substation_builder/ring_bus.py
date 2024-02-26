@@ -30,7 +30,7 @@ class RingBusSubstation():
         # If no network defined, create substation as a DistributedArea
         if not self.network:
             self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
-
+        self.network.add_to_graph(self.substation)
         # If base voltage not defined, create a new BaseVoltage object
         self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
 

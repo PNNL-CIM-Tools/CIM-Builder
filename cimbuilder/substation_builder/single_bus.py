@@ -41,7 +41,7 @@ class SingleBusSubstation():
        
         return self.network
     
-    def new_single_bus_branch(self, series_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
+    def new_branch(self, series_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
 
         junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID = utils.new_mrid(), ConnectivityNodeContainer=self.substation)
         
@@ -55,7 +55,7 @@ class SingleBusSubstation():
         
         self.network.add_to_graph(junction1)
 
-    def new_single_bus_feeder(self, series_number:int, feeder_network:GraphModel, feeder:cim.Feeder, 
+    def new_feeder(self, series_number:int, feeder_network:GraphModel, feeder:cim.Feeder, 
                                 sourcebus:cim.ConnectivityNode=None) -> None:
             
         feeder_network.get_all_edges(cim.Feeder)
