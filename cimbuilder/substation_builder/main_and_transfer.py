@@ -82,14 +82,14 @@ class MainAndTransferSubstation():
                                              name=f'{self.substation.name}_{series_number}', node1=junction1,
                                              node2=junction2)
         airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_{series_number + 1}',
+                                                  name=f'{self.substation.name}_{10*series_number + 1}',
                                                   node1=self.main_bus, node2=junction1)
         airgap2 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_{series_number + 2}', node1=junction2,
-                                                  node2=junction3)
+                                                  name=f'{self.substation.name}_{10*series_number + 2}', 
+                                                  node1=junction2, node2=junction3)
         airgap3 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_{series_number + 3}', node1=junction3,
-                                                  node2=self.transfer_bus)
+                                                  name=f'{self.substation.name}_{10*series_number + 3}',
+                                                  node1=junction3, node2=self.transfer_bus)
 
         breaker.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
@@ -121,24 +121,24 @@ class MainAndTransferSubstation():
             if not found:
                 _log.error(f'Could not find sourcebus for {feeder.name}')
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID=utils.new_mrid(),
+        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{10*series_number}_j1', mRID=utils.new_mrid(),
                                          ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2', mRID=utils.new_mrid(),
+        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{10*series_number}_j2', mRID=utils.new_mrid(),
                                          ConnectivityNodeContainer=self.substation)
         # junction3 = cim.ConnectivityNode(name=f'{substation.name}_{series_number}_j3', mRID = new_mrid(), ConnectivityNodeContainer=substation)
 
         breaker = object_builder.new_breaker(self.network, self.substation,
-                                             name=f'{self.substation.name}_{series_number}', node1=junction1,
+                                             name=f'{self.substation.name}_{10*series_number}', node1=junction1,
                                              node2=junction2)
         airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_{series_number + 1}',
+                                                  name=f'{self.substation.name}_{10*series_number + 1}',
                                                   node1=self.main_bus, node2=junction1)
         airgap2 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_{series_number + 2}', node1=junction2,
-                                                  node2=sourcebus)
+                                                  name=f'{self.substation.name}_{10*series_number + 2}',
+                                                  node1=junction2, node2=sourcebus)
         airgap3 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_{series_number + 3}', node1=sourcebus,
-                                                  node2=self.transfer_bus)
+                                                  name=f'{self.substation.name}_{10*series_number + 3}', 
+                                                  node1=sourcebus, node2=self.transfer_bus)
 
         breaker.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
@@ -149,8 +149,10 @@ class MainAndTransferSubstation():
 
         feeder.NormalEnergizingSubstation = self.substation
         sourcebus.AdditionalEquipmentContainer = self.substation
+        self.substation.NormalEnergizedFeeder.append(feeder)
 
+        self.network.add_to_graph(junction1)
         self.network.add_to_graph(junction2)
         self.network.add_to_graph(sourcebus)
         self.network.add_to_graph(feeder)
-        feeder_network.add_to_graph(self.substation)
+        # feeder_network.add_to_graph(self.substation)

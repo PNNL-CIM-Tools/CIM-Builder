@@ -45,11 +45,11 @@ class BreakerAndHalfSubstation:
 
         # Create bus ties
         for tie in range(self.total_bus_ties):
-            if tie == 0:
-                tie_number = 0
-            else:
-                tie_number = 3*tie + 1
-            self.new_bus_tie(tie_number)
+            # if tie == 0:
+            #     tie_number = 0
+            # else:
+            #     tie_number = 3*tie + 1
+            self.new_bus_tie(tie)#_number)
 
         return self.network
 
@@ -132,13 +132,21 @@ class BreakerAndHalfSubstation:
 
         self.network.add_to_graph(junction1)
 
-    def new_feeder(self, feeder_number: int, branch_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
+    def new_feeder(self, branch_number: int, tie_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
                    sourcebus: cim.ConnectivityNode = None) -> None:
 
-        if feeder_number % 2 == 0:
-            node_name = f'{self.substation.name}_{branch_number}_j2'
+        # if feeder_number % 2 == 0:
+        #     node_name = f'{self.substation.name}_{branch_number}_j2'
+        # else:
+        #     node_name = f'{self.substation.name}_{branch_number}_j1'
+
+
+        if branch_number % 2 == 0:
+            jcn_name = f'{self.substation.name}_{tie_number}_bt_j{6}'
+            jcn_num = 2
         else:
-            node_name = f'{self.substation.name}_{branch_number}_j1'
+            jcn_name = f'{self.substation.name}_{tie_number}_bt_j{3}'
+            jcn_num = 1
 
         feeder_network.get_all_edges(cim.Feeder)
 
@@ -156,9 +164,8 @@ class BreakerAndHalfSubstation:
                 _log.error(f'Could not find sourcebus for {feeder.name}')
 
         airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_d{branch_number}_{feeder_number}',
-                                                  node1=node_name,
-                                                  node2=sourcebus)
+                                                  name=f'{self.substation.name}_{10 * branch_number}',
+                                                  node1=jcn_name, node2=sourcebus)
         airgap1.BaseVoltage = self.base_voltage
 
         feeder.NormalEnergizingSubstation = self.substation
@@ -167,3 +174,4 @@ class BreakerAndHalfSubstation:
         self.network.add_to_graph(sourcebus)
         self.network.add_to_graph(feeder)
         feeder_network.add_to_graph(self.substation)
+        self.substation.NormalEnergizedFeeder.append(feeder)

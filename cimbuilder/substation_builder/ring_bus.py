@@ -62,11 +62,11 @@ class RingBusSubstation():
         bus_tie = object_builder.new_breaker(self.network, self.substation, name=f'{self.name}_{series_number}',
                                              node1=junction1, node2=junction2)
         airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.name}_{series_number + 1}', node1=from_bus,
-                                                  node2=junction1)
+                                                  name=f'{self.name}_{series_number + 1}',
+                                                  node1=from_bus, node2=junction1)
         airgap2 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.name}_{series_number + 2}', node1=junction2,
-                                                  node2=to_bus)
+                                                  name=f'{self.name}_{series_number + 2}',
+                                                  node1=junction2, node2=to_bus)
 
         bus_tie.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
@@ -118,6 +118,8 @@ class RingBusSubstation():
 
         feeder.NormalEnergizingSubstation = self.substation
         sourcebus.AdditionalEquipmentContainer = self.substation
+        self.substation.NormalEnergizedFeeder.append(feeder)
+
 
         self.network.add_to_graph(sourcebus)
         self.network.add_to_graph(feeder)
