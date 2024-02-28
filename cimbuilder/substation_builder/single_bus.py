@@ -86,11 +86,12 @@ class SingleBusSubstation():
         airgap2.BaseVoltage = self.base_voltage
         feeder.NormalEnergizingSubstation = self.substation
         sourcebus.AdditionalEquipmentContainer = self.substation
+        self.substation.NormalEnergizedFeeder.append(feeder)
 
-        self.network.add_to_graph(sourcebus)
-        self.network.add_to_graph(feeder)
-        feeder_network.add_to_graph(self.substation)
+
+        # feeder_network.add_to_graph(self.substation)
         self.network.add_to_graph(junction1)
         self.network.add_to_graph(junction2)
-
+        self.network.add_to_graph(sourcebus)
+        self.network.add_to_graph(feeder)
     

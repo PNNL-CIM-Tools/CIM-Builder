@@ -123,6 +123,8 @@ class DoubleBusSingleBreakerSubstation():
        
         feeder.NormalEnergizingSubstation = self.substation
         sourcebus.AdditionalEquipmentContainer = self.substation
+        self.substation.NormalEnergizedFeeder.append(feeder)
+
 
         self.network.add_to_graph(junction1)
         self.network.add_to_graph(sourcebus)
