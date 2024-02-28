@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "cim-builder"
+version = "v0.0.1a"
+description = "Simplified Dictionaries of CIM data"
+authors = ["A. Anderson <19935503+AAndersn@users.noreply.github.com>"]
+packages = [
+    { include = "cimbuilder" }
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8.1,<4.0"
+
+cim-graph = "^0.1.2a0"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.27.1"
