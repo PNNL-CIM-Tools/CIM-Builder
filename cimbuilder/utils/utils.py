@@ -2,6 +2,7 @@ from __future__ import annotations
 import uuid
 import logging
 import importlib
+import json
 
 from cimgraph import GraphModel
 from cimgraph.databases import ConnectionInterface
@@ -49,3 +50,34 @@ def get_base_voltage(network:GraphModel, base_voltage:int|cim.BaseVoltage) -> ci
         base_voltage_obj = base_voltage
 
     return base_voltage_obj
+
+
+def catalog_parser(catalog_file, network):
+    file = open(catalog_file)
+    catalog = json.load(file)
+    data = catalog['catalog']
+    cim = get_cim_profile(network.connection) # Import CIM profile
+    obj = item_parser(data, network, cim)
+    file.close()
+    return obj
+
+def item_parser(data, network, cim):
+    class_type = edge_class = eval(f'cim.{data["@type"]}')
+    obj = class_type()
+    setattr(obj, 'mRID', new_mrid())
+    network.add_to_graph(obj)
+
+    for attribute in data:
+        if type(data[attribute]) == str:
+            if attribute in class_type.__dataclass_fields__:
+                setattr(obj, attribute, data[attribute])
+            # else:
+            #     _log.warning(f'Attribute {attribute} not found')
+        elif type(data[attribute]) == list:
+            if attribute in class_type.__dataclass_fields__:
+                values = getattr(obj, attribute)
+                for item in data[attribute]:
+                    value = item_parser(item, network, cim)
+                    values.append(value)
+                setattr(obj, attribute, values)
+    return obj

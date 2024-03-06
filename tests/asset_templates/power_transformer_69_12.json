@@ -1,0 +1,39 @@
+{
+    "catalog": {
+        "@type": "PowerTransformer",
+        "name": "hvmv69_12",
+        "vectorGroup": "Yy",
+        "PowerTransformerEnd": [
+            {
+                "@type": "PowerTransformerEnd", 
+                "name": "hvmv69_12_End_1",
+                "endNumber": "1",
+                "grounded": "true",
+                "rground": "0",
+                "xground": "0",
+                "connectionKind": "WindingConnection.Y",
+                "phaseAngleClock": "0",
+                "r": "1.594935",
+                "x": "18.90117",
+                "b": "0",
+                "ratedS": "20000000",
+                "ratedU": "69000"
+            },
+            {
+                "@type": "PowerTransformerEnd", 
+                "name": "hvmv69_12_End_2",
+                "endNumber": "2",
+                "grounded": "true",
+                "rground": "0",
+                "xground": "0",
+                "connectionKind": "WindingConnection.Y",
+                "phaseAngleClock": "0",
+                "r": "0.052092802",
+                "x": "0",
+                "b": "0",
+                "ratedS": "20000000",
+                "ratedU": "12470"
+            }
+        ]
+    }
+}

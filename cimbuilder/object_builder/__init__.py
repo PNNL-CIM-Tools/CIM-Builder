@@ -2,6 +2,7 @@
 from cimbuilder.object_builder.new_breaker import new_breaker as new_breaker
 from cimbuilder.object_builder.new_disconnector import new_disconnector as new_disconnector
 from cimbuilder.object_builder.new_bus_bar_section import new_bus_bar_section as new_bus_bar_section
+from cimbuilder.object_builder.new_power_transformer import new_power_transformer as new_power_transformer
 
 from cimbuilder.object_builder.new_one_terminal_obj import new_one_terminal_object as new_one_terminal_object
 from cimbuilder.object_builder.new_two_terminal_obj import new_two_terminal_object as new_two_terminal_object

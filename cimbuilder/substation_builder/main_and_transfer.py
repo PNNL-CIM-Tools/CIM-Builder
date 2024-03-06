@@ -18,18 +18,22 @@ class MainAndTransferSubstation():
     network: GraphModel = field(default=None)
     name: str = field(default='new_main_transfer_sub')
     base_voltage: int | cim.BaseVoltage = field(default=115000)
+    substation: cim.Substation = field(default=None)
 
     def __post_init__(self):
 
         self.cim = utils.get_cim_profile(self.connection)  # Import CIM profile
 
         # Create new substation class
-        self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
+        if not self.substation:
+            self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
 
         # If no network defined, create substation as a DistributedArea
         if not self.network:
             self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
+            
         self.network.add_to_graph(self.substation)
+        
         # If base voltage not defined, create a new BaseVoltage object
         self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
 
@@ -68,8 +72,7 @@ class MainAndTransferSubstation():
         self.network.add_to_graph(junction1)
         self.network.add_to_graph(junction2)
 
-    def new_branch(self, series_number: int, branch_equipment: cim.ConductingEquipment,
-                              branch_terminal: cim.Terminal | int) -> None:
+    def new_branch(self, series_number: int) -> None:
 
         junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID=utils.new_mrid(),
                                          ConnectivityNodeContainer=self.substation)
@@ -96,26 +99,25 @@ class MainAndTransferSubstation():
         airgap2.BaseVoltage = self.base_voltage
         airgap3.BaseVoltage = self.base_voltage
 
-        if type(branch_terminal) == cim.Terminal:
-            branch_terminal.ConnectivityNode = junction3
-
         self.network.add_to_graph(junction1)
         self.network.add_to_graph(junction2)
         self.network.add_to_graph(junction3)
 
+        return junction3
+
     def new_feeder(self, series_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
-                              sourcebus: cim.ConnectivityNode = None) -> None:
+                              sourcebus: str|cim.ConnectivityNode = 'sourcebus') -> None:
 
         feeder_network.get_all_edges(cim.Feeder)
 
         # If sourcebus of feeder not specified, look for something named sourcebus
-        if not sourcebus:
+        if type(sourcebus) == str:
             found = False
             feeder_network.get_all_edges(cim.EnergySource)
             feeder_network.get_all_edges(cim.Terminal)
             feeder_network.get_all_edges(cim.ConnectivityNode)
             for source in feeder_network.graph[cim.EnergySource].values():
-                if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
+                if source.Terminals[0].ConnectivityNode.name == sourcebus:
                     sourcebus = source.Terminals[0].ConnectivityNode
                     found = True
             if not found:
