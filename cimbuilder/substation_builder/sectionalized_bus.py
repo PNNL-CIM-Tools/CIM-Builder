@@ -133,4 +133,4 @@ class SectionalizedBusSubstation:
         self.network.add_to_graph(sourcebus)
         self.network.add_to_graph(feeder)
         
-        # feeder_network.add_to_graph(self.substation)
+        feeder_network.add_to_graph(self.substation)
