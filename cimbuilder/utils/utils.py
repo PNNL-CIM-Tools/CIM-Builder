@@ -1,5 +1,7 @@
 from __future__ import annotations
-import uuid
+from random import Random
+from typing import Any
+from uuid import UUID
 import logging
 import importlib
 import json
@@ -9,6 +11,7 @@ from cimgraph.databases import ConnectionInterface
 from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
+
 _log = logging.getLogger(__name__)
 
 def get_cim_profile(connection:ConnectionInterface) -> type:
@@ -16,8 +19,10 @@ def get_cim_profile(connection:ConnectionInterface) -> type:
     cim = importlib.import_module(f'cimgraph.data_profile.{cim_profile}')
     return cim
 
-def new_mrid():
-    mRID = str(uuid.uuid4())
+def new_mrid(cimClass, objectName: Any) -> str:
+    seedStr = f"{cimClass.__name__}:{objectName}"
+    randomGenerator = Random(seedStr)
+    mRID = str(UUID(int=randomGenerator.getrandbits(128), version=4))
     return mRID
 
 def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.ConnectivityNode):
