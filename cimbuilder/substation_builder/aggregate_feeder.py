@@ -33,13 +33,14 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
 
     
     # create feeder container
-    feeder_mrid = utils.new_mrid()
+    feeder_mrid = utils.new_mrid(class_type=cim.Feeder, name=feeder_name)
     feeder = cim.Feeder(mRID = feeder_mrid, name=feeder_name)
     feeder.NormalEnergizingSubstation = substation
     network.add_to_graph(feeder)
 
     # create aggregate Node
-    feeder_node = cim.ConnectivityNode(name=f'{feeder_name}_1', mRID=utils.new_mrid())
+    node_mrid = utils.new_mrid(class_type=cim.ConnectivityNode, name=f'node_{feeder_name}_1')
+    feeder_node = cim.ConnectivityNode(name=f'{feeder_name}_node_1', mRID=node_mrid)
     feeder_node.ConnectivityNodeContainer = feeder
     network.add_to_graph(feeder_node)
 

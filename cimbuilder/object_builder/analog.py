@@ -11,13 +11,17 @@ _log = logging.getLogger(__name__)
 
 def new_analog(network:GraphModel, equipment:object, measurementType:str, terminal:object = None) -> object:
 
+    cim = utils.get_cim_profile(network.connection)  # Import CIM profile
+    #
     # Use first terminal by default
     if terminal is None:
         terminal = equipment.Terminals[0]
 
     # Create a new analog for specified terminal
-    meas = cim.Analog(mRID = utils.new_mrid())
-    meas.name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
+    sequence = terminal.sequenceNumber
+    name = f'{equipment.__class__.__name__}_{equipment.name}_t{sequence}_{measurementType}'
+    meas = cim.Analog(mRID = utils.new_mrid(class_type=cim.Analog, name=name))
+    meas.name = name
     meas.Terminal = terminal
     meas.PowerSystemResource = equipment
     meas.Location = equipment.Location
@@ -31,10 +35,15 @@ def new_analog(network:GraphModel, equipment:object, measurementType:str, termin
 def create_all_analog(network:GraphModel, equipment:object, measurementType:str) -> object:
     counter = 1
     meas_list = []
+    cim = utils.get_cim_profile(network.connection)  # Import CIM profile
+
+
     for terminal in equipment.Terminals:
         # Create a new analog for each terminal
-        meas = cim.Analog(mRID = utils.new_mrid())
-        meas.name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}_{counter}'
+        sequence = terminal.sequenceNumber
+        name = f'{equipment.__class__.__name__}_{equipment.name}_t{sequence}_{measurementType}'
+        meas = cim.Analog(mRID = utils.new_mrid(class_type=cim.Analog, name=name))
+        meas.name = name
         meas.Terminal = terminal
         meas.PowerSystemResource = equipment
         meas.Location = equipment.Location

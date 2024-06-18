@@ -1,7 +1,6 @@
 from __future__ import annotations
 from random import Random
-from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 import logging
 import importlib
 import json
@@ -19,10 +18,13 @@ def get_cim_profile(connection:ConnectionInterface) -> type:
     cim = importlib.import_module(f'cimgraph.data_profile.{cim_profile}')
     return cim
 
-def new_mrid(cimClass, objectName: Any) -> str:
-    seedStr = f"{cimClass.__name__}:{objectName}"
-    randomGenerator = Random(seedStr)
-    mRID = str(UUID(int=randomGenerator.getrandbits(128), version=4))
+def new_mrid(class_type:type = cim.IdentifiedObject, name:str = None) -> str:
+    if name:
+        seedStr = f"{class_type.__name__}:{name}"
+        randomGenerator = Random(seedStr)
+        mRID = str(UUID(int=randomGenerator.getrandbits(128), version=4))
+    else:
+        mRID = str(uuid4())
     return mRID
 
 def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.ConnectivityNode):
