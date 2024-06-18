@@ -13,7 +13,7 @@ _log = logging.getLogger(__name__)
 def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, substation:cim.Substation, 
                          node:cim.ConnectivityNode|str, base_voltage:cim.BaseVoltage|float,
                          total_load_kw:float=0, total_load_kvar:float=0, total_btm_pv_kw:float=0, total_ftm_pv_kw:float=0,
-                         total_btm_wind_kw:float=0, total_ftm_wind_kw:float=0) -> None:
+                         total_btm_wind_kw:float=0, total_ftm_wind_kw:float=0) -> tuple[cim.Feeder, cim.EnergyConsumer, cim.Breaker]:
     
     # get base voltage
     if base_voltage.__class__ == float or base_voltage.__class__ == int:
@@ -47,6 +47,7 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
     breaker = builder.new_two_terminal_object(network, container=substation, class_type=cim.Breaker, 
                                               name=breaker_name, node1 = node, node2 = feeder_node)
     breaker.AdditionalEquipmentContainer = feeder
+    # feeder.AdditionalGroupedEquipment.append(breaker)
     breaker.BaseVoltage = base_voltage_obj
     builder.new_discrete(network, equipment=breaker, measurementType='Pos')
     # builder.new_analog(network, equipment=breaker, measurementType='PNV')
@@ -65,6 +66,7 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
     load.p = total_load_kw*1000
     load.q = total_load_kvar*1000
     load.BaseVoltage = base_voltage_obj
+    # feeder.Equipments.append(load)
     # builder.new_analog(network, equipment=load, measurementType='PNV')
     meas = builder.new_analog(network, equipment=load, measurementType='VA')
     meas.aliasName = 'GrossLoad(MW)'
@@ -81,6 +83,7 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
     pv_unit.maxP = total_btm_pv_kw*1000
     pv_unit.PowerElectronicsConnection = btm_inverter
     btm_inverter.PowerElectronicsUnit.append(pv_unit)
+    # feeder.Equipments.append(btm_inverter)
     network.add_to_graph(pv_unit)
     
     if total_btm_wind_kw:
@@ -115,10 +118,11 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
         ftm_inverter.PowerElectronicsUnit.append(wind_unit)
         network.add_to_graph(wind_unit)
 
+    # feeder.Equipments.append(ftm_inverter)
     # builder.new_analog(network, equipment=inverter, measurementType='PNV')
     meas = builder.new_analog(network, equipment=btm_inverter, measurementType='VA')
     meas.aliasName = 'FTMGeneration(MW)'
 
-
+    return feeder, load, breaker
 
 

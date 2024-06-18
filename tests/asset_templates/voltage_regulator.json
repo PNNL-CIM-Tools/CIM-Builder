@@ -1,0 +1,73 @@
+{
+    "catalog": 
+    {
+        "@type": "TransformerTank",
+        "name": "regulator",
+        "TransformerTankEnds": 
+        [
+            {
+                "@type": "TransformerTankEnd",
+                "name": "reg1_End_1",
+                "endNumber": "1",
+                "grounded": true,
+                "rground": "0",
+                "xground": "0",
+                "orderedPhases": "OrderedPhaseCodeKind.AN"
+            },
+            {
+                "@type": "TransformerTankEnd",
+                "name": "reg1_End_2",
+                "endNumber": "2",
+                "grounded": true,
+                "rground": "0",
+                "xground": "0",
+                "RatioTapChanger": {
+                    "@type": "RatioTapChanger",
+                    "controlEnabled": true,
+                    "ctRating": "700",
+                    "ctRatio": "3500",
+                    "highStep": "16",
+                    "initialDelay": "15",
+                    "lowStep": "-16",
+                    "ltcFlag": true,
+                    "neutralStep": "0",
+                    "neutralU": "2400",
+                    "normalStep": "0",
+                    "ptRatio": "20",
+                    "step": "8",
+                    "subsequentDelay": "2",
+                    "TapChangerControl": 
+                    {
+                        "@type": "TapChangerControl",
+                        "discrete": true,
+                        "enabled": true,
+                        "mode": "RegulatingControlModeKind.voltage",
+                        "monitoredPhase": "PhaseCode.A",
+                        "targetDeadband": "2",
+                        "targetValue": "122",
+                        "lineDropCompensation": true,
+                        "lineDropR": "3",
+                        "lineDropX": "9",
+                        "maxLimitVoltage": "132",
+                        "minLimitVoltage": "108",
+                        "reversible": false
+                    },
+                    "stepVoltageIncrement": "0.625"
+                },
+                "orderedPhases": "OrderedPhaseCodeKind.AN"
+            }
+        ],
+        "TransformerTankInfo": 
+        {
+            "@type": "TransformerTankInfo",
+            "name": "cimxfmrcode_reg1",
+            "TransformerEndInfos": 
+            [
+                {
+                    "@type": "TransformerEndInfo",
+                    "@id": "E5816653-354B-4A9B-B3C6-52AF94318954"
+                }
+        
+
+        }
+}
