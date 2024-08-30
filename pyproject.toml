@@ -10,7 +10,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0"
-cim-graph = "^0.1.5a0"
+cim-graph = { git = "https://github.com/PNNL-CIM-Tools/CIM-Graph.git", branch = "feature/68"}
+gridappsd-python = "^2024.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
