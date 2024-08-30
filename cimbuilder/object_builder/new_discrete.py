@@ -1,5 +1,4 @@
 from __future__ import annotations
-import importlib
 import logging
 
 from cimgraph import GraphModel
