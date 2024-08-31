@@ -9,24 +9,32 @@ import cimbuilder.utils as utils
 
 _log = logging.getLogger(__name__)
 
-def new_analog(network:GraphModel, equipment:object, measurementType:str, terminal:object = None) -> object:
+def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
+               phase:cim.PhaseCode, measurementType:str, name = '') -> object:
 
-    # Use first terminal by default
-    if terminal is None:
-        terminal = equipment.Terminals[0]
-
-    # Create a new analog for specified terminal
-    meas = cim.Analog(mRID = utils.new_mrid())
-    meas.name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
-    meas.Terminal = terminal
-    meas.PowerSystemResource = equipment
-    meas.Location = equipment.Location
-    meas.measurementType = measurementType
-    equipment.Measurements.append(meas)
-    terminal.Measurements.append(meas)
-    network.add_to_graph(meas)
-
-    return meas
+    meas_exists = False
+    if measurementType == 'PNV':
+        for far_terminal in terminal.ConnectivityNode.Terminals:
+            for far_meas in far_terminal.Measurements:
+                if far_meas.measurementType == 'PNV':
+                    meas_exists = True
+    
+    if not meas_exists:
+        # Create a new analog for specified terminal
+        meas = cim.Analog()
+        if not name:
+            name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
+            name += f'_{terminal.sequenceNumber}_phase_{phase.value}'
+        meas.uuid(name = name)
+        meas.Terminal = terminal
+        meas.PowerSystemResource = equipment
+        meas.measurementType = measurementType
+        meas.phases = phase
+        equipment.Measurements.append(meas)
+        terminal.Measurements.append(meas)
+        network.add_to_graph(meas)
+        # _log.warning(meas.name)
+        return meas
 
 def create_all_analog(network:GraphModel, equipment:object, measurementType:str) -> object:
     counter = 1
@@ -37,7 +45,6 @@ def create_all_analog(network:GraphModel, equipment:object, measurementType:str)
         meas.name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}_{counter}'
         meas.Terminal = terminal
         meas.PowerSystemResource = equipment
-        meas.Location = equipment.Location
         meas.measurementType = measurementType
         equipment.Measurements.append(meas)
         terminal.Measurements.append(meas)

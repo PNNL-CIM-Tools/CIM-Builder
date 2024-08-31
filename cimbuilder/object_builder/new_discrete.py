@@ -1,4 +1,3 @@
-from __future__ import annotations
 import logging
 
 from cimgraph import GraphModel
@@ -8,16 +7,19 @@ import cimbuilder.utils as utils
 
 _log = logging.getLogger(__name__)
 
-def new_discrete(network:GraphModel, equipment:object, measurementType:str) -> object:
+def new_discrete(network:GraphModel, equipment:cim.Equipment, terminal:cim.ACDCTerminal,
+                  phase:cim.PhaseCode, measurementType:str) -> cim.Discrete:
     
     terminal = equipment.Terminals[0]
     # Create a new discrete for each terminal
-    meas = cim.Discrete( mRID = utils.new_mrid())
-    meas.name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
+    name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
+    name += f'_{terminal.sequenceNumber}_phase_{phase.value}'
+    meas = cim.Discrete()
+    meas.uuid(name = name)
     meas.Terminal = terminal
     meas.PowerSystemResource = equipment
-    meas.Location = equipment.Location
     meas.measurementType = measurementType
+    meas.phases = phase
     equipment.Measurements.append(meas)
     terminal.Measurements.append(meas)
     network.add_to_graph(meas)
