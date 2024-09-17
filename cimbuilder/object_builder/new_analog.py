@@ -12,7 +12,9 @@ _log = logging.getLogger(__name__)
 def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
                phase:cim.PhaseCode, measurementType:str, mRID: str = None) -> object:
     meas_exists = False
-    if measurementType == 'PNV':
+    if measurementType == 'PNV' and not isinstance(equipment, 
+                                                   (cim.EnergyConsumer, cim.PowerElectronicsConnection, 
+                                                    cim.LinearShuntCompensator)):
         for far_terminal in terminal.ConnectivityNode.Terminals:
             for far_meas in far_terminal.Measurements:
                 if far_meas.measurementType == 'PNV':
