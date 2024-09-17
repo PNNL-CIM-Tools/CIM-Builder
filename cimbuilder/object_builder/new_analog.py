@@ -10,21 +10,32 @@ import cimbuilder.utils as utils
 _log = logging.getLogger(__name__)
 
 def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
-               phase:cim.PhaseCode, measurementType:str, name = '') -> object:
-
+               phase:cim.PhaseCode, measurementType:str, mRID: str = None) -> object:
     meas_exists = False
     if measurementType == 'PNV':
         for far_terminal in terminal.ConnectivityNode.Terminals:
             for far_meas in far_terminal.Measurements:
                 if far_meas.measurementType == 'PNV':
                     meas_exists = True
-    
+                    break
+            if meas_exists:
+                break
+    else:
+        for meas in equipment.Measurements:
+            if (
+                terminal.identifier == meas.Terminal.identifier and
+                phase == meas.phases and
+                measurementType == meas.measurementType
+            ):
+                meas_exists = True
+                break
+    meas = None
     if not meas_exists:
         # Create a new analog for specified terminal
         meas = cim.Analog()
-        if not name:
-            name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
-            name += f'_{terminal.sequenceNumber}_phase_{phase.value}'
+        name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
+        if measurementType != 'SoC':
+            name += f'_{terminal.sequenceNumber}_{phase.value}'
         meas.uuid(name = name)
         meas.Terminal = terminal
         meas.PowerSystemResource = equipment
@@ -34,7 +45,7 @@ def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Termina
         terminal.Measurements.append(meas)
         network.add_to_graph(meas)
         # _log.warning(meas.name)
-        return meas
+    return meas
 
 def create_all_analog(network:GraphModel, equipment:object, measurementType:str) -> object:
     counter = 1
