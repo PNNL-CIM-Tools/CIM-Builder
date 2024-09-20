@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 cim = None
 feederModelmRIDs = {
-    # "IEEE123.xml": "C1C3E687-6FFD-C753-582B-632A27E28507",
-    # "IEEE123_PV.xml": "E407CBB6-8C8D-9BC9-589C-AB83FBF0826D",
+    "IEEE123.xml": "C1C3E687-6FFD-C753-582B-632A27E28507",
+    "IEEE123_PV.xml": "E407CBB6-8C8D-9BC9-589C-AB83FBF0826D",
     "IEEE13.xml": "49AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
-    # "IEEE13_Assets.xml": "5B816B93-7A5F-B64C-8460-47C17D6E4B0F",
-    # "IEEE13_OCHRE.xml": "13AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
-    # "IEEE9500bal.xml": "EE71F6C9-56F0-4167-A14E-7F4C71F10EAA",
-    # "IEEE123_PV.xml": "F49D1288-9EC6-47DB-8769-57E2B6EDB124"
+    "IEEE13_Assets.xml": "5B816B93-7A5F-B64C-8460-47C17D6E4B0F",
+    "IEEE13_OCHRE.xml": "13AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
+    "IEEE9500bal.xml": "EE71F6C9-56F0-4167-A14E-7F4C71F10EAA",
+    "IEEE123_PV.xml": "F49D1288-9EC6-47DB-8769-57E2B6EDB124"
 }
 
 class CimMeasurementManager(object):
@@ -517,7 +517,7 @@ class CimMeasurementManager(object):
                 if isinstance(regEnd, cim.PowerTransformerEnd):
                     phases = [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]
                     for phase in phases:
-                        name = f"{cimObject.__class__.__name__}_{cimObject.name}_Pos_{regEnd.Terminal.sequenceNumber}_"
+                        name = f"RatioTapChanger_{cimObject.name}_Pos_{regEnd.Terminal.sequenceNumber}_"
                         name += f"{phase.value}"
                         measurement = cim.Discrete(name = name, 
                                                    PowerSystemResource = cimObject, 
@@ -533,7 +533,7 @@ class CimMeasurementManager(object):
                         logger.info(f"non Y configured regulator found!\nPowerTransformer: {cimObject.name}\n"
                                     f"TransformerEnd:{regEnd.name}\nTransformerEndPhase:{regEnd.orderedPhases}")
                     phases = cim.PhaseCode(regEnd.orderedPhases.value.replace("N",""))
-                    name = f"{cimObject.__class__.__name__}_{cimObject.name}_Pos_{regEnd.Terminal.sequenceNumber}_"
+                    name = f"RatioTapChanger_{cimObject.name}_Pos_{regEnd.Terminal.sequenceNumber}_"
                     name += f"{phases.value}"
                     measurement = cim.Discrete(name = name, 
                                                PowerSystemResource = cimObject, 
