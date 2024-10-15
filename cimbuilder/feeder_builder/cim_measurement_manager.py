@@ -26,11 +26,16 @@ cim = None
 feederModelmRIDs = {
     # "IEEE123.xml": "C1C3E687-6FFD-C753-582B-632A27E28507",
     # "IEEE123_PV.xml": "E407CBB6-8C8D-9BC9-589C-AB83FBF0826D",
-    "IEEE13.xml": "49AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
+    # "IEEE13.xml": "49AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
     # "IEEE13_Assets.xml": "5B816B93-7A5F-B64C-8460-47C17D6E4B0F",
     # "IEEE13_OCHRE.xml": "13AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
     # "IEEE9500bal.xml": "EE71F6C9-56F0-4167-A14E-7F4C71F10EAA",
-    # "IEEE123_PV.xml": "F49D1288-9EC6-47DB-8769-57E2B6EDB124"
+    "IEEE8500.xml": "4F76A5F9-271D-9EB8-5E31-AA362D86F2C3",
+    # "IEEE8500_3subs.xml": "AAE94E4A-2465-6F5E-37B1-3E72183A4E44",
+    # "ieee123apps.xml": "F49D1288-9EC6-47DB-8769-57E2B6EDB124", # appears to be created using rc4 profile.
+    # "IEEE37.xml": "49003F52-A359-C2EA-10C4-F4ED3FD368CC", # Fails to load in cimgraph.
+    # "R2_12_47_2.xml": "9CE150A8-8CC5-A0F9-B67E-BBD8C79D3095",
+    # "Transactive.xml": "503D6E20-F499-4CC7-8051-971E23D0BF79"
 }
 
 class CimMeasurementManager(object):
@@ -68,8 +73,8 @@ class CimMeasurementManager(object):
         cim = importlib.import_module(f"cimgraph.data_profile.{self.cimProfile}")
         self.dbConnection = self.databaseConnection(databaseType, databaseUrl)
         self.baseXmls = self.loadPowerGridFeederXmlFiles(systemModelType, powergridModelsXmlDirectory)
-        self.cleanMrids()
         self.populateModelWithMeasurements()
+        self.cleanMrids()
     
     def databaseConnection(self, dbType: str, dbUrl: str) -> ConnectionInterface:
         dbConnection = None
@@ -147,31 +152,25 @@ class CimMeasurementManager(object):
     
     def cleanMrids(self):
         uniqueMrids = {}
-        for xmlDict in self.baseXmls.values():
-            xmlBaseModified = True
+        for xmlRootName, xmlDict in self.baseXmls.items():
             for cimClassDict in xmlDict["graphModel"].graph.values():
                 for cimObj in cimClassDict.values():
                     objId = cimObj.identifier
                     if objId not in uniqueMrids.keys():
                         uniqueMrids[objId] = {"object_type": type(cimObj).__name__}
-                    elif not isinstance(cimObj, cim.GeographicalRegion, cim.SubGeographicalRegion, cim.Substation):
+                    elif not isinstance(cimObj, (cim.GeographicalRegion, cim.SubGeographicalRegion, cim.Substation)):
                         duplicateData = {"mRID": f"{objId}",
                                          "class1": uniqueMrids[objId]["object_type"],
                                          "class2": type(cimObj).__name__}
                         logger.info(f"Duplicate identifier found!{json.dumps(duplicateData,indent=4, sort_keys=True)}")
                         rGen = Random(f"{objId}")
-                        xmlBaseModified = True
                         while objId in uniqueMrids:
                             objId = UUID(int=rGen.getrandbits(128), version=4)
                         cimObj.identifier = objId
                         if "mRID" in cimObj.__dataclass_fields__:
                             cimObj.mRID = f"{objId}".upper()
-            if xmlBaseModified:
-                xmlFile = xmlDict["databaseConnection"].filename
-                cimUtils.write_xml(xmlDict["graphModel"], xmlFile)
-                    
-                    
-
+            xmlFileName = xmlDict["outputDir"] / f"{xmlRootName}.xml"
+            cimUtils.write_xml(xmlDict["graphModel"], xmlFileName)
 
     def addMeasurement(self, measurementsModel: GraphModel, measurementObject):
         # check to see if measurementObject already exists before adding to graph.
@@ -699,12 +698,6 @@ class CimMeasurementManager(object):
                                         cim.Breaker, cim.Recloser]:
                             self.createDiscreteMeasurements(measurementsModel, cimObject)
             self.catalogExistingMeasurements(measurementsModel)
-            graphKeys = list(xmlDict["graphModel"].graph.keys())
-            for key in graphKeys:
-                if key not in [cim.Analog, cim.Discrete]:
-                    del xmlDict["graphModel"].graph[key]
-            xmlFileName = xmlDict["outputDir"] / f"measurements.xml"
-            cimUtils.write_xml(measurementsModel, xmlFileName)
             logger.info(f"Finished creating measurements for feeder {xmlDict['graphModel'].container.mRID}.")
             
 
