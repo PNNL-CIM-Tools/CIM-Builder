@@ -9,3 +9,5 @@ from cimbuilder.object_builder.new_two_terminal_obj import new_two_terminal_obje
 from cimbuilder.object_builder.new_analog import new_analog as new_analog
 from cimbuilder.object_builder.new_analog import create_all_analog as create_all_analog
 from cimbuilder.object_builder.new_discrete import new_discrete as new_discrete
+
+from cimbuilder.object_builder.new_house import new_house as new_house

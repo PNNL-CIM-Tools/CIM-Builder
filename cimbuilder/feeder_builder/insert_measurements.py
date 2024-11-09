@@ -8,10 +8,8 @@ _log = logging.getLogger(__name__)
 def create_all_analog_measurements(feeder_model: FeederModel):
     cim = feeder_model.cim
 
-    params = ConnectionParameters(filename=None, cim_profile=feeder_model.connection.connection_params.cim_profile, iec61970_301=8)
-    connection = RDFlibConnection(params)
 
-    analogs = FeederModel(container = cim.Feeder(), connection = connection, distributed=False)
+    analogs = FeederModel(container = cim.Feeder(), connection = feeder_model.connection, distributed=False)
 
     for inverter in feeder_model.graph.get(cim.PowerElectronicsConnection,{}).values():
         for power_electronics_unit in inverter.PowerElectronicsUnit:
@@ -157,10 +155,8 @@ def create_all_analog_measurements(feeder_model: FeederModel):
 def create_all_discrete_measurements(feeder_model: FeederModel):
     cim = feeder_model.cim
 
-    params = ConnectionParameters(filename=None, cim_profile=feeder_model.connection.connection_params.cim_profile, iec61970_301=8)
-    connection = RDFlibConnection(params)
 
-    discretes = FeederModel(container = cim.Feeder(), connection = connection, distributed=False)
+    discretes = FeederModel(container = cim.Feeder(), connection = feeder_model.connection, distributed=False)
 
     
     switch_classes = [cim.Breaker, cim.Sectionaliser,

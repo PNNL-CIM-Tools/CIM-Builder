@@ -13,10 +13,13 @@ _log = logging.getLogger(__name__)
 
 def new_energy_consumer(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node:str|cim.ConnectivityNode, p:float = 0, q:float = 0) -> None:
+    cim = network.connection.cim
 
     load = cim.EnergyConsumer(name = name, mRID = new_mrid())
 
-    t1 = cim.Terminal(name=f"{name}_t1", mRID = new_mrid(), sequenceNumber=1)
+    t1 = cim.Terminal()
+    t1.uuid(name=f"{name}_t1")
+    t1.sequenceNumber=1
     t1.ConductingEquipment = load
     terminal_to_node(network, t1, node)
 

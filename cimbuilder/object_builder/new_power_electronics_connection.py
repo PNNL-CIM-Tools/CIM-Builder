@@ -16,7 +16,9 @@ def new_power_electronics_connection(network:GraphModel, container:cim.Equipment
 
     inverter = cim.PowerElectronicsConnection(name = name, mRID = new_mrid())
 
-    t1 = cim.Terminal(name=f"{name}_t1", mRID = new_mrid(), sequenceNumber=1)
+    t1 = cim.Terminal()
+    t1.uuid(name=f"{name}_t1")
+    t1.sequenceNumber=1
     t1.ConductingEquipment = inverter
     terminal_to_node(network, t1, node)
 
@@ -24,9 +26,6 @@ def new_power_electronics_connection(network:GraphModel, container:cim.Equipment
     inverter.p = p
     inverter.q = q
     inverter.Terminals.append(t1)
-
-    
- 
 
     network.add_to_graph(inverter)
     network.add_to_graph(t1)

@@ -10,7 +10,9 @@ import cimbuilder.utils as utils
 _log = logging.getLogger(__name__)
 
 def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
-               phase:cim.PhaseCode, measurementType:str, mRID: str = None) -> object:
+               phase:cim.PhaseCode, measurementType:str, mRID: str = None,
+               check_duplicate = True) -> object:
+    cim = network.connection.cim
     meas_exists = False
     if measurementType == 'PNV' and not isinstance(equipment, 
                                                    (cim.EnergyConsumer, cim.PowerElectronicsConnection, 
@@ -22,7 +24,7 @@ def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Termina
                     break
             if meas_exists:
                 break
-    else:
+    elif check_duplicate:
         for meas in equipment.Measurements:
             if (
                 terminal.identifier == meas.Terminal.identifier and

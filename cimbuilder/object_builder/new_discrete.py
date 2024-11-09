@@ -10,6 +10,7 @@ _log = logging.getLogger(__name__)
 def new_discrete(network:GraphModel, equipment:cim.Equipment, terminal:cim.ACDCTerminal,
                   phase:cim.PhaseCode, measurementType:str, mRID: str = None) -> cim.Discrete:
     
+    cim = network.connection.cim
     meas_exists = False
     for meas in equipment.Measurements:
             if (

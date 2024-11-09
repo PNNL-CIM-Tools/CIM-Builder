@@ -13,9 +13,15 @@ _log = logging.getLogger(__name__)
 def new_two_terminal_object(network:GraphModel, container:cim.EquipmentContainer, class_type:type, 
                             name:str, node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode) -> object:
 
-    new_object = class_type(name = name, mRID = utils.new_mrid())
-    t1 = cim.Terminal(name=f"{name}_t1", mRID = utils.new_mrid(), sequenceNumber=1)
-    t2 = cim.Terminal(name=f"{name}_t2", mRID = utils.new_mrid(), sequenceNumber=2)
+    cim = network.connection.cim
+    new_object = class_type()
+    new_object.uuid(name = name)
+    t1 = cim.Terminal()
+    t1.uuid(name=f"{name}_t1")
+    t1.sequenceNumber=1
+    t2 = cim.Terminal()
+    t2.uuid(name=f"{name}_t2")
+    t2.sequenceNumber=2
 
     utils.terminal_to_node(network, t1, node1)
     utils.terminal_to_node(network, t2, node2)
