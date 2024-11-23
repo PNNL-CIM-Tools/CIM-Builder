@@ -1,5 +1,5 @@
 import logging
-import cimgraph.data_profile.cim17v40 as cim
+import cimgraph.data_profile.cimhub_2023 as cim
 from cimgraph.models import FeederModel
 from cimbuilder.object_builder import new_analog, new_discrete
 from cimgraph.databases import ConnectionParameters, RDFlibConnection
@@ -10,6 +10,25 @@ def create_all_analog_measurements(feeder_model: FeederModel):
 
 
     analogs = FeederModel(container = cim.Feeder(), connection = feeder_model.connection, distributed=False)
+    feeder_model.get_all_edges(cim.EnergyConsumer)
+    feeder_model.get_all_edges(cim.EnergyConsumerPhase)
+    feeder_model.get_all_edges(cim.PowerElectronicsConnection)
+    feeder_model.get_all_edges(cim.PowerElectronicsConnectionPhase)
+    feeder_model.get_all_edges(cim.LinearShuntCompensator)
+    feeder_model.get_all_edges(cim.LinearShuntCompensatorPhase)
+    feeder_model.get_all_edges(cim.SynchronousMachine)
+    feeder_model.get_all_edges(cim.PowerTransformer)
+    feeder_model.get_all_edges(cim.PowerTransformerEnd)
+    feeder_model.get_all_edges(cim.TransformerTank)
+    feeder_model.get_all_edges(cim.TransformerTankEnd)
+
+    switch_classes = [cim.Breaker, cim.Sectionaliser,
+                cim.Recloser, cim.LoadBreakSwitch, cim.Switch]
+    
+    for sw_cls in switch_classes:
+        feeder_model.get_all_edges(sw_cls)
+
+    feeder_model.get_all_edges(cim.Terminal)
 
     for inverter in feeder_model.graph.get(cim.PowerElectronicsConnection,{}).values():
         for power_electronics_unit in inverter.PowerElectronicsUnit:
@@ -118,9 +137,6 @@ def create_all_analog_measurements(feeder_model: FeederModel):
                 if int(terminal.sequenceNumber) in [1, 2]:
                     new_analog(analogs, transformer, terminal, phase, 'PNV')
                     new_analog(analogs, transformer, terminal, phase, 'VA', name)
-              
-    switch_classes = [cim.Breaker, cim.Sectionaliser,
-                cim.Recloser, cim.LoadBreakSwitch, cim.Switch]
 
     for cim_class in switch_classes:
         for switch in feeder_model.graph.get(cim_class, {}).values():

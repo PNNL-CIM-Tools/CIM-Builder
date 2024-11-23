@@ -49,11 +49,12 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
     network.add_to_graph(feeder_node)
 
     # create breaker
-    breaker = builder.new_two_terminal_object(network, container=substation, class_type=cim.Breaker, 
+    breaker = builder.new_two_terminal_object(network, container=feeder, class_type=cim.Breaker, 
                                               name=breaker_name, node1 = node, node2 = feeder_node)
     
-    breaker.AdditionalEquipmentContainer = feeder
+    # breaker.AdditionalEquipmentContainer = substation
     breaker.BaseVoltage = base_voltage_obj
+
     feeder.NormalHeadTerminal = breaker.Terminals[1]
 
     if distributed:
@@ -64,27 +65,24 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
 
         feeder.FeederArea = feeder_area
         breaker.Terminals[1].BoundedSchedulingArea = feeder_area
+        breaker.SubSchedulingArea = feeder_area
         network.add_to_graph(feeder_area)
 
 
     builder.new_discrete(network, equipment=breaker, measurementType='Pos', 
                          terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC)
 
-    meas = builder.new_analog(network, equipment=breaker, measurementType='VA',
+    meas1 = builder.new_analog(network, equipment=breaker, measurementType='VA',
                               terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC,
-                              check_duplicate=False)
-    meas.name = f'NetLoad(MW)_{feeder_name}'
+                              name = f'NetLoad(MW)_{feeder_name}', check_duplicate=False)
 
-    meas = builder.new_analog(network, equipment=breaker, measurementType='VA', 
+    meas2 = builder.new_analog(network, equipment=breaker, measurementType='VA', 
                               terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC,
-                              check_duplicate=False)
-    meas.name = f'ExcessGeneration(MW)_{feeder_name}'
+                              name = f'ExcessGeneration(MW)_{feeder_name}', check_duplicate=False)
 
-    meas = builder.new_analog(network, equipment=breaker, measurementType='VA',
+    meas3 = builder.new_analog(network, equipment=breaker, measurementType='VA',
                               terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC,
-                              check_duplicate=False)
-    meas.name = f'TotalGeneration(MW)_{feeder_name}'
-  
+                              name = f'TotalGeneration(MW)_{feeder_name}', check_duplicate=False)
 
     # create energy consumer
     load = builder.new_one_terminal_object(network, container=feeder, class_type=cim.EnergyConsumer,
@@ -94,11 +92,10 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
     load.BaseVoltage = base_voltage_obj
     if distributed:
             load.SubSchedulingArea = feeder_area
-    # feeder.Equipments.append(load)
-    # builder.new_analog(network, equipment=load, measurementType='PNV')
-    meas = builder.new_analog(network, equipment=load, measurementType='VA', 
-                              terminal=load.Terminals[0], phase=cim.PhaseCode.ABC)
-    meas.name = f'GrossLoad(MW)_{feeder_name}'
+
+    meas4 = builder.new_analog(network, equipment=load, measurementType='VA', 
+                              terminal=load.Terminals[0], phase=cim.PhaseCode.ABC,
+                              name = f'GrossLoad(MW)_{feeder_name}', check_duplicate=False)
 
     # create BTM PV objects
     
@@ -131,11 +128,11 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
         btm_inverter.PowerElectronicsUnit.append(wind_unit)
         network.add_to_graph(wind_unit)
 
-    # builder.new_analog(network, equipment=inverter, measurementType='PNV')
-    meas = builder.new_analog(network, equipment=btm_inverter, measurementType='VA',
+    meas5 = builder.new_analog(network, equipment=btm_inverter, measurementType='VA',
                               terminal=btm_inverter.Terminals[0], phase=cim.PhaseCode.ABC,
                               check_duplicate=False)
-    meas.name = f'BTMGeneration(MW)_{feeder_name}'
+    meas5.name = f'BTMGeneration(MW)_{feeder_name}'
+    network.add_to_graph(meas5)
 
     # create FTM PV objects
     ftm_inverter = builder.new_one_terminal_object(network, container=feeder, class_type=cim.PowerElectronicsConnection,
@@ -165,12 +162,11 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
         ftm_inverter.PowerElectronicsUnit.append(wind_unit)
         network.add_to_graph(wind_unit)
 
-    # feeder.Equipments.append(ftm_inverter)
-    # builder.new_analog(network, equipment=inverter, measurementType='PNV')
-    meas = builder.new_analog(network, equipment=ftm_inverter, measurementType='VA',
+    meas6 = builder.new_analog(network, equipment=ftm_inverter, measurementType='VA',
                               terminal=ftm_inverter.Terminals[0], phase=cim.PhaseCode.ABC,
                               check_duplicate=False)
-    meas.name = f'FTMGeneration(MW)_{feeder_name}'
+    meas6.name = f'FTMGeneration(MW)_{feeder_name}'
+    network.add_to_graph(meas6)
 
     
 

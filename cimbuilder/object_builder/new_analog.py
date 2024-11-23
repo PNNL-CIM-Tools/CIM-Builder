@@ -10,7 +10,7 @@ import cimbuilder.utils as utils
 _log = logging.getLogger(__name__)
 
 def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
-               phase:cim.PhaseCode, measurementType:str, mRID: str = None,
+               phase:cim.PhaseCode, measurementType:str, mRID: str = None, name:str = None,
                check_duplicate = True) -> object:
     cim = network.connection.cim
     meas_exists = False
@@ -37,10 +37,14 @@ def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Termina
     if not meas_exists:
         # Create a new analog for specified terminal
         meas = cim.Analog()
-        name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
+        seed = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}'
         if measurementType != 'SoC':
-            name += f'_{terminal.sequenceNumber}_{phase.value}'
-        meas.uuid(name = name)
+            seed += f'_{terminal.sequenceNumber}_{phase.value}'
+        if name is not None:
+            meas.uuid(name = seed + name)
+            meas.name = name
+        else:
+            meas.uuid(name = seed)
         meas.Terminal = terminal
         meas.PowerSystemResource = equipment
         meas.measurementType = measurementType
