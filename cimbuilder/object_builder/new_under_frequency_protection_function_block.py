@@ -2,9 +2,8 @@ from __future__ import annotations
 import importlib
 import logging
 
-from cimgraph import GraphModel
+from cimgraph.models import GraphModel
 from cimgraph.databases import ConnectionInterface
-from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import cimgraph.data_profile.ufls as cim #TODO: cleaner typying import
 
 from cimbuilder.utils.utils import terminal_to_node
