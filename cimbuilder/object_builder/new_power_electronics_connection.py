@@ -2,9 +2,8 @@ from __future__ import annotations
 import importlib
 import logging
 
-from cimgraph import GraphModel
+from cimgraph.models import GraphModel
 from cimgraph.databases import ConnectionInterface
-from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 from cimbuilder.utils.utils import terminal_to_node
@@ -14,7 +13,7 @@ _log = logging.getLogger(__name__)
 def new_power_electronics_connection(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node:str|cim.ConnectivityNode, p:float = 0, q:float = 0) -> None:
 
-    inverter = cim.PowerElectronicsConnection(name = name, mRID = new_mrid())
+    inverter = cim.PowerElectronicsConnection(name = name)
 
     t1 = cim.Terminal()
     t1.uuid(name=f"{name}_t1")

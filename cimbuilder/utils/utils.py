@@ -3,9 +3,9 @@ import uuid
 import logging
 import importlib
 
-from cimgraph import GraphModel
+from cimgraph.models import GraphModel
 from cimgraph.databases import ConnectionInterface
-from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
+# from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 _log = logging.getLogger(__name__)

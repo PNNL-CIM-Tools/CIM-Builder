@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 
-from cimgraph import GraphModel
+from cimgraph.models import GraphModel
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 import cimbuilder.utils as utils
