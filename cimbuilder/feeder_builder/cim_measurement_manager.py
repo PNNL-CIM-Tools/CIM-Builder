@@ -1,7 +1,10 @@
 import importlib
 import json
 import logging
+import time
+
 from argparse import ArgumentParser
+from copy import deepcopy
 from pathlib import Path
 from random import Random
 from typing import Union
@@ -40,9 +43,15 @@ feederModelmRIDs = {
     # "EPRI_DPV_J1.xml": "67AB291F-DCCD-31B7-B499-338206B9828F", # Fails to load in cimgraph.
 }
 
+class UuidEncoder(json.JSONEncoder):
+    def default(self, obj: object):
+        if isinstance(obj, UUID):
+            return f"{obj}"
+        return json.JSONEncoder.default(self, obj)
+
 class CimMeasurementManager(object):
     def __init__(self, databaseType: str, databaseUrl: str, cimProfile: str, systemModelType: str, 
-                 powergridModelsXmlDirectory: Union[str, Path]):
+                 powergridModelsXmlDirectory: Path, uuidFile: Path):
         if not isinstance(databaseType, str):
             raise TypeError("Argument databaseType must be a str type. The provided value is of type "
                             f"{type(databaseType)}")
@@ -54,9 +63,12 @@ class CimMeasurementManager(object):
         if not isinstance(systemModelType, str):
             raise TypeError("Argument systemModelType must be a str type. The provided value is of type "
                             f"{type(systemModelType)}")
-        if not isinstance(powergridModelsXmlDirectory, str):
-            raise TypeError("Argument powergridModelsXmlDirectory must be a str type. The provided value is of type "
+        if not isinstance(powergridModelsXmlDirectory, Path):
+            raise TypeError("Argument powergridModelsXmlDirectory must be a Path type. The provided value is of type "
                             f"{type(powergridModelsXmlDirectory)}")
+        if not isinstance(uuidFile, Path):
+            raise TypeError("Argument uuidFile must be a Path type. The provided value is of type "
+                            f"{type(uuidFile)}")
         if databaseType not in ["Blazegraph", "GraphDB", "Neo4j", "xml"]:
             raise ValueError(f"Unsupported database type, {databaseType}, specified! Current supported databases "
                              "are: Blazegraph, GraphDB, Neo4j, or xml.")
@@ -67,7 +79,9 @@ class CimMeasurementManager(object):
             raise ValueError(f"Unsupported model type, {systemModelType}, specified! Current supported model types "
                              "are: feeder, or busBranch.")
         global cim
-        self.modelUuids = {}
+        self.databaseUuids = {}
+        self.persistentUuids = []
+        self.persistentUuidFile = None
         self.cimProfile = cimProfile
         self.iec61970301 = 7
         if self.cimProfile == 'cimhub_2023':
@@ -75,8 +89,7 @@ class CimMeasurementManager(object):
         cim = importlib.import_module(f"cimgraph.data_profile.{self.cimProfile}")
         self.dbConnection = self.databaseConnection(databaseType, databaseUrl)
         self.baseXmls = self.loadPowerGridFeederXmlFiles(systemModelType, powergridModelsXmlDirectory)
-        self.populateModelWithMeasurements()
-        self.cleanMrids()
+        self.loadUuidFile(uuidFile)
     
     def databaseConnection(self, dbType: str, dbUrl: str) -> ConnectionInterface:
         dbConnection = None
@@ -117,7 +130,7 @@ class CimMeasurementManager(object):
                                         distributed=False)
         return graphModel
     
-    def loadPowerGridFeederXmlFiles(self, modelType: str, xmlDir: Union[str, Path]) -> dict:
+    def loadPowerGridFeederXmlFiles(self, modelType: str, xmlDir: Path) -> dict:
         if not isinstance(modelType, str):
             raise TypeError(f"Argument modelType must be a str type. The provided value is of type {type(modelType)}")
         if not isinstance(xmlDir, (str, Path)):
@@ -125,10 +138,7 @@ class CimMeasurementManager(object):
         if modelType not in ["feeder", "busBranch"]:
             raise ValueError(f"Unsupported model type, {modelType}, specified! Current supported model types are: "
                              "feeder, or busBranch.")
-        if isinstance(xmlDir, str):
-            xmlPath = Path(xmlDir).resolve()
-        else:
-            xmlPath = xmlDir.resolve()
+        xmlPath = xmlDir.resolve()
         if not xmlPath.is_dir():
             raise ValueError(f"The xml directory provided is not a valid directory! No such directory, {xmlDir}, "
                              "exists.")
@@ -150,33 +160,50 @@ class CimMeasurementManager(object):
                 rv[child.stem]["graphModel"] = self.createGraphModel(modelType, rv[child.stem]["databaseConnection"], 
                                                                      feederModelmRIDs.get(child.name))
                 cimUtils.get_all_data(rv[child.stem]["graphModel"])
+        if not self.persistentUuidFile:
+            self.persistentUuidFile = xmlPath / "persistentUuids.json"
         return rv
     
-    def cleanMrids(self):
-        uniqueMrids = {}
-        for xmlRootName, xmlDict in self.baseXmls.items():
-            for cimClassDict in xmlDict["graphModel"].graph.values():
-                for cimObj in cimClassDict.values():
-                    objId = cimObj.identifier
-                    if objId not in uniqueMrids.keys():
-                        uniqueMrids[objId] = {"object_type": type(cimObj).__name__}
-                    elif not isinstance(cimObj, (cim.GeographicalRegion, cim.SubGeographicalRegion, cim.Substation)):
-                        duplicateData = {"mRID": f"{objId}",
-                                         "class1": uniqueMrids[objId]["object_type"],
-                                         "class2": type(cimObj).__name__}
-                        logger.info(f"Duplicate identifier found!{json.dumps(duplicateData,indent=4, sort_keys=True)}")
-                        rGen = Random(f"{objId}")
-                        while objId in uniqueMrids:
-                            objId = UUID(int=rGen.getrandbits(128), version=4)
-                        cimObj.identifier = objId
-                        if "mRID" in cimObj.__dataclass_fields__:
-                            cimObj.mRID = f"{objId}".upper()
-            xmlFileName = xmlDict["outputDir"] / f"{xmlRootName}.xml"
-            cimUtils.write_xml(xmlDict["graphModel"], xmlFileName)
+    def loadUuidFile(self, uuidFile: Path):
+        if not isinstance(uuidFile, Path):
+            raise TypeError("Argument uuidFile must be a Path type. The provided value is of type "
+                            f"{type(uuidFile)}")
+        if uuidFile.is_file():
+            self.persistentUuidFile = uuidFile
+            with uuidFile.open(mode="r", encoding="utf-8") as fh:
+                self.databaseUuids = json.load(fh)
+        for xmlModel in self.baseXmls.keys():
+            feederMrid = self.baseXmls[xmlModel]["graphModel"].container.mRID
+            if feederMrid not in self.databaseUuids.keys():
+                self.databaseUuids[feederMrid] = {}
+            for cimClass in self.baseXmls[xmlModel]["graphModel"].graph.keys():
+                if cimClass in [cim.Analog, cim.Discrete]:
+                    if cimClass.__name__ not in self.databaseUuids[feederMrid].keys():
+                        self.databaseUuids[feederMrid][cimClass.__name__] = {}
+                    for cimObj in self.baseXmls[xmlModel]["graphModel"].graph[cimClass].values():
+                        self.databaseUuids[cimClass.__name__][cimObj.name] = f"{cimObj.identifier}"
+        for modelDict in self.databaseUuids.values():
+            for cimClassDict in modelDict.values():
+                for cimUuid in cimClassDict.values():
+                    self.persistentUuids.append(UUID(cimUuid))
+
+    def getUuid(self, feederMrid: str, cimClass: str, name: str) -> UUID:
+        rv = None
+        objUuid = self.databaseUuids.get(feederMrid).get(cimClass, {}).get(name)
+        if objUuid:
+            rv = UUID(objUuid)
+        else:
+            uuidGen = Random(name)
+            objUuid = UUID(int=uuidGen.getrandbits(128), version=4)
+            while objUuid in self.persistentUuids:
+                objUuid = UUID(int=uuidGen.getrandbits(128), version=4)
+            rv = objUuid
+        return rv        
 
     def addMeasurement(self, measurementsModel: GraphModel, measurementObject):
         # check to see if measurementObject already exists before adding to graph.
         measurementIsDuplicate = False
+        feederMrid = measurementsModel.container.mRID
         if isinstance(measurementObject, cim.Analog):
             for measurement in measurementsModel.graph.get(cim.Analog, {}).values():
                 if (
@@ -213,24 +240,37 @@ class CimMeasurementManager(object):
         if not measurementIsDuplicate:
             measurementObject.PowerSystemResource.Measurements.append(measurementObject)
             measurementObject.Terminal.Measurements.append(measurementObject)
-            logger.info(f'Adding {measurementObject.__class__.__name__} for '
-                        f'{type(measurementObject.PowerSystemResource).__name__}:'
-                        f'{measurementObject.PowerSystemResource.name}')
+            logger.debug(f'Adding {measurementObject.__class__.__name__} for '
+                         f'{type(measurementObject.PowerSystemResource).__name__}:'
+                         f'{measurementObject.PowerSystemResource.name}')
             measurementsModel.add_to_graph(measurementObject)
+            if measurementObject.identifier not in self.persistentUuids:
+                self.persistentUuids.append(measurementObject.identifier)
+            if type(measurementObject).__name__ not in self.databaseUuids[feederMrid].keys():
+                self.databaseUuids[feederMrid][type(measurementObject).__name__] = {}
+            if measurementObject.name not in self.databaseUuids[feederMrid][type(measurementObject).__name__].keys():
+                self.databaseUuids[feederMrid][type(measurementObject).__name__][measurementObject.name] = \
+                    f"{measurementObject.identifier}"
+            elif f"{measurementObject.identifier}" != \
+                self.databaseUuids[feederMrid][type(measurementObject).__name__][measurementObject.name]:
+                logger.error(f"UUID for measurment {measurementObject.name} changed when it shouldn't have!\n"
+                             f"new UUID:{measurementObject.identifier}\npersistent UUID: "
+                             f"{self.databaseUuids[feederMrid][type(measurementObject).__name__][measurementObject.name]}")
         else:
-            logger.info(f"Duplicate or Redundant measurement.\nType: {measurementObject.measurementType}\nPhases: "
-                        f"{measurementObject.phases.value}\nPowerSystemResource class type: "
-                        f"{type(measurementObject.PowerSystemResource).__name__}\nPowerSystemResource name: "
-                        f"{measurementObject.PowerSystemResource.name}\nConnectivityNode: "
-                        f"{measurementObject.Terminal.ConnectivityNode.name}\nis a duplicate of \nType: "
-                        f"{measurement.measurementType}\nPhases: "
-                        f"{measurement.phases.value}\nPowerSystemResource class type: "
-                        f"{type(measurement.PowerSystemResource).__name__}\nPowerSystemResource name: "
-                        f"{measurement.PowerSystemResource.name}\nConnectivityNode: "
-                        f"{measurement.Terminal.ConnectivityNode.name}")
+            logger.debug(f"Duplicate or Redundant measurement.\nType: {measurementObject.measurementType}\nPhases: "
+                         f"{measurementObject.phases.value}\nPowerSystemResource class type: "
+                         f"{type(measurementObject.PowerSystemResource).__name__}\nPowerSystemResource name: "
+                         f"{measurementObject.PowerSystemResource.name}\nConnectivityNode: "
+                         f"{measurementObject.Terminal.ConnectivityNode.name}\nis a duplicate of \nType: "
+                         f"{measurement.measurementType}\nPhases: "
+                         f"{measurement.phases.value}\nPowerSystemResource class type: "
+                         f"{type(measurement.PowerSystemResource).__name__}\nPowerSystemResource name: "
+                         f"{measurement.PowerSystemResource.name}\nConnectivityNode: "
+                         f"{measurement.Terminal.ConnectivityNode.name}")
 
     def createAnalogMeasurements(self, measurementsModel: GraphModel, cimObject):
         measurementTypes = ["A", "PNV", "VA", "SoC"]
+        modelMrid = measurementsModel.container.mRID
         if isinstance(cimObject, cim.ACLineSegment):
             if cimObject.ACLineSegmentPhases:
                 for acLineSegmentPhase in cimObject.ACLineSegmentPhases:  # don't add current and SoC measurements for lines
@@ -242,12 +282,14 @@ class CimMeasurementManager(object):
                                 continue
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{acLineSegmentPhase.phase.value}"
-                            measurement = cim.Analog(name = name, 
-                                                    PowerSystemResource = cimObject, 
-                                                    Terminal = terminal, 
-                                                    phases = cim.PhaseCode(acLineSegmentPhase.phase.value), 
-                                                    measurementType = measurementType)
-                            measurement.uuid(None, None, None)
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
+                                                     PowerSystemResource = cimObject, 
+                                                     Terminal = terminal, 
+                                                     phases = cim.PhaseCode(acLineSegmentPhase.phase.value), 
+                                                     measurementType = measurementType)
                             self.addMeasurement(measurementsModel, measurement)
             else:
                 phases = [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]
@@ -258,12 +300,14 @@ class CimMeasurementManager(object):
                                 continue
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
-                                                    PowerSystemResource = cimObject, 
-                                                    Terminal = terminal, 
-                                                    phases = phase, 
-                                                    measurementType = measurementType)
-                            measurement.uuid(None, None, None)
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
+                                                     PowerSystemResource = cimObject, 
+                                                     Terminal = terminal, 
+                                                     phases = phase, 
+                                                     measurementType = measurementType)
                             self.addMeasurement(measurementsModel, measurement)
         elif isinstance(cimObject, cim.Switch) and not isinstance(cimObject, cim.Cut):
             if cimObject.SwitchPhase:
@@ -275,12 +319,14 @@ class CimMeasurementManager(object):
                             phase = cim.PhaseCode(getattr(switchPhase, f"phaseSide{terminal.sequenceNumber}").value)
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = terminal, 
                                                      phases = phase, 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
             else:
                 for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -290,12 +336,14 @@ class CimMeasurementManager(object):
                                 continue
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = terminal, 
                                                      phases = cim.PhaseCode(phase), 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
         elif isinstance(cimObject, cim.EnergyConsumer):
             if cimObject.EnergyConsumerPhase:
@@ -304,12 +352,14 @@ class CimMeasurementManager(object):
                         for terminal in cimObject.Terminals:
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{energyConsumerPhase.phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = terminal, 
                                                      phases = cim.PhaseCode(energyConsumerPhase.phase.value), 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
             else:
                 for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -317,12 +367,14 @@ class CimMeasurementManager(object):
                         for terminal in cimObject.Terminals:
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = terminal, 
                                                      phases = phase, 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)                            
         elif isinstance(cimObject, cim.PowerElectronicsConnection):
             for powerElectronicsUnit in cimObject.PowerElectronicsUnit:
@@ -334,12 +386,14 @@ class CimMeasurementManager(object):
                                     phase = cim.PhaseCode(powerElectronicsConnectionPhase.phase.value)
                                     name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_" 
                                     name += f"{terminal.sequenceNumber}_{phase.value}"
-                                    measurement = cim.Analog(name = name, 
+                                    objUuid = self.getUuid(modelMrid, "Analog", name)
+                                    measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                             mRID = f"{objUuid}",
+                                                             name = name, 
                                                              PowerSystemResource = cimObject, 
                                                              Terminal = terminal, 
                                                              phases = phase, 
                                                              measurementType = measurementType)
-                                    measurement.uuid(None, None, None)
                                     self.addMeasurement(measurementsModel, measurement) 
                     else:
                         for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -347,13 +401,15 @@ class CimMeasurementManager(object):
                                 for terminal in cimObject.Terminals:
                                     name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                                     name += f"{terminal.sequenceNumber}_{phase.value}"
-                                    measurement = cim.Analog(name = name, 
+                                    objUuid = self.getUuid(modelMrid, "Analog", name)
+                                    measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                             mRID = f"{objUuid}",
+                                                             name = name, 
                                                              PowerSystemResource = cimObject, 
                                                              Terminal = terminal, 
                                                              phases = phase, 
                                                              measurementType = measurementType)
-                                    measurement.uuid(None, None, None)
-                                    self.addMeasurement(measurementsModel, measurement) 
+                                    self.addMeasurement(measurementsModel, measurement)
                 elif isinstance(powerElectronicsUnit, cim.BatteryUnit):
                     if cimObject.PowerElectronicsConnectionPhases:
                         for powerElectronicsConnectionPhase in cimObject.PowerElectronicsConnectionPhases:
@@ -362,12 +418,14 @@ class CimMeasurementManager(object):
                                     phase = cim.PhaseCode(powerElectronicsConnectionPhase.phase.value)
                                     name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                                     name += f"{terminal.sequenceNumber}_{phase.value}"
-                                    measurement = cim.Analog(name = name, 
+                                    objUuid = self.getUuid(modelMrid, "Analog", name)
+                                    measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                             mRID = f"{objUuid}",
+                                                             name = name, 
                                                              PowerSystemResource = cimObject, 
                                                              Terminal = terminal, 
                                                              phases = phase, 
                                                              measurementType = measurementType)
-                                    measurement.uuid(None, None, None)
                                     self.addMeasurement(measurementsModel, measurement) 
                     else:
                         for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -375,21 +433,25 @@ class CimMeasurementManager(object):
                                 for terminal in cimObject.Terminals:
                                     name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                                     name += f"{terminal.sequenceNumber}_{phase.value}"
-                                    measurement = cim.Analog(name = name, 
+                                    objUuid = self.getUuid(modelMrid, "Analog", name)
+                                    measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                             mRID = f"{objUuid}",
+                                                             name = name, 
                                                              PowerSystemResource = cimObject, 
                                                              Terminal = terminal, 
                                                              phases = phase, 
                                                              measurementType = measurementType)
-                                    measurement.uuid(None, None, None)
                                     self.addMeasurement(measurementsModel, measurement) 
                     for terminal in cimObject.Terminals:
                         name = f"{cimObject.__class__.__name__}_{cimObject.name}_SoC"
-                        measurement = cim.Analog(name = name, 
+                        objUuid = self.getUuid(modelMrid, "Analog", name)
+                        measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                 mRID = f"{objUuid}",
+                                                 name = name, 
                                                  PowerSystemResource = cimObject, 
                                                  Terminal = terminal, 
                                                  phases = cim.PhaseCode.none, 
                                                  measurementType = "SoC")
-                        measurement.uuid(None, None, None)
                         self.addMeasurement(measurementsModel, measurement) 
         elif isinstance(cimObject, cim.SynchronousMachine):
             for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:  # CIM standard for SynchronousMachines assume transmission level so three phase only at this point.
@@ -397,12 +459,14 @@ class CimMeasurementManager(object):
                     for terminal in cimObject.Terminals:
                         name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                         name += f"{terminal.sequenceNumber}_{phase.value}"
-                        measurement = cim.Analog(name = name, 
+                        objUuid = self.getUuid(modelMrid, "Analog", name)
+                        measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                 mRID = f"{objUuid}",
+                                                 name = name, 
                                                  PowerSystemResource = cimObject, 
                                                  Terminal = terminal, 
                                                  phases = phase, 
                                                  measurementType = measurementType)
-                        measurement.uuid(None, None, None)
                         self.addMeasurement(measurementsModel, measurement)
         elif isinstance(cimObject, cim.PowerTransformer):
             for transformerTank in cimObject.TransformerTanks:
@@ -421,32 +485,38 @@ class CimMeasurementManager(object):
                             if "A" in phases:
                                 name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                                 name += f"{transformerTankEnd.Terminal.sequenceNumber}_A"
-                                measurement = cim.Analog(name = name, 
+                                objUuid = self.getUuid(modelMrid, "Analog", name)
+                                measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                         mRID = f"{objUuid}",
+                                                         name = name, 
                                                          PowerSystemResource = cimObject, 
                                                          Terminal = transformerTankEnd.Terminal, 
                                                          phases = cim.PhaseCode.A, 
                                                          measurementType = measurementType)
-                                measurement.uuid(None, None, None)
                                 self.addMeasurement(measurementsModel, measurement)
                             if "B" in phases:
                                 name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                                 name += f"{transformerTankEnd.Terminal.sequenceNumber}_B"
-                                measurement = cim.Analog(name = name, 
+                                objUuid = self.getUuid(modelMrid, "Analog", name)
+                                measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                         mRID = f"{objUuid}",
+                                                         name = name, 
                                                          PowerSystemResource = cimObject, 
                                                          Terminal = transformerTankEnd.Terminal, 
                                                          phases = cim.PhaseCode.B, 
                                                          measurementType = measurementType)
-                                measurement.uuid(None, None, None)
                                 self.addMeasurement(measurementsModel, measurement)
                             if "C" in phases:
                                 name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                                 name += f"{transformerTankEnd.Terminal.sequenceNumber}_C"
-                                measurement = cim.Analog(name = name, 
+                                objUuid = self.getUuid(modelMrid, "Analog", name)
+                                measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                         mRID = f"{objUuid}",
+                                                         name = name, 
                                                          PowerSystemResource = cimObject, 
                                                          Terminal = transformerTankEnd.Terminal, 
                                                          phases = cim.PhaseCode.C, 
                                                          measurementType = measurementType)
-                                measurement.uuid(None, None, None)
                                 self.addMeasurement(measurementsModel, measurement)
             for powerTransformerEnd in cimObject.PowerTransformerEnd:
                 for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -458,12 +528,14 @@ class CimMeasurementManager(object):
                         ):
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{powerTransformerEnd.Terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = powerTransformerEnd.Terminal, 
                                                      phases = phase, 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
         elif isinstance(cimObject, cim.LinearShuntCompensator):
             if cimObject.ShuntCompensatorPhase:
@@ -473,12 +545,14 @@ class CimMeasurementManager(object):
                         for terminal in cimObject.Terminals:
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = terminal, 
                                                      phases = phase, 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
             else:
                 for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -486,17 +560,20 @@ class CimMeasurementManager(object):
                         for terminal in cimObject.Terminals:
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_{measurementType}_"
                             name += f"{terminal.sequenceNumber}_{phase.value}"
-                            measurement = cim.Analog(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Analog", name)
+                            measurement = cim.Analog(identifier = deepcopy(objUuid),
+                                                     mRID = f"{objUuid}",
+                                                     name = name, 
                                                      PowerSystemResource = cimObject, 
                                                      Terminal = terminal, 
                                                      phases = phase, 
                                                      measurementType = measurementType)
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
         else:
-            logger.warn(f'cimObject is of an unhandled cim object type. Type: {type(cimObject).__name__}')
+            logger.warning(f'cimObject is of an unhandled cim object type. Type: {type(cimObject).__name__}')
 
     def createDiscreteMeasurements(self, measurementsModel: GraphModel, cimObject):
+        modelMrid = measurementsModel.container.mRID
         if isinstance(cimObject, cim.Switch) and not isinstance(cimObject, cim.Cut):
             if cimObject.SwitchPhase:
                 for switchPhase in cimObject.SwitchPhase:
@@ -505,12 +582,14 @@ class CimMeasurementManager(object):
                         if int(terminal.sequenceNumber) == 1:
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_Pos_{terminal.sequenceNumber}_"
                             name += f"{phase.value}"
-                            measurement = cim.Discrete(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Discrete", name)
+                            measurement = cim.Discrete(identifier = deepcopy(objUuid),
+                                                       mRID = f"{objUuid}",
+                                                       name = name, 
                                                        PowerSystemResource = cimObject, 
                                                        Terminal = terminal, 
                                                        phases = phase, 
                                                        measurementType = "Pos")
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
             else:
                 for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
@@ -518,12 +597,14 @@ class CimMeasurementManager(object):
                         if int(terminal.sequenceNumber) == 1:
                             name = f"{cimObject.__class__.__name__}_{cimObject.name}_Pos_{terminal.sequenceNumber}_"
                             name += f"{phase.value}"
-                            measurement = cim.Discrete(name = name, 
+                            objUuid = self.getUuid(modelMrid, "Discrete", name)
+                            measurement = cim.Discrete(identifier = deepcopy(objUuid),
+                                                       mRID = f"{objUuid}",
+                                                       name = name, 
                                                        PowerSystemResource = cimObject, 
                                                        Terminal = terminal, 
                                                        phases = phase, 
                                                        measurementType = "Pos")
-                            measurement.uuid(None, None, None)
                             self.addMeasurement(measurementsModel, measurement)
         elif isinstance(cimObject, cim.LinearShuntCompensator):
             if cimObject.ShuntCompensatorPhase:
@@ -532,24 +613,28 @@ class CimMeasurementManager(object):
                     for terminal in cimObject.Terminals:
                         name = f"{cimObject.__class__.__name__}_{cimObject.name}_Pos_{terminal.sequenceNumber}_"
                         name += f"{phase.value}"
-                        measurement = cim.Discrete(name = name, 
+                        objUuid = self.getUuid(modelMrid, "Discrete", name)
+                        measurement = cim.Discrete(identifier = deepcopy(objUuid),
+                                                   mRID = f"{objUuid}",
+                                                   name = name, 
                                                    PowerSystemResource = cimObject, 
                                                    Terminal = terminal, 
                                                    phases = phase, 
                                                    measurementType = "Pos")
-                        measurement.uuid(None, None, None)
                         self.addMeasurement(measurementsModel, measurement)
             else:
                 for phase in [cim.PhaseCode.A, cim.PhaseCode.B, cim.PhaseCode.C]:
                     for terminal in cimObject.Terminals:
                         name = f"{cimObject.__class__.__name__}_{cimObject.name}_Pos_{terminal.sequenceNumber}_"
                         name += f"{phase.value}"
-                        measurement = cim.Discrete(name = name, 
+                        objUuid = self.getUuid(modelMrid, "Discrete", name)
+                        measurement = cim.Discrete(identifier = deepcopy(objUuid),
+                                                   mRID = f"{objUuid}",
+                                                   name = name, 
                                                    PowerSystemResource = cimObject, 
                                                    Terminal = terminal, 
                                                    phases = phase, 
                                                    measurementType = "Pos")
-                        measurement.uuid(None, None, None)
                         self.addMeasurement(measurementsModel, measurement)
         elif isinstance(cimObject, cim.PowerTransformer):
             regulatorEnds = []
@@ -566,91 +651,33 @@ class CimMeasurementManager(object):
                     for phase in phases:
                         name = f"RatioTapChanger_{cimObject.name}_Pos_{regEnd.Terminal.sequenceNumber}_"
                         name += f"{phase.value}"
-                        measurement = cim.Discrete(name = name, 
+                        objUuid = self.getUuid(modelMrid, "Discrete", name)
+                        measurement = cim.Discrete(identifier = deepcopy(objUuid),
+                                                   mRID = f"{objUuid}",
+                                                   name = name, 
                                                    PowerSystemResource = cimObject, 
                                                    Terminal = regEnd.Terminal, 
                                                    phases = phase, 
                                                    measurementType = "Pos")
-                        measurement.uuid(None, None, None)
                         self.addMeasurement(measurementsModel, measurement)
                 else:
                     if regEnd.orderedPhases not in [cim.OrderedPhaseCodeKind.A, cim.OrderedPhaseCodeKind.AN, 
                                                     cim.OrderedPhaseCodeKind.B, cim.OrderedPhaseCodeKind.BN, 
                                                     cim.OrderedPhaseCodeKind.C, cim.OrderedPhaseCodeKind.CN]:
-                        logger.info(f"non Y configured regulator found!\nPowerTransformer: {cimObject.name}\n"
-                                    f"TransformerEnd:{regEnd.name}\nTransformerEndPhase:{regEnd.orderedPhases}")
+                        logger.debug(f"non Y configured regulator found!\nPowerTransformer: {cimObject.name}\n"
+                                     f"TransformerEnd:{regEnd.name}\nTransformerEndPhase:{regEnd.orderedPhases}")
                     phases = cim.PhaseCode(regEnd.orderedPhases.value.replace("N",""))
                     name = f"RatioTapChanger_{cimObject.name}_Pos_{regEnd.Terminal.sequenceNumber}_"
                     name += f"{phases.value}"
-                    measurement = cim.Discrete(name = name, 
+                    objUuid = self.getUuid(modelMrid, "Discrete", name)
+                    measurement = cim.Discrete(identifier = deepcopy(objUuid),
+                                               mRID = f"{objUuid}",
+                                               name = name, 
                                                PowerSystemResource = cimObject, 
                                                Terminal = regEnd.Terminal, 
                                                phases = phases, 
                                                measurementType = "Pos")
-                    measurement.uuid(None, None, None)
                     self.addMeasurement(measurementsModel, measurement)
-    
-    def cleanErroneousMeasurements(self, graphModel: GraphModel):
-        logger.info("Cleaning up duplicate and erroneous measurements.")
-        erroneousMeasurements = {'count': 0, 'measurements': []}
-        cleanMeasurements = []
-        measurementDict = {}
-        measurementDict.update(graphModel.graph.get(cim.Analog, {}))
-        measurementDict.update(graphModel.graph.get(cim.Discrete, {}))
-        # Flag erroneous measurements first.
-        for i in measurementDict.keys():
-            measurement = measurementDict[i]
-            if (
-                isinstance(measurement.PowerSystemResource, cim.PowerTransformer) and
-                measurement.measurementType in ["A", "VA"] and
-                (measurement.phases in [cim.PhaseCode.s1, cim.PhaseCode.s12, cim.PhaseCode.s12N, 
-                                        cim.PhaseCode.s1N, cim.PhaseCode.s2, cim.PhaseCode.s2N] or
-                int(measurement.Terminal.sequenceNumber) != 1)
-            ):
-                logger.info(f"Erroneous measurement found!\nEquipment: {measurement.PowerSystemResource.name}\n"
-                            f"Equipment Type: {type(measurement.PowerSystemResource).__name__}\nPhase: "
-                            f"{measurement.phases.value}\nMeasurement Type: {measurement.measurementType}\n"
-                            f"Terminal: {measurement.Terminal.name}")
-                erroneousMeasurements['count'] += 1
-                if measurement not in erroneousMeasurements['measurements']:
-                    erroneousMeasurements['measurements'].append(measurement)
-            else:
-                isDuplicateMeasurement = False
-                for cleanMeasurement in cleanMeasurements:
-                    if (
-                        measurement.measurementType == cleanMeasurement.measurementType and
-                        measurement.phases == cleanMeasurement.phases and
-                        measurement.PowerSystemResource.identifier == cleanMeasurement.PowerSystemResource.identifier 
-                        and
-                        measurement.Terminal.ConnectivityNode.identifier == 
-                        cleanMeasurement.Terminal.ConnectivityNode.identifier
-                    ):
-                        isDuplicateMeasurement = True
-                        erroneousMeasurements['count'] += 1
-                        if measurement not in erroneousMeasurements['measurements']:
-                            erroneousMeasurements['measurements'].append(measurement)
-                        break
-                if not isDuplicateMeasurement and measurement not in cleanMeasurements:
-                    cleanMeasurements.append(measurement)
-                else:
-                    logger.info(f"Duplicate measurement found!\nEquipment: {measurement.PowerSystemResource.name}\n"
-                                f"Equipment Type: {type(measurement.PowerSystemResource).__name__}\nPhase: "
-                                f"{measurement.phases.value}\nMeasurement Type: {measurement.measurementType}")
-        if erroneousMeasurements['count'] > 0:
-            logger.info(f'{erroneousMeasurements["count"]} erroneous measurements were found in the model. Removing them.')
-        for measurement in erroneousMeasurements['measurements']:
-            graphMeasurement = None
-            if isinstance(measurement, cim.Analog):
-                graphMeasurement = graphModel.graph.get(cim.Analog, {}).get(measurement.identifier)
-            elif isinstance(measurement, cim.Discrete):
-                graphMeasurement = graphModel.graph.get(cim.Discrete, {}).get(measurement.identifier)
-            if graphMeasurement is not None:
-                graphMeasurement.PowerSystemResource.Measurements.remove(graphMeasurement)
-                graphMeasurement.Terminal.Measurements.remove(graphMeasurement)
-                try:
-                    del graphModel.graph[cim.Analog][measurement.identifier]
-                except KeyError:
-                    del graphModel.graph[cim.Discrete][measurement.identifier]
 
     def catalogExistingMeasurements(self, graphModel: GraphModel):
         measurementsDict = {'count': 0}
@@ -687,12 +714,12 @@ class CimMeasurementManager(object):
         logger.info(f"Measurements Info:{json.dumps(measurementsDict, indent=4, sort_keys=True)}")     
     
     def populateModelWithMeasurements(self):
-        for xmlRootName, xmlDict in self.baseXmls.items():
+        for xmlDict in self.baseXmls.values():
             logger.info(f"Creating measurements for feeder {xmlDict['graphModel'].container.mRID}.")
             measurementsModel = xmlDict["graphModel"]
             for cimClass in [cim.LinearShuntCompensator, cim.EnergyConsumer, cim.SynchronousMachine,
-                            cim.PowerElectronicsConnection, cim.PowerTransformer, cim.ACLineSegment, cim.LoadBreakSwitch,
-                            cim.Breaker, cim.Recloser]:
+                             cim.PowerElectronicsConnection, cim.PowerTransformer, cim.ACLineSegment,
+                             cim.LoadBreakSwitch, cim.Breaker, cim.Recloser]:
                 for cimObject in xmlDict["graphModel"].graph.get(cimClass, {}).values():
                     if len(cimObject.Measurements) == 0:
                         self.createAnalogMeasurements(measurementsModel, cimObject)
@@ -701,11 +728,26 @@ class CimMeasurementManager(object):
                             self.createDiscreteMeasurements(measurementsModel, cimObject)
             self.catalogExistingMeasurements(measurementsModel)
             logger.info(f"Finished creating measurements for feeder {xmlDict['graphModel'].container.mRID}.")
+
+    def exportXmls(self):
+        for xmlRootName, xmlDict in self.baseXmls.items():
+            xmlFileName = xmlDict["outputDir"] / f"{xmlRootName}.xml"
+            cimUtils.write_xml(xmlDict["graphModel"], xmlFileName)
+        with self.persistentUuidFile.open(mode="w", encoding="utf-8") as fh:
+            json.dump(self.databaseUuids, fh, cls=UuidEncoder, indent=4, sort_keys=True)
             
 
-def main(database: str, databaseUrl: str, cimProfile: str, systemModelType: str, powergridModelsXmlDirectory: str):
+def main(database: str, databaseUrl: str, cimProfile: str, systemModelType: str, powergridModelsXmlDirectory: str, 
+         uuidFile: str):
+    t0 = time.time()
     cimMeasurementManager = CimMeasurementManager(database, databaseUrl, cimProfile, systemModelType,
-                                                  powergridModelsXmlDirectory)
+                                                  Path(powergridModelsXmlDirectory), Path(uuidFile))
+    t1 = time.time()
+    cimMeasurementManager.populateModelWithMeasurements()
+    t2 = time.time()
+    logger.info(f"Time to initialize all models: {t1 - t0}")
+    logger.info(f"Time to add all measurements: {t2 - t1}")
+    cimMeasurementManager.exportXmls()
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -717,6 +759,8 @@ if __name__ == "__main__":
     helpStr = "This should be the directory containing the xml files of the feeders from the PowergridModels "
     helpStr += "repository"
     parser.add_argument("powergrid_models_xml_directory", help=helpStr)
+    parser.add_argument("uuid_file", nargs='?', default="persistentUuids.json",
+                        help="The json file containing uuids contained in the database")
     args = parser.parse_args()
     main(args.database, args.database_url, args.cim_profile, args.system_model_type,
-         args.powergrid_models_xml_directory)    
+         args.powergrid_models_xml_directory, args.uuid_file)    

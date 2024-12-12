@@ -9,9 +9,9 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<4.0"
-cim-graph = { git = "https://github.com/PNNL-CIM-Tools/CIM-Graph.git", branch = "feature/68"}
+python = ">=3.10,<4.0"
 gridappsd-python = "^2024.6.0"
+cim-graph = {version = "^0.1.6a0", allow-prereleases = true}
 
 
 [tool.poetry.group.dev.dependencies]
