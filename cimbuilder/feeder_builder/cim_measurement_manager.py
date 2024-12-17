@@ -33,7 +33,7 @@ feederModelmRIDs = {
     "IEEE13_Assets.xml": "5B816B93-7A5F-B64C-8460-47C17D6E4B0F",
     "IEEE13_OCHRE.xml": "13AD8E07-3BF9-A4E2-CB8F-C3722F837B62",
     "IEEE9500bal.xml": "EE71F6C9-56F0-4167-A14E-7F4C71F10EAA",
-    # "IEEE8500.xml": "4F76A5F9-271D-9EB8-5E31-AA362D86F2C3", # Outdated do not use
+    "IEEE8500.xml": "4F76A5F9-271D-9EB8-5E31-AA362D86F2C3",
     # "IEEE8500_3subs.xml": "AAE94E4A-2465-6F5E-37B1-3E72183A4E44", # Outdated do not use
     # "ieee123apps.xml": "F49D1288-9EC6-47DB-8769-57E2B6EDB124", # appears to be created using rc4 profile.
     # "IEEE37.xml": "49003F52-A359-C2EA-10C4-F4ED3FD368CC", # Fails to load in cimgraph.
