@@ -16,20 +16,18 @@ class SingleBusSubstation():
     network:GraphModel = field(default=None)
     name:str = field(default='new_single_bus_sub')
     base_voltage:int|cim.BaseVoltage = field(default=115000)
-    substation: cim.Substation = field(default=None)
+    total_sections:int = field(default = 4)
 
     def __post_init__(self):
-
-        self.cim = utils.get_cim_profile(self.connection)  # Import CIM profile
+        self.total_sections = int(self.total_sections)
+        self.cim = utils.get_cim_profile(self.connection) # Import CIM profile
 
         # Create new substation class
-        if not self.substation:
-            self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
-
+        self.substation = self.cim.Substation(mRID = utils.new_mrid(), name=self.name)
+        
         # If no network defined, create substation as a DistributedArea
         if not self.network:
             self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
-            
         self.network.add_to_graph(self.substation)
         
         # If base voltage not defined, create a new BaseVoltage object
