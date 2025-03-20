@@ -1,12 +1,15 @@
 from __future__ import annotations
-import uuid
+from random import Random
+from uuid import UUID, uuid4
 import logging
 import importlib
+import json
 
 from cimgraph import GraphModel
 from cimgraph.databases import ConnectionInterface
 from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
+
 
 _log = logging.getLogger(__name__)
 
@@ -15,8 +18,13 @@ def get_cim_profile(connection:ConnectionInterface) -> type:
     cim = importlib.import_module(f'cimgraph.data_profile.{cim_profile}')
     return cim
 
-def new_mrid():
-    mRID = str(uuid.uuid4())
+def new_mrid(class_type:type = cim.IdentifiedObject, name:str = None) -> str:
+    if name:
+        seedStr = f"{class_type.__name__}:{name}"
+        randomGenerator = Random(seedStr)
+        mRID = str(UUID(int=randomGenerator.getrandbits(128), version=4))
+    else:
+        mRID = str(uuid4())
     return mRID
 
 def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.ConnectivityNode):
@@ -49,3 +57,34 @@ def get_base_voltage(network:GraphModel, base_voltage:int|cim.BaseVoltage) -> ci
         base_voltage_obj = base_voltage
 
     return base_voltage_obj
+
+
+def catalog_parser(catalog_file, network):
+    file = open(catalog_file)
+    catalog = json.load(file)
+    data = catalog['catalog']
+    cim = get_cim_profile(network.connection) # Import CIM profile
+    obj = item_parser(data, network, cim)
+    file.close()
+    return obj
+
+def item_parser(data, network, cim):
+    class_type = edge_class = eval(f'cim.{data["@type"]}')
+    obj = class_type()
+    setattr(obj, 'mRID', new_mrid())
+    network.add_to_graph(obj)
+
+    for attribute in data:
+        if type(data[attribute]) == str:
+            if attribute in class_type.__dataclass_fields__:
+                setattr(obj, attribute, data[attribute])
+            # else:
+            #     _log.warning(f'Attribute {attribute} not found')
+        elif type(data[attribute]) == list:
+            if attribute in class_type.__dataclass_fields__:
+                values = getattr(obj, attribute)
+                for item in data[attribute]:
+                    value = item_parser(item, network, cim)
+                    values.append(value)
+                setattr(obj, attribute, values)
+    return obj

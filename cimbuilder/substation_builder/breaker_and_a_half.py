@@ -17,17 +17,22 @@ class BreakerAndHalfSubstation:
     name:str = field(default='new_breaker_and_half_bus_sub')
     base_voltage:int|cim.BaseVoltage = field(default=115000)
     total_bus_ties:int = field(default=2)
+    substation: cim.Substation = field(default=None)
 
     def __post_init__(self):
+
         self.cim = utils.get_cim_profile(self.connection)  # Import CIM profile
 
         # Create new substation class
-        self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
+        if not self.substation:
+            self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
 
         # If no network defined, create substation as a DistributedArea
         if not self.network:
             self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
+            
         self.network.add_to_graph(self.substation)
+
         # If base voltage not defined, create a new BaseVoltage object
         self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
 
