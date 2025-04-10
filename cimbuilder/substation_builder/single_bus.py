@@ -18,7 +18,7 @@ class SingleBusSubstation():
     base_voltage:int|cim.BaseVoltage = field(default=115000)
     total_sections:int = field(default = 4)
 
-    def __post_init__(self):
+    def __post_init__(self):                                    
         self.total_sections = int(self.total_sections)
         self.cim = utils.get_cim_profile(self.connection) # Import CIM profile
 
