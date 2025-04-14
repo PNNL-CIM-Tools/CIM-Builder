@@ -1,7 +1,8 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-
+from typing import Type
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface
+from cimgraph.databases import ConnectionInterface, get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim  # TODO: cleaner typing import
 
 import cimbuilder.object_builder as object_builder
@@ -21,11 +22,13 @@ class RingBusSubstation():
     total_sections: int = field(default=4)
 
     def __post_init__(self):
+        cim_profile, cim_module = get_cim_profile()
+        self.cim:cim = cim_module
+
         self.total_sections = int(self.total_sections)
-        self.cim = utils.get_cim_profile(self.connection)  # Import CIM profile
 
         # Create new substation class
-        self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
+        self.substation = self.cim.Substation(name=self.name)
 
         # If no network defined, create substation as a DistributedArea
         if not self.network:
@@ -36,7 +39,7 @@ class RingBusSubstation():
 
         # Create bus sections
         for section in range(self.total_sections):
-            bus = self.cim.ConnectivityNode(name=f'{self.name}_bus_{section + 1}', mRID=utils.new_mrid())
+            bus = self.cim.ConnectivityNode(name=f'{self.name}_bus_{section + 1}')
             bus.ConnectivityNodeContainer = self.substation
             self.network.add_to_graph(bus)
             object_builder.new_bus_bar_section(self.network, bus)
@@ -54,9 +57,9 @@ class RingBusSubstation():
 
     def new_bus_tie(self, from_bus, to_bus, series_number):
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', mRID=utils.new_mrid(),
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1',
                                          ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2', mRID=utils.new_mrid(),
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2',
                                          ConnectivityNodeContainer=self.substation)
 
         bus_tie = object_builder.new_breaker(self.network, self.substation, name=f'{self.name}_{series_number}',
@@ -80,7 +83,7 @@ class RingBusSubstation():
 
         bus_name = f'{self.name}_bus_{bus_number}'
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{bus_number}_j1', mRID=utils.new_mrid(),
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{bus_number}_j1', 
                                          ConnectivityNodeContainer=self.substation)
         airgap1 = object_builder.new_disconnector(self.network, self.substation,
                                                   name=f'{self.substation.name}_d{bus_number}', node1=bus_name,
@@ -99,10 +102,10 @@ class RingBusSubstation():
         # If sourcebus of feeder not specified, look for something named sourcebus
         if not sourcebus:
             found = False
-            feeder_network.get_all_edges(cim.EnergySource)
-            feeder_network.get_all_edges(cim.Terminal)
-            feeder_network.get_all_edges(cim.ConnectivityNode)
-            for source in feeder_network.graph[cim.EnergySource].values():
+            feeder_network.get_all_edges(self.cim.EnergySource)
+            feeder_network.get_all_edges(self.cim.Terminal)
+            feeder_network.get_all_edges(self.cim.ConnectivityNode)
+            for source in feeder_network.graph[self.cim.EnergySource].values():
                 if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
                     sourcebus = source.Terminals[0].ConnectivityNode
                     found = True

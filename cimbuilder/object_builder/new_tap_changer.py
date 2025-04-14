@@ -2,9 +2,8 @@ from __future__ import annotations
 import importlib
 import logging
 
-from cimgraph import GraphModel
-from cimgraph.databases import ConnectionInterface
-from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
+from cimgraph.models import GraphModel 
+from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 from cimbuilder.utils.utils import terminal_to_node
@@ -14,15 +13,17 @@ _log = logging.getLogger(__name__)
 def new_regulator(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node:str|cim.ConnectivityNode, highStep:float = 0, lowStep:float = 0, initialDelay:float = 0) -> None:
 
-    transmission_line = cim.TapChanger(name = name, mRID = new_mrid())
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
 
-    t1 = cim.Terminal(name=f"{name}_t1", mRID = new_mrid(), sequenceNumber=1)
+    regulator = cim.RatioTapChanger(name = name)
+
+    t1 = cim.Terminal(name=f"{name}_t1", sequenceNumber=1)
     
     t1.ConductingEquipment = regulator
 
     terminal_to_node(network, t1, node)
 
-    regulator.EquipmentContainer = container
     regulator.highStep = highStep
     regulator.lowStep = lowStep
     regulator.initialDelay = initialDelay

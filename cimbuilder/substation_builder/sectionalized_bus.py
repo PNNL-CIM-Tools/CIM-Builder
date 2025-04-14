@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface
+from cimgraph.databases import ConnectionInterface, get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 import cimbuilder.object_builder as object_builder
@@ -20,8 +20,9 @@ class SectionalizedBusSubstation:
 
     def __post_init__(self):
         self.total_sections = int(self.total_sections)
-        self.cim = utils.get_cim_profile(self.connection)  # Import CIM profile
+        cim_profile, self.cim = get_cim_profile()
 
+        
         # Create new substation class
         self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
        
@@ -105,9 +106,9 @@ class SectionalizedBusSubstation:
             if not found:
                 _log.error(f'Could not find sourcebus for {feeder.name}')
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j1', mRID=utils.new_mrid(),
+        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j1', 
                                          ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j2', mRID=utils.new_mrid(),
+        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j2',
                                          ConnectivityNodeContainer=self.substation)
         #junction3 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j3', mRID=utils.new_mrid(),
         #                                 ConnectivityNodeContainer=self.substation)

@@ -1,7 +1,8 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface
+from cimgraph.databases import ConnectionInterface, get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 import cimbuilder.object_builder as object_builder
@@ -19,7 +20,8 @@ class BreakerAndHalfSubstation:
     total_bus_ties:int = field(default=2)
 
     def __post_init__(self):
-        self.cim = utils.get_cim_profile(self.connection)  # Import CIM profile
+        cim_profile, cim_module = get_cim_profile()
+        self.cim:cim = cim_module
 
         # Create new substation class
         self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
@@ -59,7 +61,7 @@ class BreakerAndHalfSubstation:
 
         for i in range(number_of_junctions):
             junctions.append(cim.ConnectivityNode(name=f'{self.substation.name}_{tie_number}_bt_j{i + 1}',
-                                                mRID=utils.new_mrid(), ConnectivityNodeContainer=self.substation))
+                                                 ConnectivityNodeContainer=self.substation))
 
         tie_number = 10*tie_number
 
@@ -121,7 +123,6 @@ class BreakerAndHalfSubstation:
             jcn_num = 1
 
         junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{branch_number}_j{jcn_num}',
-                                         mRID=utils.new_mrid(),
                                          ConnectivityNodeContainer=self.substation)
         airgap1 = object_builder.new_disconnector(self.network, self.substation,
                                                   name=f'{self.substation.name}_{10 * branch_number}', node1=jcn_name,
@@ -153,10 +154,10 @@ class BreakerAndHalfSubstation:
         # If sourcebus of feeder not specified, look for something named sourcebus
         if not sourcebus:
             found = False
-            feeder_network.get_all_edges(cim.EnergySource)
-            feeder_network.get_all_edges(cim.Terminal)
-            feeder_network.get_all_edges(cim.ConnectivityNode)
-            for source in feeder_network.graph[cim.EnergySource].values():
+            feeder_network.get_all_edges(self.cim.EnergySource)
+            feeder_network.get_all_edges(self.cim.Terminal)
+            feeder_network.get_all_edges(self.cim.ConnectivityNode)
+            for source in feeder_network.graph[self.cim.EnergySource].values():
                 if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
                     sourcebus = source.Terminals[0].ConnectivityNode
                     found = True
