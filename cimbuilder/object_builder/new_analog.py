@@ -1,18 +1,17 @@
 from __future__ import annotations
-import importlib
-import logging
 
 from cimgraph.models import GraphModel
-import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
+from cimgraph.databases import get_cim_profile
+import cimgraph.data_profile.cimhub_2023 as cim
 
-import cimbuilder.utils as utils
-
+import logging
 _log = logging.getLogger(__name__)
 
 def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
                phase:cim.PhaseCode, measurementType:str, mRID: str = None, name:str = None,
                check_duplicate = True) -> object:
-    cim = network.connection.cim
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
     meas_exists = False
     if measurementType == 'PNV' and not isinstance(equipment, 
                                                    (cim.EnergyConsumer, cim.PowerElectronicsConnection, 
@@ -52,16 +51,17 @@ def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Termina
         equipment.Measurements.append(meas)
         terminal.Measurements.append(meas)
         network.add_to_graph(meas)
-        # _log.warning(meas.name)
+
     return meas
 
-def create_all_analog(network:GraphModel, equipment:object, measurementType:str) -> object:
+def create_all_analog(network:GraphModel, equipment:cim.ConductingEquipment, measurementType:str) -> object:
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
     counter = 1
     meas_list = []
     for terminal in equipment.Terminals:
         # Create a new analog for each terminal
-        meas = cim.Analog(mRID = utils.new_mrid())
-        meas.name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}_{counter}'
+        meas = cim.Analog(name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}_{counter}')
         meas.Terminal = terminal
         meas.PowerSystemResource = equipment
         meas.measurementType = measurementType

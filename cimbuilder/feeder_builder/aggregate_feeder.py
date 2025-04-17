@@ -2,6 +2,7 @@ from __future__ import annotations
 import logging
 
 from cimgraph.models import GraphModel
+from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_ufls as cim #TODO: cleaner typying import
 
 import cimbuilder.object_builder as builder
@@ -14,7 +15,8 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
                          node:cim.ConnectivityNode|str, base_voltage:cim.BaseVoltage|float,
                          total_load_kw:float=0, total_load_kvar:float=0, total_btm_pv_kw:float=0, total_ftm_pv_kw:float=0,
                          total_btm_wind_kw:float=0, total_ftm_wind_kw:float=0, distributed = True) -> tuple[cim.Feeder, cim.EnergyConsumer, cim.Breaker]:
-    cim = network.connection.cim
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
     # get base voltage
     if base_voltage.__class__ == float or base_voltage.__class__ == int:
         # If numeric value given, search graph for a matching BaseVoltage object
@@ -174,4 +176,5 @@ def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, 
         
 
     return feeder, load, breaker
+
 

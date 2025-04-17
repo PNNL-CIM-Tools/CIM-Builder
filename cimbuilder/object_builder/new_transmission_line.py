@@ -1,23 +1,23 @@
 from __future__ import annotations
-import importlib
 import logging
 
-from cimgraph import GraphModel
-from cimgraph.databases import ConnectionInterface
-from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
+from cimgraph.models import GraphModel
+from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
-from cimbuilder.utils.utils import terminal_to_node
+from cimbuilder.utils import terminal_to_node
 
 _log = logging.getLogger(__name__)
 
 def new_transmission_line(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node:str|cim.ConnectivityNode, length:float = 0, r:float = 0, x:float = 0, bch:float = 0, r0:float = 0, x0:float = 0, bch0:float = 0) -> None:
 
-    transmission_line = cim.ACLineSegment(name = name, mRID = new_mrid())
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
+    transmission_line = cim.ACLineSegment(name = name)
 
-    t1 = cim.Terminal(name=f"{name}_t1", mRID = new_mrid(), sequenceNumber=1)
-    t2 = cim.Terminal(name=f"{name}_t2", mRID = new_mrid(), sequenceNumber=1)
+    t1 = cim.Terminal(name=f"{name}_t1", sequenceNumber=1)
+    t2 = cim.Terminal(name=f"{name}_t2", sequenceNumber=2)
     t1.ConductingEquipment = transmission_line 
     t2.ConductingEquipment = transmission_line 
     terminal_to_node(network, t1, node)
