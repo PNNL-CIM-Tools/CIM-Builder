@@ -21,8 +21,8 @@ class SectionalizedBusSubstation(SubstationBuilder):
 
     def __post_init__(self):
         self.total_sections = int(self.total_sections)
-        cim_profile, self.cim = get_cim_profile()
-
+        cim_profile, cim_module = get_cim_profile()
+        self.cim:cim = cim_module
         
         # Create new substation class
         self.substation = self.cim.Substation(name=self.name)
@@ -36,7 +36,7 @@ class SectionalizedBusSubstation(SubstationBuilder):
 
         # Create bus sections
         for section in range(self.total_sections):
-            bus = self.cim.ConnectivityNode(name=f'{self.name}_bus_{section + 1}', mRID=utils.new_mrid())
+            bus = self.cim.ConnectivityNode(name=f'{self.name}_bus_{section + 1}')
             bus.ConnectivityNodeContainer = self.substation
             self.network.add_to_graph(bus)
             object_builder.new_bus_bar_section(self.network, bus)
@@ -50,12 +50,20 @@ class SectionalizedBusSubstation(SubstationBuilder):
         return self.network
 
     def new_bus_tie(self, from_bus, to_bus, series_number):
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_bt_j1', mRID=utils.new_mrid(), ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_bt_j2', mRID=utils.new_mrid(), ConnectivityNodeContainer=self.substation)
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_bt_j1',
+                                          ConnectivityNodeContainer=self.substation)
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_bt_j2',
+                                          ConnectivityNodeContainer=self.substation)
 
-        bus_tie = object_builder.new_breaker(self.network, self.substation, name=f'{self.name}_bt_{series_number}', node1=junction1, node2=junction2)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name=f'{self.name}_bt_{series_number + 1}', node1=from_bus, node2=junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name=f'{self.name}_bt_{series_number + 2}', node1=junction2, node2=to_bus)
+        bus_tie = object_builder.new_breaker(self.network, self.substation,
+                                              name=f'{self.name}_bt_{series_number}',
+                                                node1=junction1, node2=junction2)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation,
+                                                   name=f'{self.name}_bt_{series_number + 1}',
+                                                     node1=from_bus, node2=junction1)
+        airgap2 = object_builder.new_disconnector(self.network, self.substation,
+                                                   name=f'{self.name}_bt_{series_number + 2}',
+                                                     node1=junction2, node2=to_bus)
 
         bus_tie.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
@@ -67,11 +75,11 @@ class SectionalizedBusSubstation(SubstationBuilder):
     def new_branch(self, section_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
         section_name = f'{self.name}_bus_{section_number}'
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j1', mRID=utils.new_mrid(),
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j1',
                                          ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j2', mRID=utils.new_mrid(),
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j2',
                                          ConnectivityNodeContainer=self.substation)
-        junction3 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j3', mRID=utils.new_mrid(),
+        junction3 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j3',
                                          ConnectivityNodeContainer=self.substation)
 
         breaker = object_builder.new_breaker(self.network, self.substation, name=f'{self.substation.name}_{10*section_number}', node1=junction1, node2=junction2)
@@ -82,7 +90,7 @@ class SectionalizedBusSubstation(SubstationBuilder):
         airgap1.BaseVoltage = self.base_voltage
         airgap2.BaseVoltage = self.base_voltage
 
-        if type(branch_terminal) == cim.Terminal:
+        if type(branch_terminal) == self.cim.Terminal:
             branch_terminal.ConnectivityNode = junction3
 
         self.network.add_to_graph(junction1)
@@ -92,15 +100,15 @@ class SectionalizedBusSubstation(SubstationBuilder):
     def new_feeder(self, section_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
                    sourcebus: cim.ConnectivityNode = None) -> None:
 
-        feeder_network.get_all_edges(cim.Feeder)
+        feeder_network.get_all_edges(self.cim.Feeder)
         section_name = f'{self.name}_bus_{section_number}'
         # If sourcebus of feeder not specified, look for something named sourcebus
         if not sourcebus:
             found = False
-            feeder_network.get_all_edges(cim.EnergySource)
-            feeder_network.get_all_edges(cim.Terminal)
-            feeder_network.get_all_edges(cim.ConnectivityNode)
-            for source in feeder_network.graph[cim.EnergySource].values():
+            feeder_network.get_all_edges(self.cim.EnergySource)
+            feeder_network.get_all_edges(self.cim.Terminal)
+            feeder_network.get_all_edges(self.cim.ConnectivityNode)
+            for source in feeder_network.graph[self.cim.EnergySource].values():
                 if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
                     sourcebus = source.Terminals[0].ConnectivityNode
                     found = True
@@ -111,19 +119,23 @@ class SectionalizedBusSubstation(SubstationBuilder):
                                          ConnectivityNodeContainer=self.substation)
         junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j2',
                                          ConnectivityNodeContainer=self.substation)
-        #junction3 = cim.ConnectivityNode(name=f'{self.substation.name}_{section_number}_j3', mRID=utils.new_mrid(),
-        #                                 ConnectivityNodeContainer=self.substation)
 
-        breaker = object_builder.new_breaker(self.network, self.substation, name=f'{self.substation.name}_{10*section_number}', node1=junction1, node2=junction2)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name=f'{self.substation.name}_{10*section_number+1}', node1=section_name, node2=junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name=f'{self.substation.name}_{10*section_number+2}', node1=junction2, node2=sourcebus)
+
+        breaker = object_builder.new_breaker(self.network, self.substation,
+                                              name=f'{self.substation.name}_{10*section_number}',
+                                                node1=junction1, node2=junction2)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation,
+                                                   name=f'{self.substation.name}_{10*section_number+1}',
+                                                     node1=section_name, node2=junction1)
+        airgap2 = object_builder.new_disconnector(self.network, self.substation,
+                                                   name=f'{self.substation.name}_{10*section_number+2}',
+                                                     node1=junction2, node2=sourcebus)
 
         breaker.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
         airgap2.BaseVoltage = self.base_voltage
 
         feeder.NormalEnergizingSubstation = self.substation
-        sourcebus.AdditionalEquipmentContainer = self.substation
         self.substation.NormalEnergizedFeeder.append(feeder)
 
         self.network.add_to_graph(junction1)

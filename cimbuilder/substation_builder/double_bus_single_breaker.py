@@ -5,6 +5,7 @@ from cimgraph.models import GraphModel, DistributedArea
 from cimgraph.databases import ConnectionInterface, get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
+from cimbuilder.substation_builder.substation_builder import SubstationBuilder
 import cimbuilder.object_builder as object_builder
 import cimbuilder.utils as utils
 
@@ -12,9 +13,7 @@ import logging
 _log = logging.getLogger(__name__)
 
 @dataclass
-class DoubleBusSingleBreakerSubstation():
-    connection:ConnectionInterface
-    network:GraphModel = field(default=None)
+class DoubleBusSingleBreakerSubstation(SubstationBuilder):
     name:str = field(default='new_main_transfer_sub')
     base_voltage:int|cim.BaseVoltage = field(default=115000)
     
@@ -52,8 +51,8 @@ class DoubleBusSingleBreakerSubstation():
 
     def new_bus_tie(self):
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_bt_j1', ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_bt_j2', ConnectivityNodeContainer=self.substation)
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_bt_j1', ConnectivityNodeContainer=self.substation)
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_bt_j2', ConnectivityNodeContainer=self.substation)
         airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_bt1', node1 = self.north_bus, node2 = junction1)
         airgap1.BaseVoltage = self.base_voltage
         bus_tie = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_bus_tie', node1 = junction1, node2 = junction2)
@@ -63,17 +62,17 @@ class DoubleBusSingleBreakerSubstation():
         self.network.add_to_graph(junction1)
         self.network.add_to_graph(junction2)
         
-    def new_branch(self, series_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
+    def new_branch(self, breaker_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
 
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', ConnectivityNodeContainer=self.substation)
-        junction2 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2', ConnectivityNodeContainer=self.substation)
-        junction3 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j3', ConnectivityNodeContainer=self.substation)
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j1', ConnectivityNodeContainer=self.substation)
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j2', ConnectivityNodeContainer=self.substation)
+        junction3 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j3', ConnectivityNodeContainer=self.substation)
 
-        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{series_number}', node1 = junction1, node2 = junction2)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+1}', node1 = self.north_bus, node2 = junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+2}', node1 = junction2, node2 = junction3)
-        airgap3 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+3}', node1 = junction3, node2 = self.south_bus)
+        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{breaker_number}', node1 = junction1, node2 = junction2)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+1}', node1 = self.north_bus, node2 = junction1)
+        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+2}', node1 = junction2, node2 = junction3)
+        airgap3 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+3}', node1 = junction3, node2 = self.south_bus)
 
         breaker.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
@@ -88,7 +87,7 @@ class DoubleBusSingleBreakerSubstation():
         self.network.add_to_graph(junction3)
 
         
-    def new_feeder(self, series_number:int, feeder_network:GraphModel, feeder:cim.Feeder, 
+    def new_feeder(self, breaker_number:int, feeder_network:GraphModel, feeder:cim.Feeder, 
                             sourcebus:cim.ConnectivityNode=None) -> None:
         
 
@@ -97,9 +96,9 @@ class DoubleBusSingleBreakerSubstation():
         # If sourcebus of feeder not specified, look for something named sourcebus
         if not sourcebus: 
             found = False
-            feeder_network.get_all_edges(cim.EnergySource)
-            feeder_network.get_all_edges(cim.Terminal)
-            feeder_network.get_all_edges(cim.ConnectivityNode)
+            feeder_network.get_all_edges(self.cim.EnergySource)
+            feeder_network.get_all_edges(self.cim.Terminal)
+            feeder_network.get_all_edges(self.cim.ConnectivityNode)
             for source in feeder_network.graph[cim.EnergySource].values():
                 if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
                     sourcebus = source.Terminals[0].ConnectivityNode
@@ -107,16 +106,16 @@ class DoubleBusSingleBreakerSubstation():
             if not found:
                 _log.error(f'Could not find sourcebus for {feeder.name}')
 
-        junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1', ConnectivityNodeContainer=self.substation)
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j1', ConnectivityNodeContainer=self.substation)
         
-        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{series_number}', node1 = junction1, node2 = sourcebus)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+1}', node1 = self.north_bus, node2 = junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{series_number+2}', node1 = junction1, node2 = self.south_bus)
+        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{breaker_number}', node1 = junction1, node2 = sourcebus)
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+1}', node1 = self.north_bus, node2 = junction1)
+        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+2}', node1 = junction1, node2 = self.south_bus)
                 
         breaker.BaseVoltage = self.base_voltage
         airgap1.BaseVoltage = self.base_voltage
         airgap2.BaseVoltage = self.base_voltage
-        if series_number % 2 == 0:
+        if breaker_number % 2 == 0:
             airgap1.open = True
             airgap1.normalOpen = True
         else:

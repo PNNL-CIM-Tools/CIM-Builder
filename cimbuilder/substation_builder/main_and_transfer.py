@@ -151,7 +151,7 @@ class MainAndTransferSubstation(SubstationBuilder):
         airgap3.BaseVoltage = self.base_voltage
         
         # Connect branch terminal to junction3
-        if type(branch_terminal) == cim.Terminal:
+        if type(branch_terminal) == self.cim.Terminal:
             branch_terminal.ConnectivityNode = junction3
         elif type(branch_terminal) == int:
             branch_terminal = branch_equipment.Terminals[branch_terminal]
@@ -185,7 +185,7 @@ class MainAndTransferSubstation(SubstationBuilder):
             feeder_network.get_all_edges(self.cim.EnergySource)
             feeder_network.get_all_edges(self.cim.Terminal)
             feeder_network.get_all_edges(self.cim.ConnectivityNode)
-            for source in feeder_network.graph[cim.EnergySource].values():
+            for source in feeder_network.graph[self.cim.EnergySource].values():
                 if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
                     sourcebus = source.Terminals[0].ConnectivityNode
                     found = True

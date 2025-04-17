@@ -2,9 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Type
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface, get_cim_profile
-import cimgraph.data_profile.cimhub_2023 as cim  # TODO: cleaner typing import
-
+from cimgraph.databases import get_cim_profile
+import cimgraph.data_profile.cimhub_2023 as cim  
+from cimbuilder.substation_builder.substation_builder import SubstationBuilder
 import cimbuilder.object_builder as object_builder
 import cimbuilder.utils as utils
 
@@ -14,9 +14,7 @@ _log = logging.getLogger(__name__)
 
 
 @dataclass
-class RingBusSubstation():
-    connection: ConnectionInterface
-    network: GraphModel = field(default=None)
+class RingBusSubstation(SubstationBuilder):
     name: str = field(default='new_ring_bus_sub')
     base_voltage: int | cim.BaseVoltage = field(default=115000)
     total_sections: int = field(default=4)
@@ -97,7 +95,7 @@ class RingBusSubstation():
     def new_feeder(self, bus_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
                             sourcebus: cim.ConnectivityNode = None) -> None:
 
-        feeder_network.get_all_edges(cim.Feeder)
+        feeder_network.get_all_edges(self.cim.Feeder)
 
         # If sourcebus of feeder not specified, look for something named sourcebus
         if not sourcebus:
@@ -120,7 +118,6 @@ class RingBusSubstation():
         airgap1.BaseVoltage = self.base_voltage
 
         feeder.NormalEnergizingSubstation = self.substation
-        sourcebus.AdditionalEquipmentContainer = self.substation
         self.substation.NormalEnergizedFeeder.append(feeder)
 
 

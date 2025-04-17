@@ -19,8 +19,8 @@ def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.Con
         node.Terminals.append(terminal)
 
 def get_base_voltage(network:GraphModel, base_voltage:int|cim.BaseVoltage) -> cim.BaseVoltage:
-    cim_profile, cim = get_cim_profile() # Import CIM profile
-
+    cim_profile, cim_module = get_cim_profile() # Import CIM profile
+    cim:cim = cim_module
     if base_voltage.__class__ == float or base_voltage.__class__ == int:
         # If numeric value given, search graph for a matching BaseVoltage object
         found = False
