@@ -3,7 +3,7 @@ import importlib
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import ConnectionInterface
+from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 from cimbuilder.utils.utils import terminal_to_node
@@ -12,7 +12,10 @@ _log = logging.getLogger(__name__)
 
 def new_power_electronics_connection(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node:str|cim.ConnectivityNode, p:float = 0, q:float = 0) -> None:
-
+    
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
+    
     inverter = cim.PowerElectronicsConnection(name = name)
 
     t1 = cim.Terminal()

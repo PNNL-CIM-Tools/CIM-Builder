@@ -3,6 +3,7 @@ import importlib
 import logging
 
 from cimgraph.models import GraphModel
+from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 import cimbuilder.utils as utils
@@ -12,7 +13,9 @@ _log = logging.getLogger(__name__)
 def new_one_terminal_object(network:GraphModel, container:cim.EquipmentContainer, class_type:type,
                              name:str, node:str|cim.ConnectivityNode) -> object:
 
-    cim = network.connection.cim
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
+
     new_object = class_type()
     new_object.uuid(name = name)
 
