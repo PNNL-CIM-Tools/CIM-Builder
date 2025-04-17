@@ -24,7 +24,7 @@ def new_discrete(network:GraphModel, equipment:cim.Equipment, terminal:cim.ACDCT
                 break
     meas = None
     if not meas_exists:
-        terminal = equipment.Terminals[0]
+
         # Create a new discrete for each terminal
         name = f'{equipment.__class__.__name__}_{equipment.name}_{measurementType}_{terminal.sequenceNumber}_'
         name += f'{phase.value}'

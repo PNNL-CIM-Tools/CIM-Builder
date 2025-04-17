@@ -4,14 +4,15 @@ from cimgraph.models import GraphModel, DistributedArea
 from cimgraph.databases import ConnectionInterface, get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
-import cimbuilder.object_builder as object_builder
+from cimbuilder.substation_builder.substation_builder import SubstationBuilder
+from cimbuilder import object_builder
 import cimbuilder.utils as utils
 
 import logging
 _log = logging.getLogger(__name__)
 
 @dataclass()
-class SectionalizedBusSubstation:
+class SectionalizedBusSubstation(SubstationBuilder):
     connection:ConnectionInterface
     network:GraphModel = field(default=None)
     name:str = field(default='new_sectionalized_bus_sub')
@@ -24,7 +25,7 @@ class SectionalizedBusSubstation:
 
         
         # Create new substation class
-        self.substation = self.cim.Substation(mRID=utils.new_mrid(), name=self.name)
+        self.substation = self.cim.Substation(name=self.name)
        
         # If no network defined, create substation as a DistributedArea
         if not self.network:
