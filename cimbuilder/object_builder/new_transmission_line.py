@@ -10,7 +10,7 @@ from cimbuilder.utils import terminal_to_node
 _log = logging.getLogger(__name__)
 
 def new_transmission_line(network:GraphModel, container:cim.EquipmentContainer, name:str, 
-                node:str|cim.ConnectivityNode, length:float = 0, r:float = 0, x:float = 0, bch:float = 0, r0:float = 0, x0:float = 0, bch0:float = 0) -> None:
+                node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode, length:float = 0, r:float = 0, x:float = 0, bch:float = 0, r0:float = 0, x0:float = 0, bch0:float = 0) -> None:
 
     cim_profile, cim_module = get_cim_profile()
     cim:cim = cim_module
