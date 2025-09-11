@@ -1,0 +1,26 @@
+Class,Instance ID,Attribute,Value,Change Type
+PowerTransformer,urn:uuid:47c74577-2d87-4ee9-ab61-d20d25f656c2,PowerTransformer.vectorGroup,Yy,ADDED
+PowerTransformer,urn:uuid:47c74577-2d87-4ee9-ab61-d20d25f656c2,IdentifiedObject.mRID,47c74577-2d87-4ee9-ab61-d20d25f656c2,ADDED
+PowerTransformer,urn:uuid:47c74577-2d87-4ee9-ab61-d20d25f656c2,IdentifiedObject.name,hvmv69_12,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,PowerTransformerEnd.phaseAngleClock,0,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,PowerTransformerEnd.connectionKind,WindingConnection.Y,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,PowerTransformerEnd.r,0.052092802,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,PowerTransformerEnd.ratedS,20000000,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,PowerTransformerEnd.ratedU,12470,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,TransformerEnd.endNumber,2,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,TransformerEnd.grounded,true,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,TransformerEnd.rground,0,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,TransformerEnd.xground,0,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,IdentifiedObject.mRID,a88d224f-3e99-462d-bf96-a2fbc4eea709,ADDED
+PowerTransformerEnd,urn:uuid:a88d224f-3e99-462d-bf96-a2fbc4eea709,IdentifiedObject.name,hvmv69_12_End_2,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,PowerTransformerEnd.phaseAngleClock,0,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,PowerTransformerEnd.connectionKind,WindingConnection.Y,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,PowerTransformerEnd.r,1.594935,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,PowerTransformerEnd.ratedS,20000000,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,PowerTransformerEnd.ratedU,69000,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,TransformerEnd.endNumber,1,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,TransformerEnd.grounded,true,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,TransformerEnd.rground,0,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,TransformerEnd.xground,0,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,IdentifiedObject.mRID,f205635c-e668-46ab-b9bf-42e64346aab3,ADDED
+PowerTransformerEnd,urn:uuid:f205635c-e668-46ab-b9bf-42e64346aab3,IdentifiedObject.name,hvmv69_12_End_1,ADDED

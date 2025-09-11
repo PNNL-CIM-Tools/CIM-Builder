@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- un-comment this line to enable validation
+-->
+<rdf:RDF xmlns:cim="http://iec.ch/TC57/CIM100#" xmlns:eu="http://iec.ch/TC57/CIM100-European#" xmlns:nc="http://entsoe.eu/ns/nc#" xmlns:gb="http://GB/placeholder/ext#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:gad="http://gridappsd.org/CIM/extension#">
+<!--
+-->
+<cim:Pole rdf:about="urn:uuid:496a16fd-27c8-45dd-91fe-fd0146c64801">
+  <cim:Structure.height>12.191999999999998 meter</cim:Structure.height>
+  <cim:IdentifiedObject.mRID>496a16fd-27c8-45dd-91fe-fd0146c64801</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.11P_pole_info</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>496a16fd-27c8-45dd-91fe-fd0146c64801</cim:Identity.identifier>
+</cim:Pole>
+<cim:WireAssemblyInfo rdf:about="urn:uuid:63f55b32-2606-4d94-b144-60826467f8c9">
+  <cim:IdentifiedObject.mRID>63f55b32-2606-4d94-b144-60826467f8c9</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.11P</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>63f55b32-2606-4d94-b144-60826467f8c9</cim:Identity.identifier>
+</cim:WireAssemblyInfo>
+<cim:WirePosition rdf:about="urn:uuid:089e04f2-7116-49f5-ab40-b7385592352b">
+  <cim:WirePosition.sequenceNumber>2</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>1.1176 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:54edea3e-5f37-4a05-98ed-ed7eb961494b"/>
+  <cim:IdentifiedObject.mRID>089e04f2-7116-49f5-ab40-b7385592352b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.11P_neutral_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>089e04f2-7116-49f5-ab40-b7385592352b</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WirePosition rdf:about="urn:uuid:b268fda0-61f9-47d2-9c4a-7f724d359b65">
+  <cim:WirePosition.sequenceNumber>1</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>-1.1176 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:54edea3e-5f37-4a05-98ed-ed7eb961494b"/>
+  <cim:IdentifiedObject.mRID>b268fda0-61f9-47d2-9c4a-7f724d359b65</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.11P_phs_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b268fda0-61f9-47d2-9c4a-7f724d359b65</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WireSpacingInfo rdf:about="urn:uuid:54edea3e-5f37-4a05-98ed-ed7eb961494b">
+  <cim:IdentifiedObject.mRID>54edea3e-5f37-4a05-98ed-ed7eb961494b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.11P_spacing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>54edea3e-5f37-4a05-98ed-ed7eb961494b</cim:Identity.identifier>
+</cim:WireSpacingInfo>
+</rdf:RDF>
