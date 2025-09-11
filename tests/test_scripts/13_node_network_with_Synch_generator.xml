@@ -1424,19 +1424,12 @@
   <cim:IdentifiedObject.mRID>2128BB42-3E2D-490A-A29D-05549E81F25D</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>house_T1</cim:IdentifiedObject.name>
 </cim:Terminal>
-<cim:Terminal rdf:about="urn:uuid:d7d0213e-bd8d-4deb-97eb-d865430d34fc">
-  <cim:Terminal.ConductingEquipment rdf:resource="urn:uuid:c28cb297-e83c-449a-adf8-9cc34ad52e60"/>
-  <cim:Terminal.ConnectivityNode rdf:resource="urn:uuid:0124E881-B82D-4206-BBDF-37D585159872"/>
-  <cim:ACDCTerminal.sequenceNumber>1</cim:ACDCTerminal.sequenceNumber>
-  <cim:IdentifiedObject.mRID>d7d0213e-bd8d-4deb-97eb-d865430d34fc</cim:IdentifiedObject.mRID>
-  <cim:IdentifiedObject.name>Breaker_645_646_t1</cim:IdentifiedObject.name>
-</cim:Terminal>
-<cim:Terminal rdf:about="urn:uuid:aaf2b358-d7ff-499c-9223-d0a33c284b13">
-  <cim:Terminal.ConductingEquipment rdf:resource="urn:uuid:c28cb297-e83c-449a-adf8-9cc34ad52e60"/>
+<cim:Terminal rdf:about="urn:uuid:256910d1-c13d-4173-a18f-fda7f0c3af73">
+  <cim:Terminal.ConductingEquipment rdf:resource="urn:uuid:73d5289b-c6ae-402e-9d07-7fcb98a5a44e"/>
   <cim:Terminal.ConnectivityNode rdf:resource="urn:uuid:8C58660F-C62C-4903-BE72-22F1255B1E62"/>
-  <cim:ACDCTerminal.sequenceNumber>2</cim:ACDCTerminal.sequenceNumber>
-  <cim:IdentifiedObject.mRID>aaf2b358-d7ff-499c-9223-d0a33c284b13</cim:IdentifiedObject.mRID>
-  <cim:IdentifiedObject.name>Breaker_645_646_t2</cim:IdentifiedObject.name>
+  <cim:ACDCTerminal.sequenceNumber>1</cim:ACDCTerminal.sequenceNumber>
+  <cim:IdentifiedObject.mRID>256910d1-c13d-4173-a18f-fda7f0c3af73</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>diesel_generator_synchr_1_t1</cim:IdentifiedObject.name>
 </cim:Terminal>
 <cim:PositionPoint rdf:about="urn:uuid:05F2AFBD-33EC-4FD0-9AB6-AEF3DA2EA417">
   <cim:PositionPoint.sequenceNumber>1</cim:PositionPoint.sequenceNumber>
@@ -3030,14 +3023,6 @@
   <cim:IdentifiedObject.mRID>52DE9189-20DC-4C73-BDEE-E960FE1F9493</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>brkr1</cim:IdentifiedObject.name>
 </cim:Breaker>
-<cim:Breaker rdf:about="urn:uuid:c28cb297-e83c-449a-adf8-9cc34ad52e60">
-  <cim:Switch.normalOpen>False</cim:Switch.normalOpen>
-  <cim:Switch.open>False</cim:Switch.open>
-  <cim:Switch.retained>True</cim:Switch.retained>
-  <cim:Equipment.EquipmentContainer rdf:resource="urn:uuid:49AD8E07-3BF9-A4E2-CB8F-C3722F837B62"/>
-  <cim:IdentifiedObject.mRID>c28cb297-e83c-449a-adf8-9cc34ad52e60</cim:IdentifiedObject.mRID>
-  <cim:IdentifiedObject.name>Breaker_645_646</cim:IdentifiedObject.name>
-</cim:Breaker>
 <cim:Fuse rdf:about="urn:uuid:43EF8365-F932-409B-A51E-FBED3F6DFFAA">
   <cim:Switch.normalOpen>False</cim:Switch.normalOpen>
   <cim:Switch.open>False</cim:Switch.open>
@@ -3939,4 +3924,13 @@
   <cim:IdentifiedObject.mRID>056A706E-3E64-4B20-8CD5-BD29CEADEF7B</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>OpLimI_400.0_600.0_Emerg</cim:IdentifiedObject.name>
 </cim:CurrentLimit>
+<cim:SynchronousMachine rdf:about="urn:uuid:73d5289b-c6ae-402e-9d07-7fcb98a5a44e">
+  <cim:RotatingMachine.p>200</cim:RotatingMachine.p>
+  <cim:RotatingMachine.q>35</cim:RotatingMachine.q>
+  <cim:RotatingMachine.ratedS>250</cim:RotatingMachine.ratedS>
+  <cim:RotatingMachine.ratedU>38</cim:RotatingMachine.ratedU>
+  <cim:Equipment.EquipmentContainer rdf:resource="urn:uuid:49AD8E07-3BF9-A4E2-CB8F-C3722F837B62"/>
+  <cim:IdentifiedObject.mRID>73d5289b-c6ae-402e-9d07-7fcb98a5a44e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>diesel_generator_synchr_1</cim:IdentifiedObject.name>
+</cim:SynchronousMachine>
 </rdf:RDF>
