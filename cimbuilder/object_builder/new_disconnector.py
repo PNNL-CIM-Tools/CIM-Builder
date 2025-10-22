@@ -1,7 +1,8 @@
 from __future__ import annotations
 import logging
 
-from cimgraph import GraphModel
+from cimgraph.models import GraphModel
+from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 import cimbuilder.utils as utils
@@ -10,9 +11,16 @@ def new_disconnector(network:GraphModel, container:cim.EquipmentContainer, name:
                 node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode,
                 open:bool=False, normalOpen:bool=False, retained:bool=False) -> cim.Disconnector:
 
-    disconnector = cim.Disconnector(name = name, mRID = utils.new_mrid())
-    t1 = cim.Terminal(name=f"{name}_t1", mRID = utils.new_mrid(), sequenceNumber=1)
-    t2 = cim.Terminal(name=f"{name}_t2", mRID = utils.new_mrid(), sequenceNumber=2)
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
+
+    disconnector = cim.Disconnector(name = name)
+    t1 = cim.Terminal()
+    t1.uuid(name=f"{name}_t1")
+    t1.sequenceNumber=1
+    t2 = cim.Terminal()
+    t1.uuid(name=f"{name}_t2")
+    t2.sequenceNumber=2
 
     utils.terminal_to_node(network, t1, node1)
     utils.terminal_to_node(network, t2, node2)

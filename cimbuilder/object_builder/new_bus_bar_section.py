@@ -2,19 +2,23 @@ from __future__ import annotations
 import importlib
 import logging
 
-from cimgraph import GraphModel
-import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
+from cimgraph.models import GraphModel
+from cimgraph.databases import get_cim_profile
+import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
-import cimbuilder.utils as utils
+
 
 _log = logging.getLogger(__name__)
 
 def new_bus_bar_section(network:GraphModel, node:cim.ConnectivityNode) -> cim.BusbarSection:
-    busbar = cim.BusbarSection(mRID=utils.new_mrid())
+    cim_profile, cim_module = get_cim_profile()
+    cim:cim = cim_module
+    
+    busbar = cim.BusbarSection()
     busbar.name = node.name
     busbar.EquipmentContainer = node.ConnectivityNodeContainer
     
-    terminal = cim.Terminal(mRID = utils.new_mrid())
+    terminal = cim.Terminal()
     terminal.name = node.name + 'busbar_t1'
     terminal.ConnectivityNode = node
     terminal.ConductingEquipment = busbar
