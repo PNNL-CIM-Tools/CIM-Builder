@@ -1,0 +1,1449 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- un-comment this line to enable validation
+-->
+<rdf:RDF xmlns:cim="http://iec.ch/TC57/CIM100#" xmlns:eu="http://iec.ch/TC57/CIM100-European#" xmlns:nc="http://entsoe.eu/ns/nc#" xmlns:gb="http://GB/placeholder/ext#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:gad="http://gridappsd.org/CIM/extension#">
+<!--
+-->
+<cim:OverheadWireInfo rdf:about="urn:uuid:02591368-ca8a-4cbe-96e5-063410d31aff">
+  <cim:WireInfo.sizeDescription>336.4</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0017360899999999998 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0002050524934383202 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0086868 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>519.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00016732283464566928 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>02591368-ca8a-4cbe-96e5-063410d31aff</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Merlin</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>02591368-ca8a-4cbe-96e5-063410d31aff</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:0496c3c4-fd59-47d6-bad2-9fddda479a76">
+  <cim:WireInfo.rAC75>0.0004133858267716535 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0058928 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>331.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00033792650918635167 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>0496c3c4-fd59-47d6-bad2-9fddda479a76</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Phlox</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>0496c3c4-fd59-47d6-bad2-9fddda479a76</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:05b457d0-b5dd-4d17-bef4-3bd66e21d957">
+  <cim:WireInfo.rAC75>0.00015485564304461942 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0097663 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>616.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00012598425196850391 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>05b457d0-b5dd-4d17-bef4-3bd66e21d957</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Goldentuft</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>05b457d0-b5dd-4d17-bef4-3bd66e21d957</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:08efaa8f-5654-4271-8473-833c634ae8d7">
+  <cim:WireInfo.sizeDescription>1.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00149987 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0008792650918635171 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0044957999999999994 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>212.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0006594488188976378 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>08efaa8f-5654-4271-8473-833c634ae8d7</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Robin</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>08efaa8f-5654-4271-8473-833c634ae8d7</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:0ba627d1-9eb0-46c0-bba4-e564cf70b4cd">
+  <cim:WireInfo.sizeDescription>6.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00083947 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0026443569553805777 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0025146 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>105.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0021030183727034123 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>0ba627d1-9eb0-46c0-bba4-e564cf70b4cd</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Turkey</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>0ba627d1-9eb0-46c0-bba4-e564cf70b4cd</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:0c4a7c6f-4862-46bd-9799-6c7a855945e5">
+  <cim:WireInfo.sizeDescription>101.8</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00350901 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0008179133858267717 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0058547 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>234.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0005193569553805774 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>0c4a7c6f-4862-46bd-9799-6c7a855945e5</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Petrel</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>0c4a7c6f-4862-46bd-9799-6c7a855945e5</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:0df8580f-4a74-42af-9713-548b581ce8f6">
+  <cim:WireInfo.rAC75>0.000145997375328084 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0100965 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>639.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011876640419947507 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>0df8580f-4a74-42af-9713-548b581ce8f6</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Syringa</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>0df8580f-4a74-42af-9713-548b581ce8f6</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:0e8697a4-62eb-4a01-bb07-6c0984f65295">
+  <cim:WireInfo.sizeDescription>954</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>7.119422572178478e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0050634899999999995 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1859.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.708661417322834e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>0e8697a4-62eb-4a01-bb07-6c0984f65295</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Redbird</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>0e8697a4-62eb-4a01-bb07-6c0984f65295</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:0f646c1c-3c06-419b-b5cd-aa8bbf371257">
+  <cim:WireInfo.rAC75>0.00019849081364829396 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0086233 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>526.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0001620734908136483 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>0f646c1c-3c06-419b-b5cd-aa8bbf371257</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Daffodil</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>0f646c1c-3c06-419b-b5cd-aa8bbf371257</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:102bb858-6b1c-46f9-bf92-1a29d470a0dc">
+  <cim:WireInfo.sizeDescription>1431.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.004528819999999999 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>5.019685039370078e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0181229 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1272.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.937007874015748e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>102bb858-6b1c-46f9-bf92-1a29d470a0dc</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bobolink</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>102bb858-6b1c-46f9-bf92-1a29d470a0dc</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:112ea6c3-86bf-482d-bafc-0afec47c141e">
+  <cim:WireInfo.sizeDescription>636.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00554736 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010662729658792651 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.012941299999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>798.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.398950131233596e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>112ea6c3-86bf-482d-bafc-0afec47c141e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Scoter</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>112ea6c3-86bf-482d-bafc-0afec47c141e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:12196db1-ca1d-4959-ab14-7ee6db4586d3">
+  <cim:WireInfo.rAC75>9.383202099737533e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0126746 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>847.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.545931758530183e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>12196db1-ca1d-4959-ab14-7ee6db4586d3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cattail</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>12196db1-ca1d-4959-ab14-7ee6db4586d3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:1268c051-e4cd-4ad5-9aeb-0ee822b15c08">
+  <cim:WireInfo.rAC75>6.003937007874016e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0159766 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1124.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.7572178477690293e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>1268c051-e4cd-4ad5-9aeb-0ee822b15c08</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Hawthorn</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>1268c051-e4cd-4ad5-9aeb-0ee822b15c08</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:149d1ec8-441c-49aa-8d80-2d0ebd1219b4">
+  <cim:WireInfo.sizeDescription>397.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00188722 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00017355643044619424 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0094361 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>576.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00014173228346456694 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>149d1ec8-441c-49aa-8d80-2d0ebd1219b4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Chickadee</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>149d1ec8-441c-49aa-8d80-2d0ebd1219b4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:150bdf5c-6936-47e1-831e-3746e5c7a5b3">
+  <cim:WireInfo.rAC75>0.00013943569553805774 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0102997 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>658.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011351706036745407 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>150bdf5c-6936-47e1-831e-3746e5c7a5b3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Zinnia</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>150bdf5c-6936-47e1-831e-3746e5c7a5b3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:17a169b6-01c0-48d1-a4f6-bd820fe2283b">
+  <cim:WireInfo.sizeDescription>900.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00491871 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>7.906824146981627e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.014757399999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>961.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.233595800524934e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>17a169b6-01c0-48d1-a4f6-bd820fe2283b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Canary</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>17a169b6-01c0-48d1-a4f6-bd820fe2283b</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:180d3fc9-ba23-422d-8450-a4c059f23362">
+  <cim:WireInfo.sizeDescription>556.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00518922 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00012204724409448817 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.012103099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>734.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>9.940944881889764e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>180d3fc9-ba23-422d-8450-a4c059f23362</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Eagle</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>180d3fc9-ba23-422d-8450-a4c059f23362</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:1975904f-648a-4313-be62-c6740b2a6f05">
+  <cim:WireInfo.rAC75>2.4934383202099737e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.027406599999999996 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>2024.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>1.6371391076115484e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>1975904f-648a-4313-be62-c6740b2a6f05</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bluebonnet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>1975904f-648a-4313-be62-c6740b2a6f05</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:205e3b9c-39ba-4a7f-8d3c-2bf74026f99f">
+  <cim:WireInfo.rAC75>7.414698162729658e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0142748 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>982.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.9383202099737536e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>205e3b9c-39ba-4a7f-8d3c-2bf74026f99f</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Magnolia</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>205e3b9c-39ba-4a7f-8d3c-2bf74026f99f</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:2175816c-71a8-4c7f-9826-dd2cff473a06">
+  <cim:WireInfo.sizeDescription>266.8</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00300101 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0002555774278215223 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0081534 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>475.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00020898950131233596 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>2175816c-71a8-4c7f-9826-dd2cff473a06</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Partridge</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>2175816c-71a8-4c7f-9826-dd2cff473a06</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:245c5118-fbcc-4a7a-a48f-808f31601a23">
+  <cim:WireInfo.sizeDescription>2.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00189103 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0005774278215223096 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0056768999999999995 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>276.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0004133858267716535 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>245c5118-fbcc-4a7a-a48f-808f31601a23</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Quail</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>245c5118-fbcc-4a7a-a48f-808f31601a23</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:2560bb93-87b7-4500-a20a-7de6f072ea5a">
+  <cim:WireInfo.sizeDescription>1033.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.005270499999999999 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>6.92257217847769e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0158115 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1047.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.413385826771654e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>2560bb93-87b7-4500-a20a-7de6f072ea5a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Curlew</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>2560bb93-87b7-4500-a20a-7de6f072ea5a</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:2873467c-afe5-4e29-8373-27719d56c9d1">
+  <cim:WireInfo.rAC75>0.00011646981627296587 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0113157 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>738.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.480314960629921e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>2873467c-afe5-4e29-8373-27719d56c9d1</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Meadowsweet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>2873467c-afe5-4e29-8373-27719d56c9d1</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:2d45a933-1d9f-437f-bb9b-26eb294f4fa3">
+  <cim:WireInfo.sizeDescription>1113.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>6.364829396325459e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0143383 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1925.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.921259842519685e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>2d45a933-1d9f-437f-bb9b-26eb294f4fa3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Avocet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>2d45a933-1d9f-437f-bb9b-26eb294f4fa3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:2e061c06-cabe-40a1-920d-57005bd83f4e">
+  <cim:WireInfo.sizeDescription>795.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0051816 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>8.628608923884515e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0140589 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>907.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.020997375328084e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>2e061c06-cabe-40a1-920d-57005bd83f4e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Drake</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>2e061c06-cabe-40a1-920d-57005bd83f4e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:2fc19284-755c-4fdc-adb3-663a7702f85b">
+  <cim:WireInfo.sizeDescription>954.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>7.381889763779527e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0132588 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1740.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.774278215223097e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>2fc19284-755c-4fdc-adb3-663a7702f85b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Phoenix</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>2fc19284-755c-4fdc-adb3-663a7702f85b</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:3066fce8-1446-4bca-8b52-5c0d31dba779">
+  <cim:WireInfo.sizeDescription>795.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>8.497375328083989e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.012445999999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1595.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.856955380577427e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>3066fce8-1446-4bca-8b52-5c0d31dba779</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Puffin</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>3066fce8-1446-4bca-8b52-5c0d31dba779</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:30e5fc83-ab29-4051-afbc-ee47d5c6c531">
+  <cim:WireInfo.sizeDescription>134.6</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00403479 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0006561679790026247 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.006731 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>271.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00039271653543307086 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>30e5fc83-ab29-4051-afbc-ee47d5c6c531</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Leghorn</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>30e5fc83-ab29-4051-afbc-ee47d5c6c531</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:324bc6f7-537d-48db-af2e-61c7fb44cbb2">
+  <cim:WireInfo.sizeDescription>Duck/ACSS</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>8.891076115485564e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0018033999999999997 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>0.0334 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>109.25196850393701 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>324bc6f7-537d-48db-af2e-61c7fb44cbb2</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Wood</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>324bc6f7-537d-48db-af2e-61c7fb44cbb2</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:3447512a-0117-4d66-96e0-106c24b1ace4">
+  <cim:WireInfo.sizeDescription>954.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00369824 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>7.381889763779527e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0147955 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>993.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.9055118110236214e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>3447512a-0117-4d66-96e0-106c24b1ace4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Rail</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>3447512a-0117-4d66-96e0-106c24b1ace4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:3ebb899f-d322-46b3-8eb0-550632f6e5c0">
+  <cim:WireInfo.sizeDescription>477.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0040132 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00014304461942257218 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0108966 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>659.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0001167979002624672 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>3ebb899f-d322-46b3-8eb0-550632f6e5c0</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Hawk</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>3ebb899f-d322-46b3-8eb0-550632f6e5c0</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:3f241a2a-111e-494d-8f3a-08bd550f5dfb">
+  <cim:WireInfo.sizeDescription>266.8</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>0.0002480314960629921 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0035928299999999995 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>822.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00020177165354330707 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>3f241a2a-111e-494d-8f3a-08bd550f5dfb</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Junco</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>3f241a2a-111e-494d-8f3a-08bd550f5dfb</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:438b22c4-498e-4bc9-b8f0-4aaaf465a02e">
+  <cim:WireInfo.rAC75>9.809711286089239e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0123571 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>823.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.939632545931759e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>438b22c4-498e-4bc9-b8f0-4aaaf465a02e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Violet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>438b22c4-498e-4bc9-b8f0-4aaaf465a02e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:43d1c2b5-1111-4f20-9fb2-a1444996c630">
+  <cim:WireInfo.sizeDescription>1351.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00440182 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>5.314960629921259e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0176022 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1229.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.1666666666666665e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>43d1c2b5-1111-4f20-9fb2-a1444996c630</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Dipper</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>43d1c2b5-1111-4f20-9fb2-a1444996c630</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:43fc28ad-6d3e-4177-9036-93bb8666714d">
+  <cim:WireInfo.rAC75>4.625984251968504e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0184531 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1333.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.5761154855643044e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>43fc28ad-6d3e-4177-9036-93bb8666714d</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Coreopsis</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>43fc28ad-6d3e-4177-9036-93bb8666714d</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:49c6863d-734c-4eec-8f73-ea6974fc0e8a">
+  <cim:WireInfo.sizeDescription>666.6</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0042329099999999995 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010334645669291338 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0127 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>807.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.398950131233596e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>49c6863d-734c-4eec-8f73-ea6974fc0e8a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Flamingo</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>49c6863d-734c-4eec-8f73-ea6974fc0e8a</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:4a5d57e7-3871-419c-923f-e7629f797bb5">
+  <cim:WireInfo.sizeDescription>1192.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00413512 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>5.9711286089238845e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0165354 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1139.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.724409448818897e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>4a5d57e7-3871-419c-923f-e7629f797bb5</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bunting</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>4a5d57e7-3871-419c-923f-e7629f797bb5</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:4c02f071-0995-4dbe-8be3-8407b2a6d508">
+  <cim:WireInfo.sizeDescription>4.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00105918 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0016896325459317585 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.003175 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>140.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0013221784776902888 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>4c02f071-0995-4dbe-8be3-8407b2a6d508</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Swan</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>4c02f071-0995-4dbe-8be3-8407b2a6d508</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:4c144986-69fd-456b-8f2c-d8ecf1ddd775">
+  <cim:WireInfo.rAC75>0.00023162729658792648 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0079756 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>478.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00018897637795275589 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>4c144986-69fd-456b-8f2c-d8ecf1ddd775</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Peony</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>4c144986-69fd-456b-8f2c-d8ecf1ddd775</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:4d38cc11-99ee-49bf-b759-c1deab8a4c99">
+  <cim:WireInfo.sizeDescription>954.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0050634899999999995 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>7.480314960629921e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.015189199999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>996.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.8727034120734906e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>4d38cc11-99ee-49bf-b759-c1deab8a4c99</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cardinal</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>4d38cc11-99ee-49bf-b759-c1deab8a4c99</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:4e34d23e-f9a2-4c6f-be7d-ffccfe3d8cb0">
+  <cim:WireInfo.sizeDescription>1272.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00426974 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>5.610236220472441e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0170815 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1184.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.429133858267717e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>4e34d23e-f9a2-4c6f-be7d-ffccfe3d8cb0</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bittern</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>4e34d23e-f9a2-4c6f-be7d-ffccfe3d8cb0</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:4f3e573e-2799-4cc1-95f8-6cdcf2bd0021">
+  <cim:WireInfo.sizeDescription>1780.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00554736 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>4.101049868766404e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0203454 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1453.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.1824146981627294e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>4f3e573e-2799-4cc1-95f8-6cdcf2bd0021</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Chukar</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>4f3e573e-2799-4cc1-95f8-6cdcf2bd0021</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:51091efe-2f05-4d2b-af4e-226f02e81ef6">
+  <cim:WireInfo.sizeDescription>795.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0062026799999999995 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>8.562992125984252e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.014477999999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>918.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.988188976377953e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>51091efe-2f05-4d2b-af4e-226f02e81ef6</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Mallard</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>51091efe-2f05-4d2b-af4e-226f02e81ef6</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:54378344-4957-4307-9856-e53ecb7ee5e1">
+  <cim:WireInfo.rAC75>0.0006561679790026247 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0046736 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>247.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0005380577427821523 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>54378344-4957-4307-9856-e53ecb7ee5e1</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Poppy</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>54378344-4957-4307-9856-e53ecb7ee5e1</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:544789bb-f3a0-4b94-8492-ef304edd48c0">
+  <cim:WireInfo.sizeDescription>1113.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00399415 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>6.364829396325459e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0159766 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1092.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.085301837270341e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>544789bb-f3a0-4b94-8492-ef304edd48c0</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bluejay</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>544789bb-f3a0-4b94-8492-ef304edd48c0</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:55dc715b-af34-4d94-9a48-86a30dd1e763">
+  <cim:WireInfo.sizeDescription>636.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0016878299999999998 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010958005249343831 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.011811 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>769.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.891076115485564e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>55dc715b-af34-4d94-9a48-86a30dd1e763</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Swift</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>55dc715b-af34-4d94-9a48-86a30dd1e763</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:56af8faf-cbb8-4e9a-ad34-1fdf2e327d4c">
+  <cim:WireInfo.sizeDescription>636.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0023875999999999997 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0001089238845144357 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.011937999999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>773.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.858267716535433e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>56af8faf-cbb8-4e9a-ad34-1fdf2e327d4c</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Kingbird</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>56af8faf-cbb8-4e9a-ad34-1fdf2e327d4c</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:585f426a-5369-472a-a818-18a3991a3d65">
+  <cim:WireInfo.sizeDescription>397.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00326898 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0001725721784776903 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0098044 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>584.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0001410761154855643 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>585f426a-5369-472a-a818-18a3991a3d65</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Brant</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>585f426a-5369-472a-a818-18a3991a3d65</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:59280747-26f4-42d6-ba13-28350c5cd654">
+  <cim:WireInfo.sizeDescription>666.6</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00474472 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010269028871391076 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0128778 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>812.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.366141732283464e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>59280747-26f4-42d6-ba13-28350c5cd654</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Gannet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>59280747-26f4-42d6-ba13-28350c5cd654</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:5a3ad599-3ba3-49bb-9042-ee385ac21cc0">
+  <cim:WireInfo.rAC75>0.0010433070866141731 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0037083999999999997 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>185.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0008530183727034121 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>5a3ad599-3ba3-49bb-9042-ee385ac21cc0</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Iris</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>5a3ad599-3ba3-49bb-9042-ee385ac21cc0</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:5d7c105b-a54b-48c8-afe1-ca9d5195622e">
+  <cim:WireInfo.rAC75>0.0002775590551181102 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.007200899999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>425.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00022670603674540681 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>5d7c105b-a54b-48c8-afe1-ca9d5195622e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Sneezewort</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>5d7c105b-a54b-48c8-afe1-ca9d5195622e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:5dfa5c05-e1a4-4214-b414-12efb27186b6">
+  <cim:WireInfo.sizeDescription>605.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00451993 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00011318897637795276 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0122682 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>765.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>9.219160104986877e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>5dfa5c05-e1a4-4214-b414-12efb27186b6</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Squab</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>5dfa5c05-e1a4-4214-b414-12efb27186b6</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:5e4c0a2c-2ad0-4fe0-8a88-4e7f49d47fe4">
+  <cim:WireInfo.rAC75>2.9527559055118107e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0242824 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1793.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>2.0833333333333333e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>5e4c0a2c-2ad0-4fe0-8a88-4e7f49d47fe4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bitterroot</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>5e4c0a2c-2ad0-4fe0-8a88-4e7f49d47fe4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:610f2c60-85fb-423e-a07c-044fb3e39e38">
+  <cim:WireInfo.rAC75>6.889763779527559e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.014858999999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1031.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.4790026246719156e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>610f2c60-85fb-423e-a07c-044fb3e39e38</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bluebell</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>610f2c60-85fb-423e-a07c-044fb3e39e38</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:616b8a07-11fc-4c47-ac52-6a07f3e17b21">
+  <cim:WireInfo.sizeDescription>211.3</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00505587 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0004625984251968503 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0084328 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>343.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00025032808398950135 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>616b8a07-11fc-4c47-ac52-6a07f3e17b21</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cochin</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>616b8a07-11fc-4c47-ac52-6a07f3e17b21</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:63179d11-2a89-4e1c-9b6e-8494e6e1c176">
+  <cim:WireInfo.sizeDescription>203.2</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00620395 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0004917979002624672 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.009067799999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>340.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0002506561679790026 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>63179d11-2a89-4e1c-9b6e-8494e6e1c176</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Brahma</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>63179d11-2a89-4e1c-9b6e-8494e6e1c176</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:6415d781-defb-4f0f-909a-4d4406fbfdb4">
+  <cim:WireInfo.sizeDescription>3.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00212344 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0004724409448818897 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0063754 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>315.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00032808398950131233 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>6415d781-defb-4f0f-909a-4d4406fbfdb4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Pigeon</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>6415d781-defb-4f0f-909a-4d4406fbfdb4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:674fd057-163a-4e8f-8ec2-f8565a8c0eef">
+  <cim:WireInfo.rAC75>0.0001751968503937008 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.009182099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>570.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00014271653543307085 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>674fd057-163a-4e8f-8ec2-f8565a8c0eef</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Canna</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>674fd057-163a-4e8f-8ec2-f8565a8c0eef</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:67cfa801-ddef-4de7-a083-0fd25b9821c7">
+  <cim:WireInfo.sizeDescription>1351.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00602742 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>5.347769028871391e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.018084799999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1232.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.1666666666666665e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>67cfa801-ddef-4de7-a083-0fd25b9821c7</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Martin</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>67cfa801-ddef-4de7-a083-0fd25b9821c7</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:6ae42628-633f-4f63-b3d4-17b7068b5660">
+  <cim:WireInfo.sizeDescription>4.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0013081 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.001702755905511811 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0032639 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>140.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0013090551181102364 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>6ae42628-633f-4f63-b3d4-17b7068b5660</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Swanate</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>6ae42628-633f-4f63-b3d4-17b7068b5660</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:6c2e8d5d-c730-4772-965d-c89270549b9d">
+  <cim:WireInfo.sizeDescription>1590.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00477393 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>4.560367454068241e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.019100799999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1354.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.5433070866141735e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>6c2e8d5d-c730-4772-965d-c89270549b9d</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Lapwing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>6c2e8d5d-c730-4772-965d-c89270549b9d</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:6fb40a57-3442-4e57-bcd3-2b23ff6e2a4d">
+  <cim:WireInfo.sizeDescription>2156.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00610616 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>3.4448818897637796e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0223774 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1623.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>2.6279527559055117e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>6fb40a57-3442-4e57-bcd3-2b23ff6e2a4d</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Bluebird</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>6fb40a57-3442-4e57-bcd3-2b23ff6e2a4d</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:710fb24e-0f14-4845-8a98-c921928fa583">
+  <cim:WireInfo.sizeDescription>636.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00554736 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010695538057742782 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.012941299999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>798.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.727034120734907e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>710fb24e-0f14-4845-8a98-c921928fa583</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Egret</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>710fb24e-0f14-4845-8a98-c921928fa583</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:74246897-f528-4bd0-ba7c-e0a687680919">
+  <cim:WireInfo.sizeDescription>266.8</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00154559 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0002582020997375328 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0077342999999999995 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>449.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00021095800524934381 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>74246897-f528-4bd0-ba7c-e0a687680919</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Waxwing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>74246897-f528-4bd0-ba7c-e0a687680919</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:771ddd1b-52d0-4cf3-a85e-4821778e1160">
+  <cim:WireInfo.rAC75>4.232283464566929e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0193548 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1408.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.241469816272966e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>771ddd1b-52d0-4cf3-a85e-4821778e1160</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Jessamine</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>771ddd1b-52d0-4cf3-a85e-4821778e1160</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:775dbcef-2409-48da-af2c-3b80f588f468">
+  <cim:WireInfo.sizeDescription>477.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0035801299999999995 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00014402887139107611 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.010744199999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>655.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011745406824146981 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>775dbcef-2409-48da-af2c-3b80f588f468</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Flicker</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>775dbcef-2409-48da-af2c-3b80f588f468</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:7858a6c5-828b-4f25-95bc-0d5a4058b7cd">
+  <cim:WireInfo.sizeDescription>336.4</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00403479 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00020111548556430445 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0094107 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>535.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00016469816272965878 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>7858a6c5-828b-4f25-95bc-0d5a4058b7cd</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Oriole</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>7858a6c5-828b-4f25-95bc-0d5a4058b7cd</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:7a668b61-1fbb-48c7-8b20-c8574198f1f4">
+  <cim:WireInfo.rAC75>3.4448818897637796e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.021970999999999997 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1612.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>2.545931758530184e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>7a668b61-1fbb-48c7-8b20-c8574198f1f4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Sagebrush</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>7a668b61-1fbb-48c7-8b20-c8574198f1f4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:80f9964f-693d-47e2-80c4-1e8b39e477aa">
+  <cim:WireInfo.rAC75>0.000826771653543307 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0041656 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>214.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0006791338582677165 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>80f9964f-693d-47e2-80c4-1e8b39e477aa</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Pansy</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>80f9964f-693d-47e2-80c4-1e8b39e477aa</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:82259294-1624-44f9-8aed-c4b8cef94ad4">
+  <cim:WireInfo.sizeDescription>1113.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00546989 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>6.463254593175853e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0164084 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1093.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.05249343832021e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>82259294-1624-44f9-8aed-c4b8cef94ad4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Finch</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>82259294-1624-44f9-8aed-c4b8cef94ad4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:84ff9fb0-d638-4667-b972-83cac35762c7">
+  <cim:WireInfo.rAC75>0.00010990813648293963 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0116586 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>765.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.923884514435695e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>84ff9fb0-d638-4667-b972-83cac35762c7</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Orchid</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>84ff9fb0-d638-4667-b972-83cac35762c7</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:85af5571-69dd-4346-92ea-a8a847d13b3a">
+  <cim:WireInfo.rAC75>0.00026017060367454064 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0074421999999999995 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>443.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00021259842519685037 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>85af5571-69dd-4346-92ea-a8a847d13b3a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Daisy</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>85af5571-69dd-4346-92ea-a8a847d13b3a</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:87eb631a-3bcb-4c6e-9971-5d694c9c2a5c">
+  <cim:WireInfo.sizeDescription>2.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0016484599999999998 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0011089238845144358 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0041275 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>184.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.000823490813648294 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>87eb631a-3bcb-4c6e-9971-5d694c9c2a5c</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Sparate</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>87eb631a-3bcb-4c6e-9971-5d694c9c2a5c</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:8bb3d628-caab-493e-bede-ceac5ee4da4a">
+  <cim:WireInfo.sizeDescription>636.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00413512 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010826771653543308 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0124079 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>784.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.79265091863517e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>8bb3d628-caab-493e-bede-ceac5ee4da4a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Rook</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>8bb3d628-caab-493e-bede-ceac5ee4da4a</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:8beb32a1-2749-4835-a744-23d5c772fe61">
+  <cim:WireInfo.sizeDescription>795</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>8.497375328083989e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0046228 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1650.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.856955380577427e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>8beb32a1-2749-4835-a744-23d5c772fe61</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cuckoo</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>8beb32a1-2749-4835-a744-23d5c772fe61</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:8c339ffa-405e-4e71-a3e6-ddd89a62cb37">
+  <cim:WireInfo.sizeDescription>605.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00403479 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00011351706036745407 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.012103099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>760.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>9.251968503937008e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>8c339ffa-405e-4e71-a3e6-ddd89a62cb37</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Peacock</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>8c339ffa-405e-4e71-a3e6-ddd89a62cb37</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:8dd1c12d-45bf-48b6-a686-3b5b95acc507">
+  <cim:WireInfo.sizeDescription>605.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0054101999999999996 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00011220472440944882 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0126238 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>774.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>9.153543307086614e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>8dd1c12d-45bf-48b6-a686-3b5b95acc507</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Wood
+Duck</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>8dd1c12d-45bf-48b6-a686-3b5b95acc507</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:905b1fb7-5797-4833-baa2-3b011b565d01">
+  <cim:WireInfo.sizeDescription>477.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00480441 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00014206036745406824 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0112141 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>666.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011614173228346456 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>905b1fb7-5797-4833-baa2-3b011b565d01</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Hen</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>905b1fb7-5797-4833-baa2-3b011b565d01</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:929e8f9c-3d61-4fe4-9e56-5694f935878d">
+  <cim:WireInfo.rAC75>9.383202099737533e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0126619 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>847.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.545931758530183e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>929e8f9c-3d61-4fe4-9e56-5694f935878d</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Petunia</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>929e8f9c-3d61-4fe4-9e56-5694f935878d</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:92f96ef6-d857-4190-ab67-9c7f1627ca52">
+  <cim:WireInfo.rAC75>3.7729658792650915e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.020713699999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1518.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>2.8346456692913385e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>92f96ef6-d857-4190-ab67-9c7f1627ca52</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cowslip</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>92f96ef6-d857-4190-ab67-9c7f1627ca52</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9510c772-1c9e-442c-919d-cf0c0d33849a">
+  <cim:WireInfo.rAC75>0.00020669291338582676 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0084455 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>513.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00016863517060367454 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9510c772-1c9e-442c-919d-cf0c0d33849a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Tulip</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9510c772-1c9e-442c-919d-cf0c0d33849a</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9665d25f-8565-4c8a-beb5-70bdf1ca3665">
+  <cim:WireInfo.rAC75>0.00032775590551181104 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0066294 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>383.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00026804461942257215 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9665d25f-8565-4c8a-beb5-70bdf1ca3665</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Oxlip</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9665d25f-8565-4c8a-beb5-70bdf1ca3665</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:99a8b7f0-30df-43d9-8feb-5136b12a5f41">
+  <cim:WireInfo.rAC75>0.0016601049868766404 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0029464 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>138.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.001358267716535433 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>99a8b7f0-30df-43d9-8feb-5136b12a5f41</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Rose</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>99a8b7f0-30df-43d9-8feb-5136b12a5f41</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9b09fe4c-59b0-43df-b1f6-8d4c87628658">
+  <cim:WireInfo.rAC75>5.6758530183727034e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.01651 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1169.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.4619422572178476e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9b09fe4c-59b0-43df-b1f6-8d4c87628658</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Narcissus</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9b09fe4c-59b0-43df-b1f6-8d4c87628658</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9b8bb6be-66d9-4879-b92d-6591f33fac05">
+  <cim:WireInfo.rAC75>9.809711286089239e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0123825 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>823.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.939632545931759e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9b8bb6be-66d9-4879-b92d-6591f33fac05</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Nasturtium</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9b8bb6be-66d9-4879-b92d-6591f33fac05</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9da0f97d-88ca-4d92-b2a0-038638cd7efc">
+  <cim:WireInfo.rAC75>0.00010761154855643046 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0117856 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>775.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.727034120734907e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9da0f97d-88ca-4d92-b2a0-038638cd7efc</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Heuchera</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9da0f97d-88ca-4d92-b2a0-038638cd7efc</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9e1572db-a42d-4d30-85cb-b2f0e7e6f01b">
+  <cim:WireInfo.rAC75>3.1824146981627294e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0231521 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1706.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>2.29002624671916e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9e1572db-a42d-4d30-85cb-b2f0e7e6f01b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Lupine</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9e1572db-a42d-4d30-85cb-b2f0e7e6f01b</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9f662ae0-8809-4116-a545-b1e77bbe30f4">
+  <cim:WireInfo.rAC75>0.00026017060367454064 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0075184 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>444.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00021259842519685037 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9f662ae0-8809-4116-a545-b1e77bbe30f4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Laurel</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9f662ae0-8809-4116-a545-b1e77bbe30f4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9f6f7f29-e3ff-4619-8718-04f9c8875785">
+  <cim:WireInfo.sizeDescription>159.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00438531 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0005764435695538058 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.007315199999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>296.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00033267716535433073 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9f6f7f29-e3ff-4619-8718-04f9c8875785</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Guinea</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9f6f7f29-e3ff-4619-8718-04f9c8875785</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9f9ba775-e320-4c3f-8bf0-f23db7999b5e">
+  <cim:WireInfo.rAC75>5.085301837270341e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.017500599999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1253.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.9698162729658794e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9f9ba775-e320-4c3f-8bf0-f23db7999b5e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Carnation</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9f9ba775-e320-4c3f-8bf0-f23db7999b5e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:9ff08760-3183-4d5e-8d68-faf2c7a3dfdb">
+  <cim:WireInfo.rAC75>0.0001253280839895013 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0108966 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>704.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00010203412073490813 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>9ff08760-3183-4d5e-8d68-faf2c7a3dfdb</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Mistletoe</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9ff08760-3183-4d5e-8d68-faf2c7a3dfdb</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:a1206800-a47d-494d-8dc4-1c21a1a11f53">
+  <cim:WireInfo.rAC75>0.0002775590551181102 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.007289799999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>426.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00022670603674540681 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>a1206800-a47d-494d-8dc4-1c21a1a11f53</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Valerian</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a1206800-a47d-494d-8dc4-1c21a1a11f53</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:a1495e69-0fe7-4a64-b2f8-f0ba7b220f07">
+  <cim:WireInfo.sizeDescription>1192.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00566166 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>6.036745406824147e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0169799 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1140.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.724409448818897e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>a1495e69-0fe7-4a64-b2f8-f0ba7b220f07</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Grackle</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a1495e69-0fe7-4a64-b2f8-f0ba7b220f07</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:a736392f-066d-48cd-ba58-dd6242f61de6">
+  <cim:WireInfo.rAC75>7.841207349081365e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013881099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>948.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.299212598425196e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>a736392f-066d-48cd-ba58-dd6242f61de6</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Snapdragon</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a736392f-066d-48cd-ba58-dd6242f61de6</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:a7adf701-e49b-4a6e-b3a7-d7e6076e3486">
+  <cim:WireInfo.rAC75>7.841207349081365e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013868400000000001 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>948.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.299212598425196e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>a7adf701-e49b-4a6e-b3a7-d7e6076e3486</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cockscomb</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a7adf701-e49b-4a6e-b3a7-d7e6076e3486</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:a94553dd-7c48-43ec-a976-f35e1618a721">
+  <cim:WireInfo.rAC75>0.000145997375328084 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0100584 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>639.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011876640419947507 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>a94553dd-7c48-43ec-a976-f35e1618a721</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Cosmos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a94553dd-7c48-43ec-a976-f35e1618a721</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:a9be1445-0587-4994-a331-32ba8595c3a3">
+  <cim:WireInfo.sizeDescription>1.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00168529 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0007119422572178477 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0050546 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>242.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0005216535433070866 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>a9be1445-0587-4994-a331-32ba8595c3a3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Raven</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a9be1445-0587-4994-a331-32ba8595c3a3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:aab6a4ea-b95c-4f17-9ae8-6aad857ca183">
+  <cim:WireInfo.rAC75>7.086614173228347e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.014630399999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1011.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.669291338582677e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>aab6a4ea-b95c-4f17-9ae8-6aad857ca183</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Camellia</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>aab6a4ea-b95c-4f17-9ae8-6aad857ca183</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ad01136c-881e-4909-8606-d71fd4f327a6">
+  <cim:WireInfo.sizeDescription>605.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0054101999999999996 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00011220472440944882 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0126238 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>773.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>9.153543307086614e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ad01136c-881e-4909-8606-d71fd4f327a6</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Teal</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ad01136c-881e-4909-8606-d71fd4f327a6</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ae35c9b5-eabd-4ac4-8df8-3d0373f2baec">
+  <cim:WireInfo.rAC75>7.414698162729658e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0142875 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>983.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.9383202099737536e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ae35c9b5-eabd-4ac4-8df8-3d0373f2baec</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Goldenrod</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ae35c9b5-eabd-4ac4-8df8-3d0373f2baec</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:af1aff25-5643-4575-a26c-95c6bd027589">
+  <cim:WireInfo.rAC75>0.0005216535433070866 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.005257799999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>286.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00042650918635170603 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>af1aff25-5643-4575-a26c-95c6bd027589</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Aster</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>af1aff25-5643-4575-a26c-95c6bd027589</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:afa7339d-ebb3-4da2-b8ab-f9f000d243e2">
+  <cim:WireInfo.rAC75>5.347769028871391e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.017018000000000002 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1212.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.199475065616798e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>afa7339d-ebb3-4da2-b8ab-f9f000d243e2</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Columbine</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>afa7339d-ebb3-4da2-b8ab-f9f000d243e2</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b15c9b48-71e6-4f67-8c13-a81856c413cc">
+  <cim:WireInfo.rAC75>0.0026410761154855643 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0023368 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>103.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.002158792650918635 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b15c9b48-71e6-4f67-8c13-a81856c413cc</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Peachbell</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b15c9b48-71e6-4f67-8c13-a81856c413cc</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b2c8944f-9fa2-44f1-84c5-5d95c01376b3">
+  <cim:WireInfo.rAC75>0.00010006561679790026 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.012230099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>812.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.103674540682414e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b2c8944f-9fa2-44f1-84c5-5d95c01376b3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Verbena</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b2c8944f-9fa2-44f1-84c5-5d95c01376b3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b32e4c9b-40dd-4c73-bbf4-1bb7522dc837">
+  <cim:WireInfo.rAC75>0.00010006561679790026 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0122428 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>812.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.103674540682414e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b32e4c9b-40dd-4c73-bbf4-1bb7522dc837</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Flag</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b32e4c9b-40dd-4c73-bbf4-1bb7522dc837</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b6a48b5d-d6e4-4b4f-aa5e-df1eb9d2c4fc">
+  <cim:WireInfo.sizeDescription>1033.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0038493699999999995 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>6.856955380577427e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.015392399999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1043.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.4790026246719156e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b6a48b5d-d6e4-4b4f-aa5e-df1eb9d2c4fc</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Ortolan</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b6a48b5d-d6e4-4b4f-aa5e-df1eb9d2c4fc</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b73586a6-1b66-48e3-9df9-c420c5461e52">
+  <cim:WireInfo.sizeDescription>1590.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00653796 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>4.593175853018373e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0196088 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1359.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>3.5433070866141735e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b73586a6-1b66-48e3-9df9-c420c5461e52</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Falcon</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b73586a6-1b66-48e3-9df9-c420c5461e52</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b7d46a49-e06f-446a-a17e-c2a3fd77fe31">
+  <cim:WireInfo.sizeDescription>397.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0036639499999999996 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00017158792650918636 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.009944099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>587.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00014041994750656168 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b7d46a49-e06f-446a-a17e-c2a3fd77fe31</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Ibis</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b7d46a49-e06f-446a-a17e-c2a3fd77fe31</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:b829bf8c-787a-4b9d-878e-62fdf9593c41">
+  <cim:WireInfo.sizeDescription>795</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>8.595800524934384e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.00291211 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1621.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.92257217847769e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>b829bf8c-787a-4b9d-878e-62fdf9593c41</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Macaw</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b829bf8c-787a-4b9d-878e-62fdf9593c41</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:bf85887f-9f22-4b6c-8fae-5977ce07eb1d">
+  <cim:WireInfo.sizeDescription>795.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0046228 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>8.923884514435695e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013868400000000001 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>889.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.053805774278215e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>bf85887f-9f22-4b6c-8fae-5977ce07eb1d</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Condor</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>bf85887f-9f22-4b6c-8fae-5977ce07eb1d</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:c15c4047-34aa-4a67-9072-e8724b17c1d4">
+  <cim:WireInfo.sizeDescription>715.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00491617 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>9.58005249343832e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013347699999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>849.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.808398950131234e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>c15c4047-34aa-4a67-9072-e8724b17c1d4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Starling</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>c15c4047-34aa-4a67-9072-e8724b17c1d4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:c365c713-8ba3-4117-96e8-81d67d7262d7">
+  <cim:WireInfo.rAC75>4.822834645669291e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.017983199999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1294.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.724409448818897e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>c365c713-8ba3-4117-96e8-81d67d7262d7</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Gladiolus</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>c365c713-8ba3-4117-96e8-81d67d7262d7</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:c468552f-7b68-4365-853c-b8e4bf03275a">
+  <cim:WireInfo.sizeDescription>300.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0031826199999999997 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00022736220472440946 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.008636 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>492.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0001860236220472441 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>c468552f-7b68-4365-853c-b8e4bf03275a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Ostrich</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>c468552f-7b68-4365-853c-b8e4bf03275a</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:c50e9305-f791-42b1-91ce-67cea8440af4">
+  <cim:WireInfo.rAC75>6.397637795275591e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.015443199999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1079.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.085301837270341e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>c50e9305-f791-42b1-91ce-67cea8440af4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Marigold</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>c50e9305-f791-42b1-91ce-67cea8440af4</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:c9392091-b328-4adf-8954-3a897ae5a508">
+  <cim:WireInfo.sizeDescription>336.4</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00337058 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00020275590551181103 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.009144 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>529.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00016568241469816275 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>c9392091-b328-4adf-8954-3a897ae5a508</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Linnet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>c9392091-b328-4adf-8954-3a897ae5a508</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ced30029-e93a-4f3a-857f-a36f17fb5034">
+  <cim:WireInfo.sizeDescription>715.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00588391 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>9.514435695538059e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013728699999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>859.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.742782152230971e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ced30029-e93a-4f3a-857f-a36f17fb5034</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Redwing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ced30029-e93a-4f3a-857f-a36f17fb5034</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:cfbf02f5-55ae-414c-b52b-6f5afbff6b82">
+  <cim:WireInfo.rAC75>8.858267716535433e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013042899999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>879.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.119422572178478e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>cfbf02f5-55ae-414c-b52b-6f5afbff6b82</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Lilac</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>cfbf02f5-55ae-414c-b52b-6f5afbff6b82</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:d32da4a3-0a8c-4e99-a4d4-bc3400d5f756">
+  <cim:WireInfo.sizeDescription>4.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00238506 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00039041994750656163 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.007150099999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>357.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0002608267716535433 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>d32da4a3-0a8c-4e99-a4d4-bc3400d5f756</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Penguin</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>d32da4a3-0a8c-4e99-a4d4-bc3400d5f756</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:d4ff1c23-afc6-4288-9674-a00bdd6414c8">
+  <cim:WireInfo.sizeDescription>110.8</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00366141 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.000764763779527559 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0061087 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>245.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0004770341207349081 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>d4ff1c23-afc6-4288-9674-a00bdd6414c8</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Minorca</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>d4ff1c23-afc6-4288-9674-a00bdd6414c8</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:d63c3b3c-534d-4d6c-915e-ec47ec691bb0">
+  <cim:WireInfo.sizeDescription>715.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00438531 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>9.645669291338582e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013157199999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>844.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.841207349081365e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>d63c3b3c-534d-4d6c-915e-ec47ec691bb0</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Stilt</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>d63c3b3c-534d-4d6c-915e-ec47ec691bb0</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:dbad539a-6f8c-421b-87b7-ddb1bc96488e">
+  <cim:WireInfo.sizeDescription>556.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00223266 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00012434383202099739 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0111633 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>711.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0001010498687664042 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>dbad539a-6f8c-421b-87b7-ddb1bc96488e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Osprey</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>dbad539a-6f8c-421b-87b7-ddb1bc96488e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:dbb8e88b-2341-47bb-92c6-c620168ed16e">
+  <cim:WireInfo.sizeDescription>636.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00463423 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00010761154855643046 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0125857 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>789.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>8.75984251968504e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>dbb8e88b-2341-47bb-92c6-c620168ed16e</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Grosbeak</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>dbb8e88b-2341-47bb-92c6-c620168ed16e</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:dc9a49c4-946a-4a1b-9d23-3223842f7af2">
+  <cim:WireInfo.sizeDescription>900.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0035915599999999997 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>7.841207349081365e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0143637 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>958.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>6.266404199475065e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>dc9a49c4-946a-4a1b-9d23-3223842f7af2</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Ruddy</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>dc9a49c4-946a-4a1b-9d23-3223842f7af2</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:dcc50e47-fa42-47cf-88d6-43e0d1d8ae7c">
+  <cim:WireInfo.rAC75>0.0001253280839895013 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0108712 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>703.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00010203412073490813 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>dcc50e47-fa42-47cf-88d6-43e0d1d8ae7c</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Dahlia</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>dcc50e47-fa42-47cf-88d6-43e0d1d8ae7c</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ddb5ef41-0d1d-4ea6-ac28-a96d50017c61">
+  <cim:WireInfo.sizeDescription>397.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00438531 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0001702755905511811 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0102362 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>594.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00013943569553805774 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ddb5ef41-0d1d-4ea6-ac28-a96d50017c61</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Lark</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ddb5ef41-0d1d-4ea6-ac28-a96d50017c61</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ddb6e337-69a4-46a9-b089-07c3bfe282f3">
+  <cim:WireInfo.rAC75>0.00013943569553805774 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0103378 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>658.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011351706036745407 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ddb6e337-69a4-46a9-b089-07c3bfe282f3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Hyacinth</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ddb6e337-69a4-46a9-b089-07c3bfe282f3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:de25a890-5667-4c16-ab23-881ae5369f50">
+  <cim:WireInfo.sizeDescription>795.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0033756599999999995 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>8.825459317585301e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0135001 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>887.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.086614173228347e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>de25a890-5667-4c16-ab23-881ae5369f50</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Tern</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>de25a890-5667-4c16-ab23-881ae5369f50</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ded7871c-52f4-4bd6-a640-1511e795dd38">
+  <cim:WireInfo.sizeDescription>1272.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00584835 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>5.6758530183727034e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0175387 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1187.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>4.429133858267717e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ded7871c-52f4-4bd6-a640-1511e795dd38</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Pheasant</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ded7871c-52f4-4bd6-a640-1511e795dd38</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:df4ca250-4128-4592-acf5-5d78c039d5f3">
+  <cim:WireInfo.sizeDescription>190.8</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00480441 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0005019685039370079 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0080137 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>325.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00027723097112860895 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>df4ca250-4128-4592-acf5-5d78c039d5f3</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Dorking</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>df4ca250-4128-4592-acf5-5d78c039d5f3</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:e14bda4f-9350-491f-9eca-a3d237d386f8">
+  <cim:WireInfo.rAC75>2.7230971128608924e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0253746 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1874.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>1.9094488188976376e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>e14bda4f-9350-491f-9eca-a3d237d386f8</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Trillium</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>e14bda4f-9350-491f-9eca-a3d237d386f8</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:e707ea26-9e17-4399-8edf-a4abe583ba03">
+  <cim:WireInfo.sizeDescription>556.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00433451 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00012303149606299212 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0117729 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>726.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00010039370078740156 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>e707ea26-9e17-4399-8edf-a4abe583ba03</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Dove</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>e707ea26-9e17-4399-8edf-a4abe583ba03</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:eac06c39-16ad-43fa-9678-8be45c1c0e9c">
+  <cim:WireInfo.rAC75>8.858267716535433e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0130302 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>878.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.119422572178478e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>eac06c39-16ad-43fa-9678-8be45c1c0e9c</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Arbutus</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>eac06c39-16ad-43fa-9678-8be45c1c0e9c</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ead47053-23e2-427b-a232-f41496025c26">
+  <cim:WireInfo.sizeDescription>1033.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.rAC75>6.824146981627296e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013830299999999998 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1834.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.314960629921259e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ead47053-23e2-427b-a232-f41496025c26</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Snowbird</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ead47053-23e2-427b-a232-f41496025c26</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:eccee8f3-5727-4ab0-b8af-c2b13bf4e961">
+  <cim:WireInfo.rAC75>7.086614173228347e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.014617699999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1010.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.6758530183727034e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>eccee8f3-5727-4ab0-b8af-c2b13bf4e961</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Hawkweed</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>eccee8f3-5727-4ab0-b8af-c2b13bf4e961</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:edc0ef75-0672-4f82-951b-62aa21bb1ce2">
+  <cim:WireInfo.sizeDescription>2167.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.004406899999999999 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>3.4776902887139105e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.022034500000000002 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1607.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>2.6279527559055117e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>edc0ef75-0672-4f82-951b-62aa21bb1ce2</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Kiwi</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>edc0ef75-0672-4f82-951b-62aa21bb1ce2</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:eeb80e22-a7b8-4a44-b21d-eda4d9e27f24">
+  <cim:WireInfo.sizeDescription>2.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00133604 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.001089238845144357 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0040132 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>184.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0008333333333333334 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>eeb80e22-a7b8-4a44-b21d-eda4d9e27f24</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Sparrow</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>eeb80e22-a7b8-4a44-b21d-eda4d9e27f24</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:f02d0a80-ff1a-469f-a278-523871ca509b">
+  <cim:WireInfo.rAC75>6.889763779527559e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0148717 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>1032.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>5.4790026246719156e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>f02d0a80-ff1a-469f-a278-523871ca509b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Larkspur</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>f02d0a80-ff1a-469f-a278-523871ca509b</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:f09ac451-0277-4d80-b306-ac26a2c6cfc5">
+  <cim:WireInfo.sizeDescription>477.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00206756 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00014501312335958005 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0103378 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>646.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00011811023622047243 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>f09ac451-0277-4d80-b306-ac26a2c6cfc5</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Pelican</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>f09ac451-0277-4d80-b306-ac26a2c6cfc5</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:f67ae55b-71f1-4492-9c16-d95f5ae1dde7">
+  <cim:WireInfo.sizeDescription>80.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00211709 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00094750656167979 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0046609 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>205.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.0006774934383202099 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>f67ae55b-71f1-4492-9c16-d95f5ae1dde7</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Grouse</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>f67ae55b-71f1-4492-9c16-d95f5ae1dde7</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:f7cecf6e-69b6-4b57-add7-d39c5072f33b">
+  <cim:WireInfo.sizeDescription>795.0</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00188722 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>8.79265091863517e-05 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.013208 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>884.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>7.119422572178478e-05 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>f7cecf6e-69b6-4b57-add7-d39c5072f33b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Coot</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>f7cecf6e-69b6-4b57-add7-d39c5072f33b</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:fd81022e-2e90-410f-9409-ee31e655cc48">
+  <cim:WireInfo.sizeDescription>556.5</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.0038671499999999998 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.00012335958005249345 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.0116078 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>721.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00010072178477690289 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>fd81022e-2e90-410f-9409-ee31e655cc48</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Parakeet</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>fd81022e-2e90-410f-9409-ee31e655cc48</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+<cim:OverheadWireInfo rdf:about="urn:uuid:ff7c6429-3028-47ae-bd2c-715465a050d2">
+  <cim:WireInfo.sizeDescription>176.9</cim:WireInfo.sizeDescription>
+  <cim:WireInfo.coreRadius>0.00462534 meter</cim:WireInfo.coreRadius>
+  <cim:WireInfo.rAC75>0.0005308398950131234 ohmPerm</cim:WireInfo.rAC75>
+  <cim:WireInfo.radius>0.007708899999999999 meter</cim:WireInfo.radius>
+  <cim:WireInfo.ratedCurrent>313.0 ampere</cim:WireInfo.ratedCurrent>
+  <cim:WireInfo.rDC20>0.00029888451443569556 ohmPerm</cim:WireInfo.rDC20>
+  <cim:IdentifiedObject.mRID>ff7c6429-3028-47ae-bd2c-715465a050d2</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>Dotterel</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>ff7c6429-3028-47ae-bd2c-715465a050d2</cim:Identity.identifier>
+</cim:OverheadWireInfo>
+</rdf:RDF>

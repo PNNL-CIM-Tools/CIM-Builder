@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- un-comment this line to enable validation
+-->
+<rdf:RDF xmlns:cim="http://iec.ch/TC57/CIM100#" xmlns:eu="http://iec.ch/TC57/CIM100-European#" xmlns:nc="http://entsoe.eu/ns/nc#" xmlns:gb="http://GB/placeholder/ext#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:gad="http://gridappsd.org/CIM/extension#">
+<!--
+-->
+<cim:Pole rdf:about="urn:uuid:365f76ef-677e-46c9-b046-3e9755306bd5">
+  <cim:Structure.height>12.191999999999998 meter</cim:Structure.height>
+  <cim:IdentifiedObject.mRID>365f76ef-677e-46c9-b046-3e9755306bd5</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A2.21P_pole_info</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>365f76ef-677e-46c9-b046-3e9755306bd5</cim:Identity.identifier>
+</cim:Pole>
+<cim:Pole rdf:about="urn:uuid:9b4dfb45-1d88-473c-a4f7-779878734ba8">
+  <cim:Structure.height>12.191999999999998 meter</cim:Structure.height>
+  <cim:IdentifiedObject.mRID>9b4dfb45-1d88-473c-a4f7-779878734ba8</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A5.4NG_pole_info</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>9b4dfb45-1d88-473c-a4f7-779878734ba8</cim:Identity.identifier>
+</cim:Pole>
+<cim:Pole rdf:about="urn:uuid:b00f94ce-be3e-4506-bc68-234e51213b72">
+  <cim:Structure.height>12.191999999999998 meter</cim:Structure.height>
+  <cim:IdentifiedObject.mRID>b00f94ce-be3e-4506-bc68-234e51213b72</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.6NP_pole_info</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b00f94ce-be3e-4506-bc68-234e51213b72</cim:Identity.identifier>
+</cim:Pole>
+<cim:WireAssemblyInfo rdf:about="urn:uuid:77e8adbc-0a7d-46cd-bbc7-28e67bbd720c">
+  <cim:IdentifiedObject.mRID>77e8adbc-0a7d-46cd-bbc7-28e67bbd720c</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A2.21P</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>77e8adbc-0a7d-46cd-bbc7-28e67bbd720c</cim:Identity.identifier>
+</cim:WireAssemblyInfo>
+<cim:WireAssemblyInfo rdf:about="urn:uuid:a18a4220-76ea-4756-a0e6-f4d30e79381f">
+  <cim:IdentifiedObject.mRID>a18a4220-76ea-4756-a0e6-f4d30e79381f</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.6NP</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a18a4220-76ea-4756-a0e6-f4d30e79381f</cim:Identity.identifier>
+</cim:WireAssemblyInfo>
+<cim:WireAssemblyInfo rdf:about="urn:uuid:b6d27f76-3522-4885-b18d-8cfe3210fc21">
+  <cim:IdentifiedObject.mRID>b6d27f76-3522-4885-b18d-8cfe3210fc21</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A5.4NG</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b6d27f76-3522-4885-b18d-8cfe3210fc21</cim:Identity.identifier>
+</cim:WireAssemblyInfo>
+<cim:WirePosition rdf:about="urn:uuid:051137b5-8706-4ff3-ba9d-a2223a3dfc4b">
+  <cim:WirePosition.sequenceNumber>1</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>-1.0668 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:63f2925c-e84c-4dfc-b894-907f309fcf19"/>
+  <cim:IdentifiedObject.mRID>051137b5-8706-4ff3-ba9d-a2223a3dfc4b</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A5.4NG_phs_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>051137b5-8706-4ff3-ba9d-a2223a3dfc4b</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WirePosition rdf:about="urn:uuid:19384a13-39b5-4f7e-88c7-2bf13b6856e4">
+  <cim:WirePosition.sequenceNumber>1</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>-1.1176 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:bbd9e34e-7eb9-47c1-bcdb-f577a94ffeba"/>
+  <cim:IdentifiedObject.mRID>19384a13-39b5-4f7e-88c7-2bf13b6856e4</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A2.21P_phs_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>19384a13-39b5-4f7e-88c7-2bf13b6856e4</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WirePosition rdf:about="urn:uuid:1af9aac3-b16f-4e60-8c87-71d6b483b96a">
+  <cim:WirePosition.sequenceNumber>2</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>1.1176 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:bbd9e34e-7eb9-47c1-bcdb-f577a94ffeba"/>
+  <cim:IdentifiedObject.mRID>1af9aac3-b16f-4e60-8c87-71d6b483b96a</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A2.21P_neutral_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>1af9aac3-b16f-4e60-8c87-71d6b483b96a</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WirePosition rdf:about="urn:uuid:84fa1c86-1749-46d4-ad53-7c69d4c27699">
+  <cim:WirePosition.sequenceNumber>1</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>-1.1176 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:bd8f9f86-a7c1-467b-8db5-5a73f4b138dc"/>
+  <cim:IdentifiedObject.mRID>84fa1c86-1749-46d4-ad53-7c69d4c27699</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.6NP_phs_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>84fa1c86-1749-46d4-ad53-7c69d4c27699</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WirePosition rdf:about="urn:uuid:a6641182-cb23-4341-a6d7-f04abdd9711c">
+  <cim:WirePosition.sequenceNumber>2</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>1.1176 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>11.734799999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:bd8f9f86-a7c1-467b-8db5-5a73f4b138dc"/>
+  <cim:IdentifiedObject.mRID>a6641182-cb23-4341-a6d7-f04abdd9711c</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.6NP_neutral_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>a6641182-cb23-4341-a6d7-f04abdd9711c</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WirePosition rdf:about="urn:uuid:b2580c64-e5e5-4dee-823c-20be21e53517">
+  <cim:WirePosition.sequenceNumber>2</cim:WirePosition.sequenceNumber>
+  <cim:WirePosition.xCoord>1.0668 meter</cim:WirePosition.xCoord>
+  <cim:WirePosition.yCoord>12.191999999999998 meter</cim:WirePosition.yCoord>
+  <cim:WirePosition.WireSpacingInfo rdf:resource="urn:uuid:63f2925c-e84c-4dfc-b894-907f309fcf19"/>
+  <cim:IdentifiedObject.mRID>b2580c64-e5e5-4dee-823c-20be21e53517</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A5.4NG_neutral_pos</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>b2580c64-e5e5-4dee-823c-20be21e53517</cim:Identity.identifier>
+</cim:WirePosition>
+<cim:WireSpacingInfo rdf:about="urn:uuid:63f2925c-e84c-4dfc-b894-907f309fcf19">
+  <cim:IdentifiedObject.mRID>63f2925c-e84c-4dfc-b894-907f309fcf19</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A5.4NG_spacing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>63f2925c-e84c-4dfc-b894-907f309fcf19</cim:Identity.identifier>
+</cim:WireSpacingInfo>
+<cim:WireSpacingInfo rdf:about="urn:uuid:bbd9e34e-7eb9-47c1-bcdb-f577a94ffeba">
+  <cim:IdentifiedObject.mRID>bbd9e34e-7eb9-47c1-bcdb-f577a94ffeba</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A2.21P_spacing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>bbd9e34e-7eb9-47c1-bcdb-f577a94ffeba</cim:Identity.identifier>
+</cim:WireSpacingInfo>
+<cim:WireSpacingInfo rdf:about="urn:uuid:bd8f9f86-a7c1-467b-8db5-5a73f4b138dc">
+  <cim:IdentifiedObject.mRID>bd8f9f86-a7c1-467b-8db5-5a73f4b138dc</cim:IdentifiedObject.mRID>
+  <cim:IdentifiedObject.name>USDA_A1.6NP_spacing</cim:IdentifiedObject.name>
+  <cim:Identity.identifier>bd8f9f86-a7c1-467b-8db5-5a73f4b138dc</cim:Identity.identifier>
+</cim:WireSpacingInfo>
+</rdf:RDF>

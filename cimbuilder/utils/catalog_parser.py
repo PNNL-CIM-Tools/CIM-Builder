@@ -36,3 +36,6 @@ def item_parser(data:dict, network: GraphModel, cim):
                     values.append(value)
                 setattr(obj, attribute, values)
     return obj
+
+
+### Goes through json and validates fields are valid

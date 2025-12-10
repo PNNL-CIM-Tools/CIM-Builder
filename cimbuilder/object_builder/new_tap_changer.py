@@ -10,7 +10,7 @@ from cimbuilder.utils.utils import terminal_to_node
 
 _log = logging.getLogger(__name__)
 
-def new_regulator(network:GraphModel, container:cim.EquipmentContainer, name:str, 
+def new_tap_changer(network:GraphModel, container:cim.EquipmentContainer, name:str, 
                 node:str|cim.ConnectivityNode, highStep:float = 0, lowStep:float = 0, initialDelay:float = 0) -> None:
 
     cim_profile, cim_module = get_cim_profile()

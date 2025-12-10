@@ -1,0 +1,46 @@
+Key,Value
+identifier,49389367-93c7-4b65-96eb-6be536f3a101
+mRID,49389367-93c7-4b65-96eb-6be536f3a101
+aliasName,
+description,
+name,capacitor_1
+Names,[]
+AssetDatasheet,
+Assets,[]
+Controls,[]
+Location,
+Measurements,[]
+PSRType,
+aggregate,
+inService,
+networkAnalysisEnabled,
+normallyInService,
+AdditionalEquipmentContainer,[]
+EquipmentContainer,"{""@id"": ""49ad8e07-3bf9-a4e2-cb8f-c3722f837b62"", ""@type"": ""Feeder""}"
+OperationalLimitSet,[]
+SubSchedulingArea,
+BaseVoltage,
+Terminals,"[{""@id"": ""2cbfcac3-25cf-4e3b-93fc-53101f448f2a"", ""@type"": ""Terminal""}]"
+EnergyConnectionProfile,
+controlEnabled,
+RegulatingControl,
+grounded,
+maximumSections,
+normalSections,
+sections,
+aVRDelay,
+nomU,
+phaseConnection,
+ShuntCompensatorPhase,[]
+SvShuntCompensatorSections,
+b0PerSection,
+bPerSection,
+g0PerSection,
+gPerSection,
+__uuid__,<cimgraph.data_profile.identity.UUID_Meta object at 0x7b7bec7277f0>
+__json_ld__,"{""@id"": ""49389367-93c7-4b65-96eb-6be536f3a101"", ""@type"": ""LinearShuntCompensator""}"
+sectionNumber,1
+b,0.5
+b0,0.1
+g,1
+g0,0.1
