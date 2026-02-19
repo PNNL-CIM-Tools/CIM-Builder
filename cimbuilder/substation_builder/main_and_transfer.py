@@ -1,294 +1,239 @@
 from __future__ import annotations
-
+from dataclasses import dataclass, field
 from cimgraph.models import GraphModel, DistributedArea
 from cimgraph.databases import ConnectionInterface, get_cim_profile
-import cimgraph.data_profile.cimhub_2023 as cim
-
+import cimgraph.data_profile.cimhub_2023 as cim  # TODO: cleaner typing import
+from cimbuilder.substation_builder.substation_builder import SubstationBuilder
 from cimbuilder import object_builder
 import cimbuilder.utils as utils
-
 import logging
 _log = logging.getLogger(__name__)
 
 
-def new_main_and_transfer_substation(
-    connection: ConnectionInterface,
-    name: str = 'new_main_transfer_sub',
-    base_voltage: int | cim.BaseVoltage = 115000,
-    network: GraphModel = None
-) -> dict:
+@dataclass
+class MainAndTransferSubstation(SubstationBuilder):
     """
-    Create a main-and-transfer bus substation in node-breaker representation.
-
+    Class for building a main-and-transfer bus substation model in node-breaker representation.
+    
     This substation topology features a main bus and a transfer bus connected by a bus tie.
     It allows for equipment maintenance without service interruption by transferring
     loads to the transfer bus during maintenance operations.
-
-    Args:
-        connection: Connection interface to the CIM database
-        name: Name of the substation
-        base_voltage: Base voltage in volts or a BaseVoltage object
-        network: Optional existing network to add the substation to
-
-    Returns:
-        Dictionary with keys: 'network', 'substation', 'main_bus', 'transfer_bus', 'base_voltage'
+    
+    Attributes:
+        connection (ConnectionInterface): Connection interface to the CIM database
+        network (GraphModel): Graph model to which the substation will be added
+        name (str): Name of the substation
+        base_voltage (int | cim.BaseVoltage): Base voltage in volts or a BaseVoltage object
     """
-    cim_profile, cim_module = get_cim_profile()
-    cim_mod = cim_module
+    connection: ConnectionInterface
+    network: GraphModel = field(default=None)
+    name: str = field(default='new_main_transfer_sub')
+    base_voltage: int | cim.BaseVoltage = field(default=115000)
+    
+    def __post_init__(self):
+        """
+        Initialize the substation after the instance has been created.
+        
+        Creates the substation entity, main bus, transfer bus, and bus tie.
+        If network is not provided, creates a new distributed area.
+        
+        Returns:
+            GraphModel: The network containing the substation
+        """
+        cim_profile, cim_module = get_cim_profile()
+        self.cim:cim = cim_module
+        
+        # Create new substation class
+        self.substation = self.cim.Substation(name=self.name)
+        
+        # If no network defined, create substation as a DistributedArea
+        if not self.network:
+            self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
+        self.network.add_to_graph(self.substation)
+        
+        # If base voltage not defined, create a new BaseVoltage object
+        self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
+        
+        # Create main bus
+        self.main_bus = self.cim.ConnectivityNode(name=f'{self.name}_main_bus')
+        self.main_bus.ConnectivityNodeContainer = self.substation
+        self.network.add_to_graph(self.main_bus)
+        object_builder.new_bus_bar_section(self.network, self.main_bus)
+        
+        # Create transfer bus
+        self.transfer_bus = self.cim.ConnectivityNode(name=f'{self.name}_transfer_bus')
+        self.transfer_bus.ConnectivityNodeContainer = self.substation
+        self.network.add_to_graph(self.transfer_bus)
+        object_builder.new_bus_bar_section(self.network, self.transfer_bus)
+        
+        # Create bus tie between main and transfer buses
+        self.new_bus_tie()
+        
+        return self.network
+    
+    def new_bus_tie(self):
+        """
+        Create a new bus tie between the main bus and transfer bus.
+        
+        The bus tie consists of two disconnectors and a breaker,
+        connected in series with two junction nodes.
+        """
+        # Create junction nodes for the bus tie
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_bt_j1',
+                                        ConnectivityNodeContainer=self.substation)
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_bt_j2',
+                                        ConnectivityNodeContainer=self.substation)
+        
+        # Create disconnector from main bus to junction1
+        airgap1 = object_builder.new_disconnector(self.network, self.substation, name=f'{self.substation.name}_bt1',
+                                                node1=self.main_bus, node2=junction1)
+        airgap1.BaseVoltage = self.base_voltage
+        
+        # Create breaker between junction1 and junction2
+        bus_tie = object_builder.new_breaker(self.network, self.substation, name=f'{self.substation.name}_bus_tie',
+                                            node1=junction1, node2=junction2)
+        bus_tie.BaseVoltage = self.base_voltage
+        
+        # Create disconnector from junction2 to transfer bus
+        airgap2 = object_builder.new_disconnector(self.network, self.substation, name=f'{self.substation.name}_bt1',
+                                                node1=junction2, node2=self.transfer_bus)
+        airgap2.BaseVoltage = self.base_voltage
+        
+        # Add junction nodes to graph
+        self.network.add_to_graph(junction1)
+        self.network.add_to_graph(junction2)
+    
+    def new_branch(self, breaker_number: int, branch_equipment: cim.ConductingEquipment,
+                  branch_terminal: cim.Terminal | int) -> None:
+        """
+        Create a new branch connection to the substation with the main-and-transfer bus configuration.
+        
+        The branch connection consists of a breaker and three disconnectors arranged to allow
+        the branch to be connected to either the main bus or the transfer bus.
+        
+        Args:
+            breaker_number (int): Identifier number for the branch breaker
+            branch_equipment (cim.ConductingEquipment): Branch equipment to be connected
+            branch_terminal (cim.Terminal | int): Terminal or terminal index of the branch equipment
+        """
+        # Create junction nodes for branch connection
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j1', 
+                                        ConnectivityNodeContainer=self.substation)
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j2',
+                                        ConnectivityNodeContainer=self.substation)
+        junction3 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j3', 
+                                        ConnectivityNodeContainer=self.substation)
+        
+        # Create breaker between junction1 and junction2
+        breaker = object_builder.new_breaker(self.network, self.substation,
+                                            name=f'{self.substation.name}_{breaker_number}', node1=junction1,
+                                            node2=junction2)
+        
+        # Create disconnector from main bus to junction1
+        airgap1 = object_builder.new_disconnector(self.network, self.substation,
+                                                name=f'{self.substation.name}_{10*breaker_number + 1}',
+                                                node1=self.main_bus, node2=junction1)
+        
+        # Create disconnector from junction2 to junction3
+        airgap2 = object_builder.new_disconnector(self.network, self.substation,
+                                                name=f'{self.substation.name}_{10*breaker_number + 2}', 
+                                                node1=junction2, node2=junction3)
+        
+        # Create disconnector from junction3 to transfer bus
+        airgap3 = object_builder.new_disconnector(self.network, self.substation,
+                                                name=f'{self.substation.name}_{10*breaker_number + 3}',
+                                                node1=junction3, node2=self.transfer_bus)
+        
+        # Set base voltage for all switching equipment
+        breaker.BaseVoltage = self.base_voltage
+        airgap1.BaseVoltage = self.base_voltage
+        airgap2.BaseVoltage = self.base_voltage
+        airgap3.BaseVoltage = self.base_voltage
+        
+        # Connect branch terminal to junction3
+        if type(branch_terminal) == self.cim.Terminal:
+            branch_terminal.ConnectivityNode = junction3
+        elif type(branch_terminal) == int:
+            branch_terminal = branch_equipment.Terminals[branch_terminal]
+            branch_terminal.ConnectivityNode = junction3
+        
+        # Add junction nodes to graph
+        self.network.add_to_graph(junction1)
+        self.network.add_to_graph(junction2)
+        self.network.add_to_graph(junction3)
+    
+    def new_feeder(self, series_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
+                  sourcebus: cim.ConnectivityNode = None) -> None:
+        """
+        Connect a new feeder to the substation with the main-and-transfer bus configuration.
+        
+        The feeder connection includes a breaker and disconnectors to allow for
+        connection to either the main bus or transfer bus.
+        
+        Args:
+            series_number (int): Identifier number for the feeder connection
+            feeder_network (GraphModel): Graph model containing the feeder
+            feeder (cim.Feeder): Feeder object to be connected
+            sourcebus (cim.ConnectivityNode, optional): Source bus for the feeder. If None,
+                                                       attempts to find a node named 'sourcebus'
+        """
+        feeder_network.get_all_edges(self.cim.Feeder)
+        
+        # If sourcebus of feeder not specified, look for something named sourcebus
+        if not sourcebus:
+            found = False
+            feeder_network.get_all_edges(self.cim.EnergySource)
+            feeder_network.get_all_edges(self.cim.Terminal)
+            feeder_network.get_all_edges(self.cim.ConnectivityNode)
+            for source in feeder_network.graph[self.cim.EnergySource].values():
+                if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
+                    sourcebus = source.Terminals[0].ConnectivityNode
+                    found = True
+            if not found:
+                _log.error(f'Could not find sourcebus for {feeder.name}')
+        
+        # Create junction nodes for feeder connection
+        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{10*series_number}_j1', 
+                                        ConnectivityNodeContainer=self.substation)
+        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{10*series_number}_j2', 
+                                        ConnectivityNodeContainer=self.substation)
 
-    # Create substation
-    substation = cim_mod.Substation(name=name)
-
-    # Create or use existing network
-    if not network:
-        network = DistributedArea(connection=connection, container=substation, distributed=False)
-    network.add_to_graph(substation)
-
-    # Get or create base voltage
-    base_voltage = utils.get_base_voltage(network, base_voltage)
-
-    # Create main bus
-    main_bus = cim_mod.ConnectivityNode(name=f'{name}_main_bus')
-    main_bus.ConnectivityNodeContainer = substation
-    network.add_to_graph(main_bus)
-    object_builder.new_bus_bar_section(network, main_bus)
-
-    # Create transfer bus
-    transfer_bus = cim_mod.ConnectivityNode(name=f'{name}_transfer_bus')
-    transfer_bus.ConnectivityNodeContainer = substation
-    network.add_to_graph(transfer_bus)
-    object_builder.new_bus_bar_section(network, transfer_bus)
-
-    # Create bus tie between main and transfer buses
-    _create_bus_tie(network, substation, main_bus, transfer_bus, base_voltage)
-
-    return {
-        'network': network,
-        'substation': substation,
-        'main_bus': main_bus,
-        'transfer_bus': transfer_bus,
-        'base_voltage': base_voltage
-    }
-
-
-def _create_bus_tie(
-    network: GraphModel,
-    substation: cim.Substation,
-    main_bus: cim.ConnectivityNode,
-    transfer_bus: cim.ConnectivityNode,
-    base_voltage: cim.BaseVoltage
-) -> None:
-    """
-    Create a bus tie between main and transfer buses.
-
-    The bus tie consists of two disconnectors and a breaker,
-    connected in series with two junction nodes.
-    """
-    cim_profile, cim_module = get_cim_profile()
-    cim_mod = cim_module
-
-    # Create junction nodes
-    junction1 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_bt_j1',
-        ConnectivityNodeContainer=substation
-    )
-    junction2 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_bt_j2',
-        ConnectivityNodeContainer=substation
-    )
-
-    # Create switching equipment
-    airgap1 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_bt1',
-        node1=main_bus, node2=junction1
-    )
-    bus_tie = object_builder.new_breaker(
-        network, substation,
-        name=f'{substation.name}_bus_tie',
-        node1=junction1, node2=junction2
-    )
-    airgap2 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_bt2',
-        node1=junction2, node2=transfer_bus
-    )
-
-    # Set base voltage
-    airgap1.BaseVoltage = base_voltage
-    bus_tie.BaseVoltage = base_voltage
-    airgap2.BaseVoltage = base_voltage
-
-    # Add to graph
-    network.add_to_graph(junction1)
-    network.add_to_graph(junction2)
-
-
-def add_branch_to_main_and_transfer(
-    network: GraphModel,
-    substation: cim.Substation,
-    main_bus: cim.ConnectivityNode,
-    transfer_bus: cim.ConnectivityNode,
-    base_voltage: cim.BaseVoltage,
-    breaker_number: int,
-    branch_equipment: cim.ConductingEquipment,
-    branch_terminal: cim.Terminal | int
-) -> None:
-    """
-    Add a branch connection to a main-and-transfer bus substation.
-
-    The branch connection consists of a breaker and three disconnectors arranged to allow
-    the branch to be connected to either the main bus or the transfer bus.
-
-    Args:
-        network: Graph model containing the substation
-        substation: The substation object
-        main_bus: The main bus connectivity node
-        transfer_bus: The transfer bus connectivity node
-        base_voltage: Base voltage object
-        breaker_number: Identifier number for the branch breaker
-        branch_equipment: Branch equipment to be connected
-        branch_terminal: Terminal or terminal index of the branch equipment
-    """
-    cim_profile, cim_module = get_cim_profile()
-    cim_mod = cim_module
-
-    # Create junction nodes
-    junction1 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_{breaker_number}_j1',
-        ConnectivityNodeContainer=substation
-    )
-    junction2 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_{breaker_number}_j2',
-        ConnectivityNodeContainer=substation
-    )
-    junction3 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_{breaker_number}_j3',
-        ConnectivityNodeContainer=substation
-    )
-
-    # Create switching equipment
-    breaker = object_builder.new_breaker(
-        network, substation,
-        name=f'{substation.name}_{breaker_number}',
-        node1=junction1, node2=junction2
-    )
-    airgap1 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_{10*breaker_number + 1}',
-        node1=main_bus, node2=junction1
-    )
-    airgap2 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_{10*breaker_number + 2}',
-        node1=junction2, node2=junction3
-    )
-    airgap3 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_{10*breaker_number + 3}',
-        node1=junction3, node2=transfer_bus
-    )
-
-    # Set base voltage
-    breaker.BaseVoltage = base_voltage
-    airgap1.BaseVoltage = base_voltage
-    airgap2.BaseVoltage = base_voltage
-    airgap3.BaseVoltage = base_voltage
-
-    # Connect branch terminal
-    if isinstance(branch_terminal, cim_mod.Terminal):
-        branch_terminal.ConnectivityNode = junction3
-    elif isinstance(branch_terminal, int):
-        branch_equipment.Terminals[branch_terminal].ConnectivityNode = junction3
-
-    # Add to graph
-    network.add_to_graph(junction1)
-    network.add_to_graph(junction2)
-    network.add_to_graph(junction3)
-
-
-def add_feeder_to_main_and_transfer(
-    network: GraphModel,
-    substation: cim.Substation,
-    main_bus: cim.ConnectivityNode,
-    transfer_bus: cim.ConnectivityNode,
-    base_voltage: cim.BaseVoltage,
-    series_number: int,
-    feeder_network: GraphModel,
-    feeder: cim.Feeder,
-    sourcebus: cim.ConnectivityNode = None
-) -> None:
-    """
-    Add a feeder connection to a main-and-transfer bus substation.
-
-    The feeder connection includes a breaker and disconnectors to allow for
-    connection to either the main bus or transfer bus.
-
-    Args:
-        network: Graph model containing the substation
-        substation: The substation object
-        main_bus: The main bus connectivity node
-        transfer_bus: The transfer bus connectivity node
-        base_voltage: Base voltage object
-        series_number: Identifier number for the feeder connection
-        feeder_network: Graph model containing the feeder
-        feeder: Feeder object to be connected
-        sourcebus: Optional source bus for the feeder
-    """
-    cim_profile, cim_module = get_cim_profile()
-    cim_mod = cim_module
-
-    feeder_network.get_all_edges(cim_mod.Feeder)
-
-    # Find sourcebus if not provided
-    if not sourcebus:
-        sourcebus = utils.get_source_bus(feeder_network, feeder)
-
-    # Create junction nodes
-    junction1 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_{10*series_number}_j1',
-        ConnectivityNodeContainer=substation
-    )
-    junction2 = cim_mod.ConnectivityNode(
-        name=f'{substation.name}_{10*series_number}_j2',
-        ConnectivityNodeContainer=substation
-    )
-
-    # Create switching equipment
-    breaker = object_builder.new_breaker(
-        network, substation,
-        name=f'{substation.name}_{10*series_number}',
-        node1=junction1, node2=junction2
-    )
-    airgap1 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_{10*series_number + 1}',
-        node1=main_bus, node2=junction1
-    )
-    airgap2 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_{10*series_number + 2}',
-        node1=junction2, node2=sourcebus
-    )
-    airgap3 = object_builder.new_disconnector(
-        network, substation,
-        name=f'{substation.name}_{10*series_number + 3}',
-        node1=sourcebus, node2=transfer_bus,
-        open=True, normalOpen=True
-    )
-
-    # Set base voltage
-    breaker.BaseVoltage = base_voltage
-    airgap1.BaseVoltage = base_voltage
-    airgap2.BaseVoltage = base_voltage
-    airgap3.BaseVoltage = base_voltage
-
-    # Configure feeder-substation relationship
-    feeder.NormalEnergizingSubstation = substation
-    substation.NormalEnergizedFeeder.append(feeder)
-
-    # Add to graph
-    network.add_to_graph(junction1)
-    network.add_to_graph(junction2)
-    network.add_to_graph(sourcebus)
-    network.add_to_graph(feeder)
+        # Create breaker between junction1 and junction2
+        breaker = object_builder.new_breaker(self.network, self.substation,
+                                            name=f'{self.substation.name}_{10*series_number}', node1=junction1,
+                                            node2=junction2)
+        
+        # Create disconnector from main bus to junction1
+        airgap1 = object_builder.new_disconnector(self.network, self.substation,
+                                                name=f'{self.substation.name}_{10*series_number + 1}',
+                                                node1=self.main_bus, node2=junction1)
+        
+        # Create disconnector from junction2 to sourcebus
+        airgap2 = object_builder.new_disconnector(self.network, self.substation,
+                                                name=f'{self.substation.name}_{10*series_number + 2}',
+                                                node1=junction2, node2=sourcebus)
+        
+        # Create disconnector from sourcebus to transfer bus (normally open)
+        airgap3 = object_builder.new_disconnector(self.network, self.substation,
+                                                name=f'{self.substation.name}_{10*series_number + 3}', 
+                                                node1=sourcebus, node2=self.transfer_bus)
+        
+        # Set base voltage for all switching equipment
+        breaker.BaseVoltage = self.base_voltage
+        airgap1.BaseVoltage = self.base_voltage
+        airgap2.BaseVoltage = self.base_voltage
+        airgap3.BaseVoltage = self.base_voltage
+        
+        # Configure transfer bus disconnector as normally open
+        airgap3.open = True
+        airgap3.normalOpen = True
+        
+        # Set up feeder-substation relationship
+        feeder.NormalEnergizingSubstation = self.substation
+        self.substation.NormalEnergizedFeeder.append(feeder)
+        
+        # Add nodes to graph
+        self.network.add_to_graph(junction1)
+        self.network.add_to_graph(junction2)
+        self.network.add_to_graph(sourcebus)
+        self.network.add_to_graph(feeder)
