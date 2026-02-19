@@ -1,0 +1,4 @@
+#units,,,,,,,in,in,in,in,lb/ft,lb,ohm/kft,ohm/kft,A,,
+mRID,name,description,sizeDescription,material,strandCount,coreStrandCount,strandRadius,coreStrandRadius,coreRadius,radius,massPerLength,ratedStrength,rDC20,rAC75,ratedCurrent
+urn:uuid:acsr:turkey,Turkey,ACSR 6 AWG 6/1,6,ACSR,6,1,0.03305,0.03305,0.03305,0.099,0.036,1190,0.641,0.806,105
+urn:uuid:acsr:swan,Swan,ACSR 4 AWG 6/1,4,ACSR,6,1,0.0417,0.0417,0.0417,0.125,0.057,1860,0.403,0.515,140
