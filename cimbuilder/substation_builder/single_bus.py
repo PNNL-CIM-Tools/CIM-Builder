@@ -69,12 +69,12 @@ class SingleBusSubstation(SubstationBuilder):
             feeder_network.get_all_edges(self.cim.EnergySource)
             feeder_network.get_all_edges(self.cim.Terminal)
             feeder_network.get_all_edges(self.cim.ConnectivityNode)
-            for source in feeder_network.graph[self.cim.EnergySource].values():
-                if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
-                    sourcebus:cim.ConnectivityNode = source.Terminals[0].ConnectivityNode
-                    found = True
-            if not found:
-                _log.error(f'Could not find sourcebus for {feeder.name}')
+            source = feeder_network.list_by_class(self.cim.EnergySource)[0]
+                # if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
+            sourcebus:cim.ConnectivityNode = source.Terminals[0].ConnectivityNode
+            # found = True
+            # if not found:
+            #     _log.error(f'Could not find sourcebus for {feeder.name}')
 
         junction1 = cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j1',
                                         ConnectivityNodeContainer=self.substation)
