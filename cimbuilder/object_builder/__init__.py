@@ -12,10 +12,10 @@ from cimbuilder.object_builder.measurement.new_analog import new_analog as new_a
 from cimbuilder.object_builder.measurement.new_analog import create_all_analog as create_all_analog
 from cimbuilder.object_builder.measurement.new_discrete import new_discrete as new_discrete
 
-from cimbuilder.object_builder.new_capacitor import new_capacitor as new_capacitor 
-from cimbuilder.object_builder.generator.new_synchronous_generator import new_synchronous_generator as new_synchronous_generator
-from cimbuilder.object_builder.new_transmission_line import new_transmission_line as new_transmission_line
-from cimbuilder.object_builder.transformer.new_tap_changer import new_tap_changer as new_tap_changer
+# from cimbuilder.object_builder.new_capacitor import new_capacitor as new_capacitor 
+# from cimbuilder.object_builder.generator.new_synchronous_generator import new_synchronous_generator as new_synchronous_generator
+# from cimbuilder.object_builder.new_transmission_line import new_transmission_line as new_transmission_line
+# from cimbuilder.object_builder.transformer.new_tap_changer import new_tap_changer as new_tap_changer
 
 
 # import inspect

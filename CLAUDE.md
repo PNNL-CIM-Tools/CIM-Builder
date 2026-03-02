@@ -19,31 +19,31 @@ Built on top of the `cim-graph` library (CIMantic Graphs), which provides the un
 ### Environment Setup
 ```bash
 # Install dependencies
-poetry install
+uv sync
 
-# Activate virtual environment (if not auto-activated)
-poetry shell
+# Install with dev dependencies
+uv sync --all-extras
 ```
 
 ### Testing
 ```bash
 # Run all tests
-poetry run pytest
+uv run pytest
 
 # Run a specific test file
-poetry run pytest tests/path/to/test_file.py
+uv run pytest tests/path/to/test_file.py
 
 # Run a specific test function
-poetry run pytest tests/path/to/test_file.py::test_function_name
+uv run pytest tests/path/to/test_file.py::test_function_name
 
 # Run with verbose output
-poetry run pytest -v
+uv run pytest -v
 ```
 
 ### Building
 ```bash
 # Build distribution packages
-poetry build
+uv build
 ```
 
 ### Catalog Management
