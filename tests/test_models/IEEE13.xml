@@ -528,13 +528,13 @@
   <cim:IdentifiedObject.name>ieee13nodeckt_Island</cim:IdentifiedObject.name>
   <cim:TopologicalIsland.AngleRefTopologicalNode rdf:resource="urn:uuid:A7CAAC2F-EC2B-4DF3-BD28-C8CCA20D7B7A"/>
 </cim:TopologicalIsland>
-<cim:PhotovoltaicUnit rdf:about="urn:uuid:15EEE173-CC90-4888-B9B8-43916D56890C">
+<cim:PhotoVoltaicUnit rdf:about="urn:uuid:15EEE173-CC90-4888-B9B8-43916D56890C">
   <cim:IdentifiedObject.mRID>15EEE173-CC90-4888-B9B8-43916D56890C</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>school</cim:IdentifiedObject.name>
   <cim:PowerSystemResource.Location rdf:resource="urn:uuid:83FA529E-9B45-4022-BD00-3E9867EFD55D"/>
   <cim:PowerElectronicsUnit.maxP>300000</cim:PowerElectronicsUnit.maxP>
   <cim:PowerElectronicsUnit.minP>60000</cim:PowerElectronicsUnit.minP>
-</cim:PhotovoltaicUnit>
+</cim:PhotoVoltaicUnit>
 <cim:PowerElectronicsConnection rdf:about="urn:uuid:D2E930A7-B136-4ACA-A996-8DB5C60AADF3">
   <cim:IdentifiedObject.mRID>D2E930A7-B136-4ACA-A996-8DB5C60AADF3</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>school</cim:IdentifiedObject.name>
@@ -568,13 +568,13 @@
   <cim:PositionPoint.xPosition>400</cim:PositionPoint.xPosition>
   <cim:PositionPoint.yPosition>250</cim:PositionPoint.yPosition>
 </cim:PositionPoint>
-<cim:PhotovoltaicUnit rdf:about="urn:uuid:1E58BE0E-7D37-46A5-A8A2-04B56C78E50A">
+<cim:PhotoVoltaicUnit rdf:about="urn:uuid:1E58BE0E-7D37-46A5-A8A2-04B56C78E50A">
   <cim:IdentifiedObject.mRID>1E58BE0E-7D37-46A5-A8A2-04B56C78E50A</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>house</cim:IdentifiedObject.name>
   <cim:PowerSystemResource.Location rdf:resource="urn:uuid:EF80FC47-029B-401F-9E63-45BE7AB0530B"/>
   <cim:PowerElectronicsUnit.maxP>5000</cim:PowerElectronicsUnit.maxP>
   <cim:PowerElectronicsUnit.minP>1000</cim:PowerElectronicsUnit.minP>
-</cim:PhotovoltaicUnit>
+</cim:PhotoVoltaicUnit>
 <cim:PowerElectronicsConnection rdf:about="urn:uuid:CEC0FC3A-0FD1-4F1C-9C51-7D9BEF4D8222">
   <cim:IdentifiedObject.mRID>CEC0FC3A-0FD1-4F1C-9C51-7D9BEF4D8222</cim:IdentifiedObject.mRID>
   <cim:IdentifiedObject.name>house</cim:IdentifiedObject.name>
