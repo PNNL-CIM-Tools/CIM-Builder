@@ -36,13 +36,13 @@ class DoubleBusSingleBreakerSubstation(SubstationBuilder):
         self.north_bus = self.cim.ConnectivityNode(name=f'{self.name}_north_bus')
         self.north_bus.ConnectivityNodeContainer = self.substation
         self.network.add_to_graph(self.north_bus)
-        object_builder.new_bus_bar_section(self.network, self.north_bus)
+        object_builder.new_bus_bar_section(self.network, self.substation, self.north_bus.name, self.north_bus)
 
         # south bus
         self.south_bus = self.cim.ConnectivityNode(name=f'{self.name}_south_bus')
         self.south_bus.ConnectivityNodeContainer = self.substation
         self.network.add_to_graph(self.south_bus)
-        object_builder.new_bus_bar_section(self.network, self.south_bus)
+        object_builder.new_bus_bar_section(self.network, self.substation, self.south_bus.name, self.south_bus)
 
         # create bus_tie
         self.new_bus_tie()

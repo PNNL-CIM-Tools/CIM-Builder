@@ -1,12 +1,14 @@
 # from cimbuilder.object_builder.new_base_voltage import new_base_voltage as new_base_voltage
 from typing import TypeVar
-from cimbuilder.object_builder.shunt.new_breaker import new_breaker as new_breaker
+from cimbuilder.object_builder.switch.new_breaker import new_breaker as new_breaker
 from cimbuilder.object_builder.switch.new_disconnector import new_disconnector as new_disconnector
+from cimbuilder.object_builder.switch.new_fuse import new_fuse as new_fuse
+from cimbuilder.object_builder.switch.new_load_break_switch import new_load_break_switch as new_load_break_switch
 from cimbuilder.object_builder.topology.new_bus_bar_section import new_bus_bar_section as new_bus_bar_section
 from cimbuilder.object_builder.transformer.new_power_transformer import new_power_transformer as new_power_transformer
 
-from cimbuilder.object_builder.generic.new_one_terminal_obj import new_one_terminal_object as new_one_terminal_object
-from cimbuilder.object_builder.generic.new_two_terminal_obj import new_two_terminal_object as new_two_terminal_object
+from cimbuilder.object_builder.generic.new_one_terminal_object import new_one_terminal_object as new_one_terminal_object
+from cimbuilder.object_builder.generic.new_two_terminal_object import new_two_terminal_object as new_two_terminal_object
 
 from cimbuilder.object_builder.measurement.new_analog import new_analog as new_analog
 from cimbuilder.object_builder.measurement.new_analog import create_all_analog as create_all_analog

@@ -43,13 +43,13 @@ class BreakerAndHalfSubstation(SubstationBuilder):
         self.main_bus_1 = self.cim.ConnectivityNode(name=f'{self.name}_main_bus_1')
         self.main_bus_1.ConnectivityNodeContainer = self.substation
         self.network.add_to_graph(self.main_bus_1)
-        object_builder.new_bus_bar_section(self.network, self.main_bus_1)
+        object_builder.new_bus_bar_section(self.network, self.substation, self.main_bus_1.name, self.main_bus_1)
 
         # Create the second main bus
         self.main_bus_2 = self.cim.ConnectivityNode(name=f'{self.name}_main_bus_2')
         self.main_bus_2.ConnectivityNodeContainer = self.substation
         self.network.add_to_graph(self.main_bus_2)
-        object_builder.new_bus_bar_section(self.network, self.main_bus_2)
+        object_builder.new_bus_bar_section(self.network, self.substation, self.main_bus_2.name, self.main_bus_2)
 
         # Create bus ties
         for tie in range(self.total_bus_ties):

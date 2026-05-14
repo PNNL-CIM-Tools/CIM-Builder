@@ -58,13 +58,13 @@ class MainAndTransferSubstation(SubstationBuilder):
         self.main_bus = self.cim.ConnectivityNode(name=f'{self.name}_main_bus')
         self.main_bus.ConnectivityNodeContainer = self.substation
         self.network.add_to_graph(self.main_bus)
-        object_builder.new_bus_bar_section(self.network, self.main_bus)
+        object_builder.new_bus_bar_section(self.network, self.substation, self.main_bus.name, self.main_bus)
         
         # Create transfer bus
         self.transfer_bus = self.cim.ConnectivityNode(name=f'{self.name}_transfer_bus')
         self.transfer_bus.ConnectivityNodeContainer = self.substation
         self.network.add_to_graph(self.transfer_bus)
-        object_builder.new_bus_bar_section(self.network, self.transfer_bus)
+        object_builder.new_bus_bar_section(self.network, self.substation, self.transfer_bus.name, self.transfer_bus)
         
         # Create bus tie between main and transfer buses
         self.new_bus_tie()

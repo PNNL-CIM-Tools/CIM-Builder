@@ -40,7 +40,7 @@ class RingBusSubstation(SubstationBuilder):
             bus = self.cim.ConnectivityNode(name=f'{self.name}_bus_{section + 1}')
             bus.ConnectivityNodeContainer = self.substation
             self.network.add_to_graph(bus)
-            object_builder.new_bus_bar_section(self.network, bus)
+            object_builder.new_bus_bar_section(self.network, self.substation, bus.name, bus)
 
         for section in range(self.total_sections):
             from_bus = f'{self.name}_bus_{section + 1}'

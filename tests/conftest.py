@@ -16,13 +16,13 @@ from cimgraph.models import DistributedArea, FeederModel
 from cimbuilder._profile import get_cim
 
 if TYPE_CHECKING:
-    import cimgraph.data_profile.cimhub_2023 as cim
+    import cimgraph.data_profile.cimhub_2026 as cim
 
 
 @pytest.fixture(autouse=True)
 def setup_environment(monkeypatch):
-    """Ensure CIMG_CIM_PROFILE is set to cimhub_2023 for every test."""
-    monkeypatch.setenv("CIMG_CIM_PROFILE", "cimhub_2023")
+    """Ensure CIMG_CIM_PROFILE is set to cimhub_2026 for every test."""
+    monkeypatch.setenv("CIMG_CIM_PROFILE", "cimhub_2026")
     yield
 
 

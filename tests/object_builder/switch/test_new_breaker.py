@@ -1,14 +1,8 @@
-"""Tests for cimbuilder.object_builder.shunt.new_breaker.
-
-Phase 0 reference-implementation tests.  The file this exercises currently
-lives at ``cimbuilder/object_builder/shunt/new_breaker.py`` and will move to
-``cimbuilder/object_builder/switch/`` in Phase 1 with the rest of the switch
-primitives.
-"""
+"""Tests for cimbuilder.object_builder.switch.new_breaker."""
 from __future__ import annotations
 
 from cimbuilder._profile import get_cim
-from cimbuilder.object_builder.shunt.new_breaker import new_breaker
+from cimbuilder.object_builder.switch.new_breaker import new_breaker
 
 
 def test_new_breaker_basic(simple_substation_network, connectivity_nodes):
