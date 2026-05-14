@@ -241,7 +241,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cim-graph", specifier = ">=0.4.3a10" },
+    { name = "cim-graph", editable = "../CIM-Graph" },
     { name = "graphviz", marker = "extra == 'dev'", specifier = ">=0.19.1" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.27.1" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=2.17.0" },
@@ -252,8 +252,8 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "cim-graph"
-version = "0.4.3a10"
-source = { registry = "https://pypi.org/simple" }
+version = "0.4.3a12"
+source = { editable = "../CIM-Graph" }
 dependencies = [
     { name = "defusedxml" },
     { name = "gridappsd-python" },
@@ -267,10 +267,25 @@ dependencies = [
     { name = "rdflib" },
     { name = "sparqlwrapper" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/ba/3ce28433de10a3cbe5d94963fc4a25ad08ff6940b1bae53842a700799b36/cim_graph-0.4.3a10.tar.gz", hash = "sha256:ad1e6292ce8ea3b21ef67ee6a25caa6899602e5cf42037c9dbeec8387d7be4fc", size = 2646173, upload-time = "2026-02-25T23:27:29.564Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/41/c3a707fbc83de175286018241711e546939cf0da41d680491a08c18cbb05/cim_graph-0.4.3a10-py3-none-any.whl", hash = "sha256:0354a8269f476f9a99d5e707c353bff88fc230a69b964ef1a261e570e2792d5d", size = 2725110, upload-time = "2026-02-25T23:27:31.42Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "defusedxml", specifier = ">=0.7.1" },
+    { name = "graphviz", marker = "extra == 'dev'", specifier = ">=0.19.1" },
+    { name = "gridappsd-python", specifier = ">=2025.3.2" },
+    { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.27.1" },
+    { name = "mermaid-python", specifier = ">=0.1" },
+    { name = "mysql-connector-python", specifier = ">=9.2.0" },
+    { name = "neo4j", specifier = ">=5.10.0" },
+    { name = "nest-asyncio", specifier = ">=1.5.8" },
+    { name = "oxrdflib", specifier = ">=0.3.6" },
+    { name = "pint", specifier = ">=0.24.4" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=2.17.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
+    { name = "rdflib", specifier = ">=7.0.0" },
+    { name = "sparqlwrapper", specifier = ">=2.0.0" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "colorama"

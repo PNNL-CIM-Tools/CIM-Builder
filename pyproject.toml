@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "cim-graph>=0.4.3a10",
+    "cim-graph>=0.4.3a12",
     "pydantic>=2.0,<3",
 ]
 
@@ -19,6 +19,9 @@ dev = [
     "graphviz>=0.19.1",
     "ipykernel>=6.27.1",
 ]
+
+[tool.uv.sources]
+cim-graph = { path = "../CIM-Graph", editable = true }
 
 [build-system]
 requires = ["hatchling"]

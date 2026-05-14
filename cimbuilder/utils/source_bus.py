@@ -37,8 +37,12 @@ def get_source_bus(
     feeder_network.get_all_edges(cim.Terminal)
     feeder_network.get_all_edges(cim.ConnectivityNode)
 
-    if feeder.NormalHeadTerminal is not None:
-        return feeder.NormalHeadTerminal.ConnectivityNode
+    # cimhub_2026 uses a list for NormalHeadTerminal; cimhub_2023 uses a scalar.
+    head = feeder.NormalHeadTerminal
+    if isinstance(head, list):
+        head = head[0] if head else None
+    if head is not None:
+        return head.ConnectivityNode
 
     for source in feeder_network.graph.get(cim.EnergySource, {}).values():
         if source.Terminals[0].ConnectivityNode.name == "sourcebus":

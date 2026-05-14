@@ -1,4 +1,7 @@
 """CIM-Builder: programmatic CIM model construction."""
+# Layer 4 — session classes
+from cimbuilder.session import SubstationSession, FeederSession, NetworkSession
+
 # Layer 1 — primitives
 from cimbuilder.object_builder import (
     new_base_voltage,
@@ -29,7 +32,29 @@ from cimbuilder.object_builder import (
     new_two_terminal_object,
 )
 
-# Legacy substation builders (class-based API — replaced by topology_builder/ in Phase 3)
+# Layer 3 — topology functions
+from cimbuilder.topology_builder import (
+    new_single_bus_substation,
+    add_feeder_to_single_bus,
+    add_branch_to_single_bus,
+    new_double_bus_single_breaker_substation,
+    add_feeder_to_double_bus_single_breaker,
+    add_branch_to_double_bus_single_breaker,
+    new_main_and_transfer_substation,
+    add_feeder_to_main_and_transfer,
+    add_branch_to_main_and_transfer,
+    new_ring_bus_substation,
+    add_feeder_to_ring_bus,
+    add_branch_to_ring_bus,
+    new_sectionalized_bus_substation,
+    add_feeder_to_sectionalized_bus,
+    add_branch_to_sectionalized_bus,
+    new_breaker_and_half_substation,
+    add_feeder_to_breaker_and_half,
+    add_branch_to_breaker_and_half,
+)
+
+# Legacy substation builders (class-based API — will become deprecation shims in Phase 5)
 from cimbuilder.substation_builder import (
     SingleBusSubstation,
     DoubleBusSingleBreakerSubstation,
@@ -40,6 +65,10 @@ from cimbuilder.substation_builder import (
 )
 
 __all__ = [
+    # session classes
+    "SubstationSession",
+    "FeederSession",
+    "NetworkSession",
     # primitives
     "new_base_voltage",
     "new_bus_bar_section",
@@ -67,7 +96,26 @@ __all__ = [
     "new_discrete",
     "new_one_terminal_object",
     "new_two_terminal_object",
-    # legacy substation builders (Phase 3 will replace with functional API)
+    # topology functions
+    "new_single_bus_substation",
+    "add_feeder_to_single_bus",
+    "add_branch_to_single_bus",
+    "new_double_bus_single_breaker_substation",
+    "add_feeder_to_double_bus_single_breaker",
+    "add_branch_to_double_bus_single_breaker",
+    "new_main_and_transfer_substation",
+    "add_feeder_to_main_and_transfer",
+    "add_branch_to_main_and_transfer",
+    "new_ring_bus_substation",
+    "add_feeder_to_ring_bus",
+    "add_branch_to_ring_bus",
+    "new_sectionalized_bus_substation",
+    "add_feeder_to_sectionalized_bus",
+    "add_branch_to_sectionalized_bus",
+    "new_breaker_and_half_substation",
+    "add_feeder_to_breaker_and_half",
+    "add_branch_to_breaker_and_half",
+    # legacy substation builders (Phase 5 will add deprecation warnings)
     "SingleBusSubstation",
     "DoubleBusSingleBreakerSubstation",
     "BreakerAndHalfSubstation",
