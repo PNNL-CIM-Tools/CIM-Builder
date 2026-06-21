@@ -37,9 +37,9 @@ against.
    `TYPE_CHECKING` imports, narrowing writes to one profile while the runtime
    value stays the full `network.cim` module. Includes the today-vs-0.5 gap.
 
-5. **`UNITS.md`** — how `add_electrical` sets physical quantities via `CIMUnit`
-   (no manual scaling), CIMUnit on first pass, and the per-unit (`z_base`) engine
-   deferred to Phase 11.
+5. **`UNITS.md`** — how `add_electrical_bal` sets physical quantities via
+   `CIMUnit` (no manual scaling), CIMUnit on first pass, and the per-unit
+   (`z_base`) engine deferred to Phase 11.
 
 6. **`BUILDER_TEST_CREATION.md`** — the test strategy: atom factories, the
    chained-build "act", per-profile assertions, the `network.cim` identity
@@ -57,7 +57,8 @@ against.
 | Profile source | `cim = self.network.cim` (never `get_cim_profile()` in a builder) |
 | Substations | Separate assembly layer that orchestrates object builders |
 | Units | CIMUnit now; full per-unit (`z_base`) deferred to Phase 11 |
-| Profile dependency | Assumes cim-graph 0.5 (`network.cim` + `cim18gmdm` sub-profiles); the gap vs. current pin is a prerequisite |
+| Profile dependency | Targets cim-graph 0.5.0a1 — `network.cim` is live and the `cgmes_3_0_0` merged profile ships real sub-profile parts (`core_equipment`, `short_circuit`, `topology`, …). Gap closed at source; only the dependency pin bump remains (Phase 1) |
+| Electrical split | `add_electrical_bal` (balanced, implemented) vs. `add_electrical_unbal` (per-phase, stubbed until CIM18 unbalanced parts ship) |
 | Typing | §5a per-method single-sub-profile via `TYPE_CHECKING`; no `.pyi` for builders |
 
 ---

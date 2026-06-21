@@ -37,8 +37,8 @@ line = (
     LineBuilder(network=network, container=feeder)   # 1. construct the builder
         .create(name='Line1')                        # 2. EQ object into the graph
         .add_connectivity(node1='busA', node2='busB')# 3. terminals + node wiring
-        .add_electrical(r=0.01, x=0.1, bch=0.0,      # 4. impedance (CIMUnit)
-                        r_unit='ohm', x_unit='ohm', bch_unit='S')
+        .add_electrical_bal(r=0.01, x=0.1, bch=0.0,  # 4. balanced impedance (CIMUnit)
+                            r_unit='ohm', x_unit='ohm', bch_unit='S')
         .add_short_circuit(r0=0.03, x0=0.3, b0ch=0.0)# 5. zero-sequence (optional)
         .build()                                     # 6. return the CIM object
 )
@@ -63,8 +63,9 @@ line = (
 | Method | Profile part | Populates |
 |--------|--------------|-----------|
 | `create(name, ...)` | EQ identity | the equipment object itself, container, graph membership |
-| `add_connectivity(node1, node2=None, ...)` | connectivity (CN) | `Terminal`s and their `ConnectivityNode` wiring |
-| `add_electrical(...)` | electrical (EQ) | impedance / ratings (`r`, `x`, `bch`, rated power/voltage) as CIMUnit |
+| `add_connectivity(node1, node2=None, ...)` | connectivity (CN; lives in EQ under CIM17) | `Terminal`s and their `ConnectivityNode` wiring |
+| `add_electrical_bal(...)` | electrical (EQ) | **balanced** impedance / ratings (scalar `r`, `x`, `bch`, rated power/voltage) as CIMUnit |
+| `add_electrical_unbal(...)` | electrical (unbalanced) | **per-phase** impedance (`ACLineSegmentPhase`, `PerLengthPhaseImpedance`) — stubbed `NotImplementedError` until the CIM18 parts ship |
 | `add_short_circuit(...)` | short-circuit (SC) | zero-sequence (`r0`, `x0`, `b0ch`) |
 | `add_dynamics(...)` | dynamics (DN) | dynamics-profile fields |
 | `add_measurement(...)` | measurement | `Analog` / `Discrete` measurements on terminals |
@@ -93,12 +94,19 @@ Rules:
 ## Argument grouping = profile boundary
 
 A method's parameters are exactly its profile's fields — never another
-profile's. `add_electrical` takes `r/x/bch` (+ unit strings); it must not take
-`node1` (connectivity) or `r0` (short-circuit). This is the same boundary the
-§5a type narrowing enforces at edit time (`PROFILE_TYPING.md`): a parameter that
-doesn't belong to the method's profile is a design smell, not a convenience.
+profile's. `add_electrical_bal` takes `r/x/bch` (+ unit strings); it must not
+take `node1` (connectivity) or `r0` (short-circuit). This is the same boundary
+the §5a type narrowing enforces at edit time (`PROFILE_TYPING.md`): a parameter
+that doesn't belong to the method's profile is a design smell, not a convenience.
 
-Unit handling in `add_electrical` follows `UNITS.md`: values are wrapped in
+**Balanced vs. unbalanced.** Electrical is split one level further:
+`add_electrical_bal` sets the scalar balanced impedance (CGMES `core_equipment`,
+implemented now); `add_electrical_unbal` sets the per-phase unbalanced model and
+raises `NotImplementedError` until the CIM18 unbalanced profile parts are
+official. Same method-boundary discipline, applied to the two electrical
+representations — a builder never mixes scalar and per-phase fields in one call.
+
+Unit handling in `add_electrical_bal` follows `UNITS.md`: values are wrapped in
 CIMUnit constructors (`cim.Resistance(r, r_unit or 'ohm')`); the per-unit path
 is stubbed (`NotImplementedError`) until Phase 11.
 
@@ -136,7 +144,7 @@ builder and exported from `cimbuilder/__init__.py`:
 def new_line(network, container, name, node1, node2, r=None, x=None, **kw):
     b = LineBuilder(network, container).create(name).add_connectivity(node1, node2)
     if r is not None or x is not None:
-        b.add_electrical(r=r, x=x, **kw)
+        b.add_electrical_bal(r=r, x=x, **kw)
     return b.build()
 ```
 
@@ -174,5 +182,5 @@ substation classes, not here.
 
 - `ARCHITECTURE.md` — the layering and `ObjectBuilder` / `builder_base` contract.
 - `PROFILE_TYPING.md` — how each `add_<profile>` signature is typed (§5a).
-- `UNITS.md` — CIMUnit handling inside `add_electrical`.
+- `UNITS.md` — CIMUnit handling inside `add_electrical_bal`.
 - `BUILDER_TEST_CREATION.md` — testing a builder against atom factories.

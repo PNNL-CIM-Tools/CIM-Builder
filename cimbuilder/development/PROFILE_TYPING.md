@@ -20,10 +20,11 @@ Runtime and edit-time pull in opposite directions:
   asset…). Under cim-graph 0.5 this module is a runtime *merge* — it has **no
   file on disk**. Pylance can only see it as `ModuleType` / `Any`: no
   completions, no field checking.
-- **What we want at edit time:** in `add_electrical` you should get completions
-  for `r`, `x`, `bch` — and a *flag* if you accidentally set `r0` (short-circuit)
-  or wire a node (connectivity). The method should be scoped to **one profile's
-  fields**.
+- **What we want at edit time:** in `add_electrical_bal` you should get
+  completions for `r`, `x`, `bch` — and a *flag* if you accidentally set `r0`
+  (short-circuit). The method should be scoped to **one profile's fields**. (The
+  connectivity flag arrives with the CIM18 CN split; under CIM17 the CN classes
+  share the EQ part.)
 
 A single annotation can't be both the wide runtime truth and the narrow per-method
 scope. So we split them.
@@ -49,17 +50,16 @@ from cimgraph.models import GraphModel
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
 if TYPE_CHECKING:
-    import cimgraph.data_profile.cim18gmdm.connectivity   as CN
-    import cimgraph.data_profile.cim18gmdm.electrical     as EQ
-    import cimgraph.data_profile.cim18gmdm.short_circuit  as SC
-    import cimgraph.data_profile.cim18gmdm.asset          as AST
-    # import cimgraph.data_profile.cim18gmdm.dynamics     as DN
+    import cimgraph.data_profile.cgmes_3_0_0.core_equipment          as EQ
+    import cimgraph.data_profile.cgmes_3_0_0.short_circuit           as SC
+    import cimgraph.data_profile.cgmes_3_0_0.steady_state_hypothesis as SSH
+    # import cimgraph.data_profile.cgmes_3_0_0.dynamics              as DN
 
 
 @dataclass
 class LineBuilder(ObjectBuilder):
     network: GraphModel
-    container: "CN.EquipmentContainer"
+    container: "EQ.EquipmentContainer"
 
     def create(self, name: str) -> "LineBuilder":
         cim: EQ = self.network.cim                 # runtime: the merged module
@@ -69,48 +69,64 @@ class LineBuilder(ObjectBuilder):
         return self
 
     def add_connectivity(self, node1, node2) -> "LineBuilder":
-        cim: CN = self.network.cim                 # edit time: only CN fields offered
+        cim: EQ = self.network.cim                 # CIM17: CN lives in EQ (see below)
         t1 = self._new_terminal(self.line, 1, f'{self.line.name}_t1')
         t2 = self._new_terminal(self.line, 2, f'{self.line.name}_t2')
         self._connect_node(t1, node1)
         self._connect_node(t2, node2)
-        # self.line.r = ...  ← would be flagged here: `r` is electrical, wrong method
         return self
 
-    def add_electrical(self, r, x, bch,
-                       r_unit=None, x_unit=None, bch_unit=None) -> "LineBuilder":
-        cim: EQ = self.network.cim                 # same object, electrical slice
+    def add_electrical_bal(self, r, x, bch,
+                           r_unit=None, x_unit=None, bch_unit=None) -> "LineBuilder":
+        cim: EQ = self.network.cim                 # balanced: scalar r/x/bch on EQ
         self.line.r = cim.Resistance(r, r_unit or 'ohm')
         self.line.x = cim.Reactance(x, x_unit or 'ohm')
         self.line.bch = cim.Susceptance(bch, bch_unit or 'S')
         return self
 
+    def add_electrical_unbal(self, *a, **k) -> "LineBuilder":
+        # per-phase impedance (ACLineSegmentPhase / PerLengthPhaseImpedance) —
+        # stubbed until the CIM18 unbalanced profile parts ship (next round)
+        raise NotImplementedError('unbalanced electrical lands with the CIM18 parts')
+
     def add_short_circuit(self, r0, x0, b0ch) -> "LineBuilder":
-        cim: SC = self.network.cim
+        cim: SC = self.network.cim                 # r0/x0/b0ch live in the SC part
         self.line.r0 = cim.Resistance(r0, 'ohm')
         self.line.x0 = cim.Reactance(x0, 'ohm')
         self.line.b0ch = cim.Susceptance(b0ch, 'S')
         return self
 ```
 
-`cim: CN = self.network.cim` — the annotation says CN, the runtime value is the
-full module. The assignment is fine at runtime (it's the same object); Pylance
-treats `cim` as the CN slice and offers only CN's classes. The local annotation
-**narrows**, it does not change the value.
+`cim: SC = self.network.cim` — the annotation says SC, the runtime value is the
+full merged module. The assignment is fine at runtime (it's the same object);
+Pylance treats `cim` as the SC slice and offers only SC's classes. The local
+annotation **narrows**, it does not change the value.
+
+> **CIM17 vs CIM18 — the connectivity slice.** In CGMES 3.0 (CIM17), the
+> `core_equipment` (EQ) part carries *both* the connectivity classes (`Terminal`,
+> `ConnectivityNode`) and the electrical fields (`r`, `x`, `bch`). So today
+> `add_connectivity` and `add_electrical_bal` both annotate `cim: EQ`. The
+> **method boundary still holds** — connectivity wiring and impedance values are
+> distinct methods (and distinct wizard pages) — only the *type slice* coincides.
+> CIM18 splits connectivity into its own part; when those official profile parts
+> ship, `add_connectivity` narrows to `cim: CN` with no change to the method
+> shape. The seam is already in place; only the annotation tightens.
 
 ---
 
 ## Why scope by profile
 
-- **Guardrail.** `self.line.r` inside `add_connectivity` is a category error —
-  `r` is electrical. With the method scoped (the object typed via the active
-  profile slice) Pylance rejects it. The profile partition is enforced at edit
-  time, not discovered at runtime.
+- **Guardrail.** `self.line.r0` inside `add_electrical_bal` is a category error —
+  `r0` is short-circuit. With the method scoped to `cim: EQ`, Pylance rejects it
+  (`r0` is only on the SC slice). The profile partition is enforced at edit time,
+  not discovered at runtime. (Under CIM17 the EQ slice still holds connectivity,
+  so a connectivity/electrical mix-up is *not* yet flagged — that guardrail
+  arrives with the CIM18 CN split. The SC ↔ EQ guardrail works today.)
 - **No file on disk.** No `.pyi`, no `generate_type_stubs`, no canonical flat
-  import. The `TYPE_CHECKING` imports of the real `cim18gmdm` sub-profile modules
-  are the only machinery, and they are erased at runtime (`if TYPE_CHECKING` is
-  always false at runtime; `from __future__ import annotations` makes the string
-  annotations lazy).
+  import. The `TYPE_CHECKING` imports of the real `cgmes_3_0_0` sub-profile
+  modules are the only machinery, and they are erased at runtime (`if
+  TYPE_CHECKING` is always false at runtime; `from __future__ import annotations`
+  makes the string annotations lazy).
 - **It maps 1:1 onto the UI wizard.** "Add Line" → a wizard with one page per
   profile (Connectivity → Electrical → Short-circuit). Each page is backed by one
   `add_<profile>` method, and that method's profile slice is exactly the set of
@@ -133,28 +149,39 @@ the annotation. The constraint is healthy — document it, don't defeat it.
 
 ---
 
-## Today vs. 0.5
+## Today vs. the 0.5 target
 
-| | Today (`feature/23`) | Target (cim-graph 0.5) |
+cim-graph **0.5.0a1** ships the deployable target: `network.cim` is live on
+`GraphModel`, and the `cgmes_3_0_0` merged profile exposes real sub-profile parts
+(`core_equipment`, `short_circuit`, `topology`, `steady_state_hypothesis`,
+`state_variables`, `operation`, `equipment_boundary`, `geographical_location`,
+`diagram`, `dynamics`). The §5a imports resolve against a real checkout.
+
+| | Today (`feature/23` pin) | Target (cim-graph 0.5.0a1) |
 |---|---|---|
-| Runtime profile | flat `cimhub_2023` | `cim18gmdm` runtime merge |
+| Runtime profile | flat `cimhub_2023` | `cgmes_3_0_0` runtime merge |
 | Profile source in method | should become `self.network.cim` (Phase 3) | `self.network.cim` |
-| `TYPE_CHECKING` imports | `cim18gmdm.connectivity` etc. **may not yet exist** | the real sub-profile packages |
-| Annotation | use a single slice (or `# type: ignore` the import) until the sub-profiles are importable | full §5a per-method narrowing |
+| `TYPE_CHECKING` imports | not yet (pin predates 0.5) | `cgmes_3_0_0.core_equipment` / `.short_circuit` / … |
+| Connectivity slice | n/a | `cim: EQ` (CIM17); narrows to `cim: CN` when CIM18 parts ship |
+| Annotation | single flat slice until the pin is bumped | full §5a per-method narrowing |
 
-**Gap to track (Phase 0 / Phase 1).** The §5a `TYPE_CHECKING` imports target the
-`cim18gmdm` sub-profile packages. The current dependency pin is
-`cim-graph>=0.3.2,<0.4.0` with the flat `cimhub_2023` profile; the sub-profile
-packages arrive with the 0.5 line. Until the pin is bumped (Phase 1), the
-`TYPE_CHECKING` imports may be unresolved. Options, in order of preference:
+**Gap status (Phase 0 / Phase 1).** The gap the original plan flagged is now
+**closed at the source**: 0.5.0a1 deploys `cgmes_3_0_0` with the parts the §5a
+imports need. The remaining work is to bump CIM-Builder's own dependency pin
+(`cim-graph>=0.3.2,<0.4.0` → the 0.5 line) in Phase 1. Until then:
 
-1. Develop builders against the local cim-graph 0.5 checkout
-   (`/home/ande188/CIM-Graph`), where `network.cim` and the sub-profiles exist.
-2. Temporarily annotate with the flat profile (`import cimgraph.data_profile.cimhub_2023 as CN`)
-   as a single slice; swap to true sub-profile slices when 0.5 lands.
+1. Develop builders against the local 0.5.0a1 checkout
+   (`/home/ande188/CIM-Graph`), where `network.cim` and the `cgmes_3_0_0` parts
+   exist.
+2. The runtime code (`cim = self.network.cim`) is correct either way — only the
+   edit-time `TYPE_CHECKING` annotation depends on the installed package version.
 
-The runtime code (`cim = self.network.cim`) is correct either way — only the
-edit-time annotation depends on the sub-profile packages existing.
+**Note — `cim18gmdm` (unbalanced).** 0.5.0a1 also ships a `cim18gmdm` merged
+profile, but its `electrical` part collapses connectivity + balanced electrical
+together and there is no separate `short_circuit` part. The unbalanced /
+per-phase model (`ACLineSegmentPhase`, `PerLengthPhaseImpedance`) is the
+`add_electrical_unbal` path, deferred to the next round (see `BUILDER_API.md`).
+The reference builders target `cgmes_3_0_0` first.
 
 ---
 

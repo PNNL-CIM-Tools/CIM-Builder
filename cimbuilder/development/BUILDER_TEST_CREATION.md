@@ -12,7 +12,7 @@ The structure is the same; the **direction is inverted**:
 | | Converter (CIMHub) | Builder (CIM-Builder) |
 |---|---|---|
 | Input | a CIM subgraph (exporter) or a format object (importer) | a minimal **container atom** (network + container + nodes) |
-| Act | run the converter | call `create()` → `add_connectivity()` → `add_electrical()` … |
+| Act | run the converter | call `create()` → `add_connectivity()` → `add_electrical_bal()` … |
 | Output asserted | a format string / a few new CIM objects | the CIM object(s) the builder added to the graph |
 | What you check | the read crossed profiles correctly | each `add_<profile>` method wrote *its* profile's fields |
 
@@ -35,7 +35,7 @@ Builder atom tests are:
 - **Isolated** — one builder (or one profile method) per test; a failure
   pinpoints which profile part is wrong.
 - **Profile-scoped** — they mirror the §5a contract: a test for
-  `add_electrical` asserts the electrical fields and *only* those.
+  `add_electrical_bal` asserts the balanced electrical fields and *only* those.
 - **Self-documenting** — the atom factory shows exactly what container the
   builder expects.
 
@@ -61,7 +61,7 @@ gets the profile from the `CIMG_CIM_PROFILE` env var via `get_cim_profile()`:
 ```python
 # CORRECT — cim-graph 0.3+
 import os
-os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2023'   # or a comma-spec under 0.5
+os.environ['CIMG_CIM_PROFILE'] = 'cgmes_3_0_0'   # the 0.5.0a1 merged profile
 from cimgraph.databases import XMLFile
 connection = XMLFile(filename=str(output_xml))     # filename=None for build-from-scratch
 ```
@@ -79,14 +79,16 @@ connection at all** — see Step 2; you construct a `GraphModel` directly.
 
 ## The CIM Object Model (Quick Reference)
 
-> Snippets import `cimhub_2023` to match today's repo. Under cim-graph 0.5 the
-> builders read `cim = self.network.cim` and the per-method type annotations
-> narrow to the `cim18gmdm` sub-profiles (`CN`/`EQ`/`SC`/`AST`) per §5a of
-> `PROFILE_IDENTITY_0_5_PLAN.md`. Tests assert against `network.cim.X` so they
-> stay correct under a merged profile.
+> Snippets import `cgmes_3_0_0` — the cim-graph 0.5.0a1 merged profile this first
+> pass targets. Builders read `cim = self.network.cim`, and the per-method type
+> annotations narrow to the `cgmes_3_0_0` sub-profiles (`EQ` = `core_equipment`,
+> `SC` = `short_circuit`, …) per §5a of `PROFILE_IDENTITY_0_5_PLAN.md`. Tests
+> assert against `network.cim.X` so they stay correct under a merged profile.
+> (Under CIM17 the connectivity classes live in the EQ part; the CIM18 CN split
+> and the unbalanced `add_electrical_unbal` path are a later round.)
 
 ```python
-import cimgraph.data_profile.cimhub_2023 as cim
+import cimgraph.data_profile.cgmes_3_0_0 as cim
 
 line = cim.ACLineSegment(name='test_line')   # UUID auto-seeded from class+name
 line.r = cim.Resistance(0.01, 'ohm')          # CIMUnit: quantity + unit
@@ -119,13 +121,13 @@ Example — the target `LineBuilder` (Phase 3):
 ```python
 class LineBuilder(ObjectBuilder):
     network: GraphModel
-    container: "CN.EquipmentContainer"        # PREREQ: a container (Feeder/Line/VL)
+    container: "EQ.EquipmentContainer"        # PREREQ: a container (Feeder/Line/VL)
 
     def create(self, name): ...               # makes the ACLineSegment
     def add_connectivity(self, node1, node2): # PREREQ: two ConnectivityNodes
         cim = self.network.cim
         ...                                   # builds 2 terminals, wires to nodes
-    def add_electrical(self, r, x, bch, ...): # writes EQ fields on self.line
+    def add_electrical_bal(self, r, x, bch, ...): # writes balanced EQ fields on self.line
     def add_short_circuit(self, r0, x0, ...): # writes SC fields on self.line
 ```
 
@@ -153,7 +155,7 @@ Put shared factories in `tests/atoms.py` and shared assertions in
 
 ```python
 # tests/atoms.py
-import cimgraph.data_profile.cimhub_2023 as cim
+import cimgraph.data_profile.cgmes_3_0_0 as cim
 from cimgraph.models import GraphModel
 
 def _empty_network() -> GraphModel:
@@ -225,11 +227,12 @@ unit, so you can stop after the method under test:
 builder = LineBuilder(network=network, container=feeder)
 builder.create('test_line')                       # EQ object exists
 builder.add_connectivity(node1='node1', node2='node2')   # terminals wired
-builder.add_electrical(r=0.01, x=0.1, bch=0.0, r_unit='ohm', x_unit='ohm', bch_unit='S')
+builder.add_electrical_bal(r=0.01, x=0.1, bch=0.0, r_unit='ohm', x_unit='ohm', bch_unit='S')
 ```
 
-To unit-test just `add_electrical`, do the minimal setup (`create` +
-`add_connectivity`) then call only `add_electrical` and assert only its fields.
+To unit-test just `add_electrical_bal`, do the minimal setup (`create` +
+`add_connectivity`) then call only `add_electrical_bal` and assert only its
+fields.
 
 ---
 
@@ -237,7 +240,7 @@ To unit-test just `add_electrical`, do the minimal setup (`create` +
 
 ```python
 # tests/object_builder/line/test_line_builder.py
-import cimgraph.data_profile.cimhub_2023 as cim
+import cimgraph.data_profile.cgmes_3_0_0 as cim
 from cimbuilder.object_builder.line.line_builder import LineBuilder
 from tests.atoms import make_2node_atom
 from tests.assertions import (
@@ -268,12 +271,12 @@ class TestLineBuilder:
         assert_terminal_connected(line.Terminals[0], 'node1', 'test_line')
         assert_terminal_connected(line.Terminals[1], 'node2', 'test_line')
 
-    def test_add_electrical_sets_impedance(self):
+    def test_add_electrical_bal_sets_impedance(self):
         network, sub, bv, n1, n2 = make_2node_atom()
         b = LineBuilder(network=network, container=sub)
         b.create('test_line').add_connectivity('node1', 'node2')
-        b.add_electrical(r=0.01, x=0.1, bch=0.0,
-                         r_unit='ohm', x_unit='ohm', bch_unit='S')
+        b.add_electrical_bal(r=0.01, x=0.1, bch=0.0,
+                             r_unit='ohm', x_unit='ohm', bch_unit='S')
 
         line = network.find_by_attribute(cim.ACLineSegment, 'name', 'test_line')[0]
         assert abs(float(line.r) - 0.01) < 1e-9       # CIMUnit stores SI ohms
@@ -381,8 +384,8 @@ replacement for the `ConnectionParameters` round-trip that broke in 0.3.
 - [ ] Run only up to the method under test (`create` → `add_connectivity` → …)
 - [ ] Assert creation: correct count of each CIM class in `network.graph`
 - [ ] Assert wiring: terminals connected to the right nodes and equipment
-- [ ] Assert per-profile values: `add_electrical` checks EQ fields only,
-      `add_short_circuit` checks SC fields only (mirrors the §5a write-scoping)
+- [ ] Assert per-profile values: `add_electrical_bal` checks balanced EQ fields
+      only, `add_short_circuit` checks SC fields only (mirrors the §5a write-scoping)
 - [ ] Assert containment: equipment assigned to the right container
 - [ ] Assert profile identity: objects live under `network.cim.X` (0.5 guardrail)
 - [ ] (Per-unit, Phase 11) assert pu→SI conversion once the units engine exists;
@@ -404,7 +407,7 @@ def test_short_circuit_only_touches_zero_sequence(self):
     line = network.find_by_attribute(cim.ACLineSegment, 'name', 'test_line')[0]
     assert abs(float(line.r0) - 0.03) < 1e-9
     assert abs(float(line.x0) - 0.3) < 1e-9
-    assert line.r is None   # add_electrical was never called — EQ untouched
+    assert line.r is None   # add_electrical_bal was never called — EQ untouched
 ```
 
 ### Testing the deferred per-unit path (until Phase 11)
@@ -417,7 +420,7 @@ def test_per_unit_not_yet_supported(self):
     b = LineBuilder(network=network, container=sub)
     b.create('test_line').add_connectivity('node1', 'node2')
     with pytest.raises(NotImplementedError):
-        b.add_electrical(r=0.01, x=0.1, bch=0.0, r_unit='pu', x_unit='pu', bch_unit='pu')
+        b.add_electrical_bal(r=0.01, x=0.1, bch=0.0, r_unit='pu', x_unit='pu', bch_unit='pu')
 ```
 
 When Phase 11 lands the `z_base = base_kv**2 / base_mva` engine, replace this

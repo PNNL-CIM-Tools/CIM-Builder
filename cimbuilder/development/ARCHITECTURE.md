@@ -30,8 +30,10 @@ sequence. This:
 - maps 1:1 onto the planned UI wizard (one page per profile — Connectivity →
   Electrical → Short-circuit → …);
 - lets the type system *scope writes to one profile per method* (see
-  `PROFILE_TYPING.md`), turning a category error (`line.r` set during
-  connectivity) into an edit-time flag.
+  `PROFILE_TYPING.md`), turning a category error (`line.r0` — short-circuit — set
+  inside `add_electrical_bal`) into an edit-time flag. (Under CIM17 the
+  connectivity classes still live in the EQ part, so the CN↔EQ guardrail arrives
+  with the CIM18 split; the SC↔EQ one works today.)
 
 ---
 
@@ -42,7 +44,7 @@ User / UI wizard / substation assembly
         │  instantiates a builder, calls add_<profile> in sequence
         ▼
 ObjectBuilder subclass            (LineBuilder, BreakerBuilder, …)
-   create() → add_connectivity() → add_electrical() → add_short_circuit() → …
+   create() → add_connectivity() → add_electrical_bal() → add_short_circuit() → …
         │  each method reads cim = self.network.cim  (NOT get_cim_profile())
         ▼
 builder_base mixin                 (shared mechanics: terminals, node wiring, graph add)
@@ -51,7 +53,7 @@ builder_base mixin                 (shared mechanics: terminals, node wiring, gr
 GraphModel  (network.graph, keyed by the network's own class identity)
         │  network.cim — the single source of profile identity (cim-graph 0.5 §2)
         ▼
-cimgraph profile module            (cimhub_2023 today; cim18gmdm merge under 0.5)
+cimgraph profile module            (cimhub_2023 today; cgmes_3_0_0 merge under 0.5)
 ```
 
 Three contracts hold at every layer:
@@ -113,7 +115,8 @@ class ObjectBuilder(ABC):
 
     # Optional profile parts — default to NotImplementedError, override where the
     # object actually has that profile's fields:
-    def add_electrical(self, *a, **k): raise NotImplementedError
+    def add_electrical_bal(self, *a, **k): raise NotImplementedError   # balanced (scalar r/x/bch)
+    def add_electrical_unbal(self, *a, **k): raise NotImplementedError  # per-phase (CIM18, deferred)
     def add_short_circuit(self, *a, **k): raise NotImplementedError
     def add_dynamics(self, *a, **k): raise NotImplementedError
     def from_catalog(self, name_or_spec): raise NotImplementedError
@@ -134,7 +137,7 @@ profile sequence:
 LineBuilder(network=net, container=feeder) \
     .create('Line1') \
     .add_connectivity(node1='busA', node2='busB') \
-    .add_electrical(r=0.01, x=0.1, bch=0.0, r_unit='ohm', x_unit='ohm', bch_unit='S')
+    .add_electrical_bal(r=0.01, x=0.1, bch=0.0, r_unit='ohm', x_unit='ohm', bch_unit='S')
 ```
 
 ---
@@ -220,7 +223,7 @@ profile-built object. Keeping the two layers distinct is a locked decision.
 - `BUILDER_API.md` — the public method signatures and naming the contract above
   must present to users.
 - `PROFILE_TYPING.md` — how `add_<profile>` methods are typed (§5a).
-- `UNITS.md` — how `add_electrical` handles CIMUnit values and the deferred
+- `UNITS.md` — how `add_electrical_bal` handles CIMUnit values and the deferred
   per-unit engine.
 - `BUILDER_TEST_CREATION.md` — how to test a builder (atom factories + chained
   asserts).

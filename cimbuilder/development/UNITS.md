@@ -29,19 +29,21 @@ bv.nominalVoltage = cim.Voltage(base_kv, 'kV')
 
 ---
 
-## Where units live: `add_electrical` (and friends)
+## Where units live: `add_electrical_bal` (and friends)
 
 Per the profile partition (`ARCHITECTURE.md`), physical quantities are set in the
-profile method that owns them — almost always `add_electrical`, plus
-`add_short_circuit` for zero-sequence. `create` and `add_connectivity` set no
-physical quantities.
+profile method that owns them — almost always `add_electrical_bal` (balanced,
+scalar impedance), plus `add_short_circuit` for zero-sequence. `create` and
+`add_connectivity` set no physical quantities. The unbalanced per-phase path
+(`add_electrical_unbal`) is a stub until the CIM18 parts ship, so no units land
+there yet.
 
-A builder's `add_electrical` signature takes a **value + a unit string** per
+A builder's `add_electrical_bal` signature takes a **value + a unit string** per
 quantity, defaulting the unit to the CIM base SI unit:
 
 ```python
-def add_electrical(self, r, x, bch,
-                   r_unit=None, x_unit=None, bch_unit=None) -> "LineBuilder":
+def add_electrical_bal(self, r, x, bch,
+                       r_unit=None, x_unit=None, bch_unit=None) -> "LineBuilder":
     cim = self.network.cim
     self.line.r   = cim.Resistance(r,   r_unit   or 'ohm')
     self.line.x   = cim.Reactance(x,    x_unit   or 'ohm')
@@ -74,7 +76,7 @@ not exist. Until Phase 11, the per-unit path is an explicit stub, not a silent
 pass-through:
 
 ```python
-def add_electrical(self, r, x, bch, r_unit=None, x_unit=None, bch_unit=None):
+def add_electrical_bal(self, r, x, bch, r_unit=None, x_unit=None, bch_unit=None):
     cim = self.network.cim
     if (r_unit or '').lower() in ('pu', 'perunit', 'per_unit'):
         raise NotImplementedError(
@@ -157,8 +159,8 @@ in Phase 11 alongside the pu engine.
 
 ## Related documents
 
-- `BUILDER_API.md` — `add_electrical` signatures (value + unit string).
-- `ARCHITECTURE.md` — why physical quantities live in `add_electrical`.
+- `BUILDER_API.md` — `add_electrical_bal` signatures (value + unit string).
+- `ARCHITECTURE.md` — why physical quantities live in `add_electrical_bal`.
 - `BUILDER_TEST_CREATION.md` — unit-value assertions and the pu-path test.
 - Canonical unit reference: cim-graph / CIMHub `UNITS.md`; global guide in
   `~/.claude/CLAUDE.md`.
