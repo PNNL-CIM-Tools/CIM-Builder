@@ -3,7 +3,7 @@ import importlib
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 from cimgraph.models.graph_model import new_mrid #TODO: replace with utils
 import uuid
 import cimgraph.data_profile.cim18gad as cim #TODO: cleaner typying import
@@ -16,8 +16,8 @@ def new_EVSE_BV(network:GraphModel, container:cim.EquipmentContainer, name:str,
                 node:str|cim.ConnectivityNode, kV:float) -> None:
     
     # current assumption: same power charging everytime, and we can charge upto rated energy
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
     
     #EVSE_BV = cim.BaseVoltage(name = name, mRID = new_mrid())
     EVSE_BV = cim.BaseVoltage(name = name, mRID = str(uuid.uuid4()))

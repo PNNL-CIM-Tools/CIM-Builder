@@ -3,7 +3,7 @@ import importlib
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import ConnectionInterface, get_cim_profile
+from cimgraph.databases import ConnectionInterface
 import cimgraph.data_profile.ufls as cim #TODO: cleaner typying import
 
 from cimbuilder.utils.utils import terminal_to_node
@@ -12,8 +12,8 @@ _log = logging.getLogger(__name__)
 
 def new_under_frequency_protection_function_block(network:GraphModel, ProtectedSwitch:cim.ProtectedSwitch, operateValue:float, 
                     enabled:bool, ProtectionEquipment:cim.ProtectionEquipment) -> cim.UnderFrequencyProtectionFunctionBlock:
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
     ufls = cim.UnderFrequencyProtectionFunctionBlock()
     ufls.uuid(name = f'ufls_{operateValue}_{ProtectedSwitch.name}')
 

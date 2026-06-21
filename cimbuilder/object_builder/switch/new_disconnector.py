@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 import cimbuilder.utils as utils
@@ -11,8 +11,8 @@ def new_disconnector(network:GraphModel, container:cim.EquipmentContainer, name:
                 node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode,
                 open:bool=False, normalOpen:bool=False, retained:bool=False) -> cim.Disconnector:
 
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
 
     disconnector = cim.Disconnector(name = name)
     t1 = cim.Terminal()

@@ -3,7 +3,7 @@ import importlib
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 
@@ -11,8 +11,8 @@ import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 _log = logging.getLogger(__name__)
 
 def new_bus_bar_section(network:GraphModel, node:cim.ConnectivityNode) -> cim.BusbarSection:
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
     
     busbar = cim.BusbarSection()
     busbar.name = node.name

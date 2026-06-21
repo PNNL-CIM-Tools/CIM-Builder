@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim  
 
 import logging
@@ -9,8 +9,8 @@ _log = logging.getLogger(__name__)
 
 def get_source_bus(feeder_network: GraphModel, feeder: cim.Feeder,) -> cim.ConnectivityNode:
     
-    cim_profile, cim_module = get_cim_profile()
-    cim: cim = cim_module
+    cim = network.cim
+
     sourcebus = None
     if not sourcebus:
         found = False

@@ -3,7 +3,7 @@ import importlib
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 
@@ -15,8 +15,8 @@ def new_two_terminal_object(network:GraphModel, container:cim.EquipmentContainer
                             name:str, node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode) -> object:
 
 
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
 
     new_object = class_type(name = name)
     t1 = cim.Terminal(name=f"{name}_t1", sequenceNumber=1)

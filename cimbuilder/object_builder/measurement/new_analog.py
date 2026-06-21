@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim
 
 import logging
@@ -10,8 +10,8 @@ _log = logging.getLogger(__name__)
 def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Terminal,
                phase:cim.PhaseCode, measurementType:str, mRID: str = None, name:str = None,
                check_duplicate = True) -> object:
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
     meas_exists = False
     if measurementType == 'PNV' and not isinstance(equipment, 
                                                    (cim.EnergyConsumer, cim.PowerElectronicsConnection, 
@@ -55,8 +55,8 @@ def new_analog(network:GraphModel, equipment:cim.Equipment, terminal:cim.Termina
     return meas
 
 def create_all_analog(network:GraphModel, equipment:cim.ConductingEquipment, measurementType:str) -> object:
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
     counter = 1
     meas_list = []
     for terminal in equipment.Terminals:

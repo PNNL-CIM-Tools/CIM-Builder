@@ -2,7 +2,6 @@ from __future__ import annotations
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 
@@ -19,8 +18,7 @@ def terminal_to_node(network:GraphModel, terminal:cim.Terminal, node:str|cim.Con
         node.Terminals.append(terminal)
 
 def get_base_voltage(network:GraphModel, base_voltage:int|cim.BaseVoltage) -> cim.BaseVoltage:
-    cim_profile, cim_module = get_cim_profile() # Import CIM profile
-    cim:cim = cim_module
+    cim = network.cim
     if base_voltage.__class__ == float or base_voltage.__class__ == int:
         # If numeric value given, search graph for a matching BaseVoltage object
         found = False

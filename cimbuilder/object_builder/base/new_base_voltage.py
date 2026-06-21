@@ -1,6 +1,6 @@
 from __future__ import annotations
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim 
 
 import logging
@@ -24,8 +24,8 @@ def new_base_voltage(network:GraphModel, base_voltage:int|float, name:str = None
     cim.BaseVoltage
         The created BaseVoltage object.
     """
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
 
     # Check if a BaseVoltage with the same nominal voltage already exists
     if cim.BaseVoltage in network.graph:
@@ -46,8 +46,8 @@ def new_base_voltage(network:GraphModel, base_voltage:int|float, name:str = None
 
 
 def get_base_voltage(network:GraphModel, base_voltage:int|cim.BaseVoltage) -> cim.BaseVoltage:
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
 
     if base_voltage.__class__ == float or base_voltage.__class__ == int:
         # If numeric value given, search graph for a matching BaseVoltage object

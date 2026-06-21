@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typying import
 
 import logging
@@ -10,8 +10,8 @@ _log = logging.getLogger(__name__)
 def new_discrete(network:GraphModel, equipment:cim.Equipment, terminal:cim.ACDCTerminal,
                   phase:cim.PhaseCode, measurementType:str, mRID: str = None) -> cim.Discrete:
     
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
     
     meas_exists = False
     for meas in equipment.Measurements:

@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim  # TODO: cleaner typing import
 
 from cimbuilder.substation_builder.substation_builder import SubstationBuilder
@@ -25,8 +25,8 @@ class BreakerAndHalfSubstation(SubstationBuilder):
         Initialize the BreakerAndHalfSubstation instance, creating the substation structure and
         components if not already defined.
         """
-        cim_profile, cim_module = get_cim_profile()
-        self.cim: cim = cim_module
+        cim_module = self.connection.cim
+        self.cim = cim_module
 
         # Create new substation class
         self.substation = self.cim.Substation(name=self.name)

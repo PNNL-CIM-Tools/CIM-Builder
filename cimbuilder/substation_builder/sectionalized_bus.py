@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface, get_cim_profile
+from cimgraph.databases import ConnectionInterface
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 from cimbuilder.substation_builder.substation_builder import SubstationBuilder
@@ -21,7 +21,7 @@ class SectionalizedBusSubstation(SubstationBuilder):
 
     def __post_init__(self):
         self.total_sections = int(self.total_sections)
-        cim_profile, cim_module = get_cim_profile()
+        cim_module = self.connection.cim
         self.cim:cim = cim_module
         
         # Create new substation class

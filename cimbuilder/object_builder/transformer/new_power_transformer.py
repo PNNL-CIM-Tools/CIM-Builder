@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 import cimbuilder.utils as utils
@@ -13,8 +13,8 @@ def new_power_transformer(network:GraphModel, container:cim.EquipmentContainer, 
                 node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode,
                 catalog_file:str = None) -> cim.PowerTransformer:
     
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
 
     if catalog_file is not None:
         xfmr = utils.catalog_parser(catalog_file, network)

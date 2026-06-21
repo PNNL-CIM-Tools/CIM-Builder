@@ -2,7 +2,6 @@ from __future__ import annotations
 import json
 import logging
 
-from cimgraph.databases import get_cim_profile
 from cimgraph.models import GraphModel
 
 _log = logging.getLogger(__name__)
@@ -12,8 +11,7 @@ def catalog_parser(catalog_file, network):
     file = open(catalog_file)
     catalog = json.load(file)
     data = catalog['catalog']
-    cim_profile, cim = get_cim_profile() # Import CIM profile
-    obj = item_parser(data, network, cim)
+    obj = item_parser(data, network, network.cim)
     file.close()
     return obj
 

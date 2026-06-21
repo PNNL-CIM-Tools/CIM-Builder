@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Type
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim  
 from cimbuilder.substation_builder.substation_builder import SubstationBuilder
 import cimbuilder.object_builder as object_builder
@@ -20,7 +20,7 @@ class RingBusSubstation(SubstationBuilder):
     total_sections: int = field(default=4)
 
     def __post_init__(self):
-        cim_profile, cim_module = get_cim_profile()
+        cim_module = self.connection.cim
         self.cim:cim = cim_module
 
         self.total_sections = int(self.total_sections)

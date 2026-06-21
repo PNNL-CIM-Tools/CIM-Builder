@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
+
 import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
 
 import cimbuilder.utils as utils
@@ -13,8 +13,8 @@ def new_breaker(network:GraphModel, container:cim.EquipmentContainer, name:str,
                 node1:str|cim.ConnectivityNode, node2:str|cim.ConnectivityNode,
                 open:bool=False, normalOpen:bool=False, retained:bool=True) -> cim.Breaker:
     
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
+    cim = network.cim
+
 
     breaker = cim.Breaker(name = name)
     breaker.uuid(name=name, seed=str(node1)+str(node2))
