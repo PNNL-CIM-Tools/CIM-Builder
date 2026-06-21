@@ -1,381 +1,189 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
+
+> **Status — refactor in progress (`feature/23`).** CIM-Builder is mid-way
+> through a uniform builder-API refactor. This file describes **two things,
+> clearly marked**: the *current* state of the code (what exists on this branch
+> today) and the *target* builder-class API the refactor is moving toward. The
+> day-by-day plan and the detailed specs live in `cimbuilder/development/` — read
+> those before writing builder code. **Do not trust pre-refactor descriptions of
+> a `catalog/` SQLite system, `*_functions.py` substation API, or a
+> `feeder_builder/` module: none of those exist on this branch** (an attempted
+> functional rewrite was reverted in `5b47fd6`).
 
 ## Project Overview
 
-CIM-Builder is a Python library for creating CIM (Common Information Model) models from scratch without requiring pre-existing model files. This is fundamentally different from other CIM tooling that requires source files like OpenDSS, PSSE, or GIS data.
+CIM-Builder is a Python library for creating CIM (Common Information Model)
+models from scratch, without requiring pre-existing model files like OpenDSS,
+PSSE, or GIS data. It builds on `cim-graph` (CIMantic Graphs), which provides the
+graph model and CIM data-profile support.
 
-The library enables:
-1. Automatic creation of node-breaker substations in CIM via function calls
-2. Automatic insertion of distribution feeders into node-breaker substations
-3. Automatic insertion of aggregate feeder data into existing CIM transmission models
-4. Equipment catalog system with SQLite backend for standard equipment specifications
-
-Built on top of the `cim-graph` library (CIMantic Graphs), which provides the underlying graph model and CIM data profile support.
+The library builds:
+1. Node-breaker substations in CIM
+2. Distribution feeders inserted into node-breaker substations
+3. Aggregate feeder data inserted into existing CIM transmission models
+4. Individual CIM equipment objects (lines, transformers, switches, …)
 
 ## Development Commands
 
-### Environment Setup
 ```bash
-# Install dependencies
-uv sync
-
-# Install with dev dependencies
+# Install dependencies (with dev extras)
 uv sync --all-extras
-```
 
-### Testing
-```bash
-# Run all tests
+# Run tests
 uv run pytest
+uv run pytest tests/path/to/test_file.py::test_function_name -v
 
-# Run a specific test file
-uv run pytest tests/path/to/test_file.py
-
-# Run a specific test function
-uv run pytest tests/path/to/test_file.py::test_function_name
-
-# Run with verbose output
-uv run pytest -v
-```
-
-### Building
-```bash
 # Build distribution packages
 uv build
 ```
 
-### Catalog Management
-```bash
-# Rebuild equipment catalog from source data
-python -m cimbuilder.catalog.importer
-```
+**Dependency note.** This branch pins `cim-graph>=0.5.0a2,<0.6.0` (a pre-release;
+`[tool.uv] prerelease = "allow"` is set so the environment resolves). The 0.5
+line is what provides `network.cim` and the `cgmes_3_0_0` merged profile the
+refactor targets. See `cimbuilder/development/BASELINE.md` for why the pin moved.
 
-## Architecture
+---
 
-### API Style: Functional with Catalog Integration
+## The refactor — read these first
 
-**CIM-Builder uses a functional API pattern** introduced in v0.2.0. Functions are stateless, take explicit parameters, and return dictionaries with created components.
+The refactor introduces a single, uniform **builder-class API**: every equipment
+type is an `ObjectBuilder` subclass built **one CIM profile-part at a time**
+(connectivity → electrical → short-circuit → …). The specs:
 
-### Core Module Structure
+| Doc (`cimbuilder/development/`) | What it defines |
+|---|---|
+| `README.md` | Index + reading order + locked decisions |
+| `ARCHITECTURE.md` | `ObjectBuilder` contract, `builder_base` mixin, profile-source rule, substation assembly layer |
+| `BUILDER_API.md` | The public `create() → add_<profile>() → build()` chain a user types |
+| `PROFILE_TYPING.md` | §5a per-method profile-scoped typing (`cim: EQ` / `cim: SC`) |
+| `UNITS.md` | CIMUnit in `add_electrical_bal`; per-unit deferred to Phase 11 |
+| `BUILDER_TEST_CREATION.md` | Atom-test strategy for builders |
+| `BASELINE.md` | Phase 0 audit: what's broken today + the leaf-builder work list |
 
-The codebase is organized into four main modules:
+The phase roadmap (phases 0–11, one per working day) is the execution plan the
+above specs are implemented against.
 
-#### 1. `catalog/` - Equipment Catalog System
-SQLite-backed catalog of standard equipment specifications.
+### Target API (what the refactor builds toward)
 
-**Key files:**
-- `__init__.py` - `CatalogManager` class and `get_catalog()` singleton
-- `schema.py` - SQLite schema for transformers, conductors, cables, standard equipment
-- `importer.py` - Tools to import from JSON/CSV into SQLite
-- `equipment.db` - SQLite database (shipped with package)
-
-**Usage:**
 ```python
-from cimbuilder import get_catalog
+from cimbuilder import LineBuilder   # exported from cimbuilder/__init__.py (Phase 9)
 
-catalog = get_catalog()
-
-# String lookup
-spec = catalog.get_transformer('hvmv69_12')
-conductor_spec = catalog.get_conductor('Turkey')
-
-# Query by properties
-conductors = catalog.find_conductor(min_ampacity=140, material='ACSR')
-
-# List available
-transformers = catalog.list_transformers()
-conductors = catalog.list_conductors()
-```
-
-#### 2. `substation_builder/` - Functional Substation API
-Functions for creating different substation topologies. **Use the `*_functions.py` files, not the old class files.**
-
-**Current functional implementations:**
-- `single_bus_functions.py` - Single bus topology
-- `double_bus_functions.py` - Double bus single breaker topology
-
-**Legacy class files (deprecated):**
-- `single_bus.py`, `double_bus_single_breaker.py`, etc. - Old class-based API
-
-**Functional API Pattern:**
-Each substation type has three main functions:
-
-1. **Creation function** (`new_<type>_substation()`):
-```python
-def new_single_bus_substation(
-    connection: ConnectionInterface,
-    name: str,
-    base_voltage: int | cim.BaseVoltage,
-    network: GraphModel = None
-) -> Dict[str, Any]:
-    """
-    Returns dict with keys: network, substation, main_bus, base_voltage
-    """
-```
-
-2. **Add feeder function** (`add_feeder_to_<type>()`):
-```python
-def add_feeder_to_single_bus(
-    network: GraphModel,
-    substation: cim.Substation,
-    main_bus: cim.ConnectivityNode,
-    base_voltage: cim.BaseVoltage,
-    breaker_number: int,
-    feeder_network: GraphModel,
-    feeder: cim.Feeder,
-    sourcebus: cim.ConnectivityNode = None
-) -> Dict[str, Any]:
-    """
-    Returns dict with keys: breaker, disconnectors, junctions
-    """
-```
-
-3. **Add branch function** (`add_branch_to_<type>()`):
-```python
-def add_branch_to_single_bus(
-    network: GraphModel,
-    substation: cim.Substation,
-    main_bus: cim.ConnectivityNode,
-    base_voltage: cim.BaseVoltage,
-    breaker_number: int,
-    branch_equipment: cim.ConductingEquipment,
-    branch_terminal: cim.Terminal | int
-) -> Dict[str, Any]:
-    """
-    Returns dict with keys: breaker, junction
-    """
-```
-
-**Usage Example:**
-```python
-from cimbuilder import (
-    new_single_bus_substation,
-    add_feeder_to_single_bus,
-    add_branch_to_single_bus
-)
-
-# Create substation
-result = new_single_bus_substation(connection=conn, name='MySub', base_voltage=115000)
-
-# Unpack components
-network = result['network']
-substation = result['substation']
-main_bus = result['main_bus']
-base_voltage = result['base_voltage']
-
-# Add feeder
-add_feeder_to_single_bus(
-    network, substation, main_bus, base_voltage,
-    breaker_number=1, feeder_network=feeder_net, feeder=my_feeder
-)
-
-# Add branch
-add_branch_to_single_bus(
-    network, substation, main_bus, base_voltage,
-    breaker_number=2, branch_equipment=transformer,
-    branch_terminal=transformer.Terminals[0]
+line = (
+    LineBuilder(network=network, container=feeder)
+        .create(name='Line1')
+        .add_connectivity(node1='busA', node2='busB')
+        .add_electrical_bal(r=0.01, x=0.1, bch=0.0,
+                            r_unit='ohm', x_unit='ohm', bch_unit='S')
+        .add_short_circuit(r0=0.03, x0=0.3, b0ch=0.0)
+        .build()
 )
 ```
 
-**Key Design Principles:**
-- Functions are stateless - all required parameters are explicit
-- Creation functions return dicts with all components needed for subsequent operations
-- No inheritance hierarchy or class-based abstraction
-- Each topology has its own set of functions tailored to its specific requirements
-- Private helper functions (prefixed with `_`) handle internal bus tie creation
+- Builder classes are stateless aside from the object under construction; each
+  `add_<profile>` populates one profile part and returns `self`.
+- `add_electrical_bal` sets balanced scalar impedance; `add_electrical_unbal`
+  (per-phase) is a `NotImplementedError` stub until the CIM18 unbalanced parts
+  ship.
+- **Substations stay a separate assembly layer** — they orchestrate object
+  builders, they are not `ObjectBuilder`s themselves.
 
-#### 3. `object_builder/` - Equipment Factory Functions
-Factory functions for creating individual CIM equipment objects. Organized by equipment category:
+---
 
-- `base/` - Base voltage objects
-- `shunt/` - Breakers, capacitors, and shunt equipment
-- `switch/` - Disconnectors and switching devices
-- `topology/` - Bus bar sections and connectivity nodes
-- `transformer/` - Power transformers and tap changers
-- `line/` - Transmission lines and conductors (**new in v0.2.0**)
-- `load/` - Energy consumers
-- `generator/` - Synchronous generators
-- `inverter/` - Power electronics connections (PEC), battery units (BU), EVSE
-- `measurement/` - Analog and discrete measurements
-- `protection/` - Protection function blocks
-- `generic/` - `new_one_terminal_object()` and `new_two_terminal_object()` for flexible object creation
+## Current code structure (what exists on this branch today)
 
-**Standard Function Signature Pattern:**
-```python
-def new_<equipment>(
-    network: GraphModel,
-    container: cim.EquipmentContainer,
-    name: str,
-    # Topology parameters
-    node1: str | cim.ConnectivityNode,
-    node2: str | cim.ConnectivityNode = None,
-    # Catalog integration
-    catalog: str = None,
-    template: <Spec> = None,
-    # Common parameters
-    base_voltage: cim.BaseVoltage = None,
-    # Equipment-specific
-    **kwargs
-) -> cim.<Equipment>:
-```
+### `object_builder/` — equipment factory **functions** (pre-refactor)
 
-**Catalog Integration Examples:**
-```python
-# Power transformer - string lookup
-xfmr = new_power_transformer(
-    network, substation, 'T1',
-    node1=bus1, node2=bus2,
-    catalog='hvmv69_12'  # ← Catalog name
-)
+Standalone `new_<equipment>(network, container, name, node1, node2, ...)`
+functions, one per equipment category. They build the whole object (terminals +
+connectivity + add-to-graph) in one call. **These are being ported to
+`ObjectBuilder` subclasses** (Phases 3–6); the function bodies are the blueprint
+for the builder methods.
 
-# Power transformer - override catalog
-xfmr = new_power_transformer(
-    network, substation, 'T1',
-    node1=bus1, node2=bus2,
-    catalog='hvmv69_12',
-    end1_rated_s=25e6  # Override
-)
+Categories: `base/` (BaseVoltage lookup/create), `topology/` (bus bar section),
+`shunt/` (breaker, capacitor), `switch/` (disconnector), `transformer/` (power
+transformer + tap changer), `line/` (the `LineBuilder` eureka sketch),
+`load/` (energy consumer), `generator/` (synchronous generator), `inverter/`
+(PEC, EVSE family), `measurement/` (analog, discrete), `protection/`, and
+`generic/` (`new_one_terminal_obj` / `new_two_terminal_obj`).
 
-# Conductor - string lookup
-line = new_acsr_conductor(
-    network, feeder, 'Line1',
-    node1=pole1, node2=pole2,
-    length=100,
-    catalog='Turkey'
-)
+> **Profile import (the seam being closed).** Today every leaf function imports
+> the flat profile at module scope:
+> ```python
+> import cimgraph.data_profile.cimhub_2023 as cim   # TODO: cleaner typing import
+> ```
+> The refactor replaces this with `cim = self.network.cim` inside each builder
+> method (the cim-graph 0.5 layered-identity rule — see `ARCHITECTURE.md`). Do
+> **not** add `get_cim_profile()` calls to leaf builders; the connection resolves
+> the profile once and the model carries it as `network.cim`.
 
-# Conductor - query by specs
-line = new_acsr_conductor(
-    network, feeder, 'Line1',
-    node1=pole1, node2=pole2,
-    length=100,
-    min_ampacity=140,
-    material='ACSR'
-)
+### `substation_builder/` — class-based substation assemblers
 
-# Manual specification (no catalog)
-line = new_acsr_conductor(
-    network, feeder, 'Line1',
-    node1=pole1, node2=pole2,
-    length=100,
-    r=0.641, x=0.3
-)
-```
+`@dataclass` classes (`SingleBusSubstation`, `MainAndTransferSubstation`,
+`RingBus`, `SectionalizedBus`, `DoubleBusSingleBreaker`, `BreakerAndAHalf`)
+inheriting `SubstationBuilder(ABC)` with `new_branch` / `new_feeder`. They
+currently call the `new_*` functions and hard-import `cimhub_2023`. Phase 8
+updates them to instantiate builder classes and read `self.network.cim`. This
+layer **stays class-based** (a substation is a composition of many objects, not
+one profile-built object).
 
-**Key Pattern:** All builder functions take a `GraphModel` as the first argument and automatically add created objects to the graph. They handle Terminal creation, ConnectivityNode associations, and UUID generation.
+### `utils/` — helpers (reuse, don't reinvent)
 
-#### 4. `feeder_builder/` - Distribution Feeder Functions
-Functions for creating and managing distribution feeders:
+- `utils.py` — `terminal_to_node()` (connects a terminal to a node object *or*
+  name string); the builder-base `_connect_node` wraps it.
+- `get_base_voltage.py` — BaseVoltage lookup/create by nominal voltage.
+- `get_source_bus.py` — feeder source-bus discovery (`NormalHeadTerminal`, then
+  a node named `sourcebus`).
+- `catalog_parser.py` — legacy JSON spec parser; the seam for `from_catalog`.
 
-- `aggregate_feeder.py` - Creates aggregate feeder representations with load and generation totals
-- `insert_measurements.py` - Adds measurements to feeder equipment
-- `cim_measurement_manager.py` - Manages measurement configurations
+### `cimbuilder/__init__.py`
 
-**Usage:**
-```python
-from cimbuilder import new_aggregate_feeder
+**Empty today.** Phase 9 populates it with the public builder/substation classes.
+Until then there is no `cimbuilder.<symbol>` surface, and
+`tests/test_single_bus_integration.py` (which imports `new_single_bus_substation`)
+fails at collection — that test is reconciled in Phase 9.
 
-feeder, load, breaker = new_aggregate_feeder(
-    network=network,
-    feeder_name='Feeder1',
-    breaker_name='Breaker1',
-    substation=substation,
-    node=bus1,
-    base_voltage=12470,
-    total_load_kw=5000,
-    total_load_kvar=1000,
-    total_btm_pv_kw=500
-)
-```
+---
 
-#### 5. `utils/` - Helper Utilities
-Helper utilities:
+## CIM-graph integration patterns
 
-- `get_base_voltage.py` - Retrieves or creates BaseVoltage objects
-- `get_source_bus.py` - Locates feeder source buses (used by all substation add_feeder functions)
-- `catalog_parser.py` - Legacy JSON parser (deprecated in favor of catalog system)
-- `utils.py` - Common utilities including `terminal_to_node()` for terminal-node connections
+### Profile identity (the 0.5 contract)
 
-### Data Catalog
+The profile is resolved **once, at the connection** (`get_cim_profile()` inside
+`ConnectionInterface.__init__`), and read downstream: the model sets
+`self.cim = self.connection.cim`, and builders read `network.cim`. Never
+re-derive the profile in a leaf — under a merged profile that yields a different
+class object and misses every graph key. (`cimbuilder/development/BASELINE.md` §5
+traces the full chain.)
 
-The `data_catalog/` directory contains source data (JSON, CSV) for equipment specifications. This is used to build the SQLite catalog database but is not shipped with the package.
+### Graph model operations
 
-**Structure:**
-```
-data_catalog/
-├── transformers/*.json  - Power transformer specifications
-├── conductors/*.csv     - Conductor type specifications
-└── cables/*.csv         - Cable specifications (future)
-```
+- `network.add_to_graph(obj)` — add to the identity-keyed graph
+- `network.get_all_edges(cim_class)` — hydrate associations
+- `network.pprint(cim_class)` — pretty-print instances
+- `network.upload()` — upload to a database (needs a `ConnectionInterface`)
 
-These are imported into `catalog/equipment.db` by running:
-```bash
-python -m cimbuilder.catalog.importer
-```
+### Terminal ↔ connectivity
 
-### CIM Profile Integration
-
-The library uses dynamic CIM profile loading via `cimgraph.databases.get_cim_profile()`. This returns:
-1. Profile name string (e.g., "cimhub_2023")
-2. CIM module for type annotations and object creation
-
-**Critical Pattern:** Most modules import a specific CIM profile for type hints:
-```python
-import cimgraph.data_profile.cimhub_2023 as cim
-```
-But then call `get_cim_profile()` at runtime to get the actual module to use:
-```python
-cim_profile, cim_module = get_cim_profile()
-cim: cim = cim_module  # Use this for object creation
-```
-
-### Graph Model Operations
-
-All CIM objects must be added to a `GraphModel` instance (from cim-graph):
-- `network.add_to_graph(obj)` - Adds object to graph
-- `network.get_all_edges(cim_class)` - Loads all edges for a CIM class type
-- `network.pprint(cim_class)` - Pretty prints all instances of a class
-- `network.upload()` - Uploads to database (requires ConnectionInterface)
-
-Functions like `new_<type>_substation()` can accept an optional existing network or create a new `DistributedArea` if none is provided.
-
-### Terminal and Connectivity Pattern
-
-CIM equipment connects via Terminals to ConnectivityNodes:
 ```
 Equipment -> Terminal -> ConnectivityNode <- Terminal <- Equipment
 ```
 
-The `utils.terminal_to_node()` function handles connecting terminals to nodes, accepting either node objects or node name strings.
+`utils.terminal_to_node()` wires a terminal to a node (object or name string).
+
+### Units
+
+Physical quantities are set via `CIMUnit` constructors with an input unit
+(`cim.Resistance(v, 'ohm')`, `cim.Voltage(kv, 'kV')`); cimgraph stores SI
+internally. **Never manually scale** (`* 1e3`, `* 1e6`). See
+`cimbuilder/development/UNITS.md` and the global units guide in `~/.claude/CLAUDE.md`.
 
 ## Important Notes
 
-- The library requires Python >=3.10
-- All UUID generation uses deterministic seeding to ensure reproducibility
-- BaseVoltage objects are searched by nominal voltage (kV or V) and created if not found
-- Feeder source buses are identified using `utils.get_source_bus()` which checks `feeder.NormalHeadTerminal` first, then searches for nodes named "sourcebus"
-- When adding feeders/branches to substations, breaker numbers are used to generate unique equipment names
-- The functional API returns dictionaries with all components needed for subsequent operations - unpack what you need
-
-## Migration from Class-Based API
-
-**If you see old class-based code**, refer to `docs/MIGRATION.md` for migration guidance.
-
-**Old pattern (deprecated):**
-```python
-sub = SingleBusSubstation(connection=conn, name='MySub', base_voltage=115000)
-sub.new_feeder(1, feeder_net, feeder)
-```
-
-**New pattern (v0.2.0+):**
-```python
-result = new_single_bus_substation(conn, 'MySub', 115000)
-add_feeder_to_single_bus(
-    result['network'], result['substation'], result['main_bus'],
-    result['base_voltage'], 1, feeder_net, feeder
-)
-```
-
-IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
+- Python >=3.10.
+- UUID generation uses deterministic seeding for reproducibility.
+- BaseVoltage objects are searched by nominal voltage and created if not found.
+- When adding feeders/branches to substations, breaker numbers generate unique
+  equipment names.
