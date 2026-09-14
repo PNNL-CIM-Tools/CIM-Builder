@@ -41,7 +41,7 @@ Table ConductorDistance: fromSequenceNumber, fromPhase, toSequenceNumber, toPhas
 
 Object TransformerAssembly: name=padmount_template
 
-Table TransformerTank: name, noLoadLoss (W), fullLoadLoss (W), percentMagnetizingCurrent, percentImpedance, TransformerAssembly
+Table TransformerTank: name, noLoadLoss (W), fullLoadLoss (W), percentMagnetizingCurrent, percentImpedance, TransformerTemplate
     padmount, 310, 2050, 0.5, 2.56,  padmount_template
 
 Table TransformerTankEnd: name, endNumber, sequenceNumber, phase, phaseNeutralU (V), TransformerTank
@@ -76,7 +76,7 @@ Table ACLineSegment: name, node1, node2, phases, length (ft), PerLengthImpedance
     670671, 670,  671, ABCN, 671,  mtx601, base_4160
     632645, 632,  645, BC,   500,  mtx603, base_4160
 
-Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponseCharacteristic
+Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponse
     load_671, 671, 1155, 660, D, base_4160, zip_constantPQ
     load_634, 634, , , Y, base_480, zip_constantPQ
     load_646, 646, , , D, base_4160, zip_constantZ
@@ -88,12 +88,12 @@ Table EnergyConsumerPhase: name, phase, p (kW), q (kW), EnergyConsumer
     load_634c, C, 120, 90, load_634
     load_646bc, BC, 230, 132, load_646
 
-Table LinearShuntCompensator: name, node, nomS (kVAr), nomU (V), phaseConnection, maximumSections, BaseVoltage
-    cap_1, 675, 600.0, 4160, Y, 1, base_4160
-    cap_2, 611, 100.0, 4160, Y, 1, base_4160
+Table LinearShuntCompensator: name, node, nomQ (kVAr), nomU (V), sections, phaseConnection, maximumSections, BaseVoltage
+    cap_1, 675, 600.0, 4160, 1, Y, 1, base_4160
+    cap_2, 611, 100.0, 4160, 1, Y, 1, base_4160
 
-Table LinearShuntCompensatorPhase: name, phase, NomS (kVAr), LinearShuntCompensator
-    cap_2c, C, 100.0, cap_2
+Table LinearShuntCompensatorPhase: name, phase, nomQ (kVAr), sections, ShuntCompensator
+    cap_2c, C, 100.0, 1, cap_2
 
 Object LoadBreakSwitch: name=671692, node1=671, node2=692
 

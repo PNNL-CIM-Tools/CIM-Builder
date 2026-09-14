@@ -28,7 +28,7 @@ classes:
   ACDCTerminal:
     description: "An electrical connection point (AC or DC) to a piece of conducting equipment. Terminals are connected at physical connection points called connectivity nodes."
     annotations:
-      ea_guid: "EAID_6B722669_A267_4897_B20A_99ADB8FBC629"
+      ea_guid: "EAID_D37077B9_3B0C_4c16_8F5F_9A6F2C83A7F2"
     is_a: IdentifiedObject
     abstract: true
     class_uri: cim:ACDCTerminal
@@ -52,7 +52,7 @@ classes:
       BusNameMarker:
         description: "The bus name marker used to name the bus (topological node)."
         annotations:
-          ea_guid: "EAID_DEB63E42_070A_4d24_B07E_E4A60ACFDAEC-B"
+          ea_guid: "EAID_EE3B8B0F_5740_4380_91F9_563BFD5783D7-B"
         slot_uri: cim:ACDCTerminal.BusNameMarker
         range: BusNameMarker
         minimum_cardinality: 0
@@ -742,7 +742,7 @@ classes:
       nominalVoltage:
         description: "The power system resource's base voltage, expressed on a phase-to-phase (line-to-line) basis. Shall be a positive value and not zero."
         annotations:
-          ea_guid: "EAID_D53D9B61_ED2C_4096_B97D_2AE74D707232"
+          ea_guid: "EAID_D37DA22A_916B_4a33_88AB_B77C229DB882"
         slot_uri: cim:BaseVoltage.nominalVoltage
         range: Voltage
         minimum_cardinality: 0
@@ -1170,7 +1170,7 @@ classes:
   BusNameMarker:
     description: "Used to apply user standard names to TopologicalNodes. Associated with one or more terminals that are normally connected with the bus name. The associated terminals are normally connected by non-retained switches. For a ring bus station configuration, all BusbarSection terminals in the ring are typically associated. For a breaker and a half scheme, both BusbarSections would normally be associated. For a ring bus, all BusbarSections would normally be associated. For a straight busbar configuration, normally only the main terminal at the BusbarSection would be associated."
     annotations:
-      ea_guid: "EAID_B25513CC_F7CF_4771_A691_AB92F7841421"
+      ea_guid: "EAID_CC2E7414_F646_406e_BFE1_86C1E97305FA"
     is_a: IdentifiedObject
     abstract: true
     class_uri: cim:BusNameMarker
@@ -1651,7 +1651,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       neutralStrandRDC20:
-        description: "DC resistance per unit length of the neutral strand at 20 �C."
+        description: "DC resistance per unit length of the neutral strand at 20  C."
         annotations:
           ea_guid: "EAID_220DD0D7_8C30_4053_8ABD_78E61B85486B"
         slot_uri: cim:ConcentricNeutralCableInfo.neutralStrandRDC20
@@ -1701,7 +1701,7 @@ classes:
   ConductingEquipment:
     description: "The parts of the AC power system that are designed to carry current or that are conductively connected through terminals."
     annotations:
-      ea_guid: "EAID_FC9E9688_ED75_46d5_BA5A_F4CA4A35863D"
+      ea_guid: "EAID_37ADAE21_9CCB_4236_A274_DA9D8E4B0935"
     is_a: Equipment
     abstract: true
     class_uri: cim:ConductingEquipment
@@ -1709,7 +1709,7 @@ classes:
       BaseVoltage:
         description: "Base voltage of this conducting equipment.  Use only when there is no voltage level container used and only one base voltage applies.  For example, not used for transformers."
         annotations:
-          ea_guid: "EAID_30103471_2F93_4f52_9F3F_B821512378DB-B"
+          ea_guid: "EAID_B21687D9_2B46_4880_B016_06CCFA215EC3-B"
         slot_uri: cim:ConductingEquipment.BaseVoltage
         range: BaseVoltage
         minimum_cardinality: 0
@@ -1859,7 +1859,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       rAC25:
-        description: "AC resistance per unit length of the conductor at 25 �C."
+        description: "AC resistance per unit length of the conductor at 25  C."
         annotations:
           ea_guid: "EAID_C1FC86E0_BA00_4f72_9A5E_EBAB31451C3B"
         slot_uri: cim:ConductorInfo.rAC25
@@ -1867,7 +1867,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       rAC50:
-        description: "AC resistance per unit length of the conductor at 50 �C."
+        description: "AC resistance per unit length of the conductor at 50  C."
         annotations:
           ea_guid: "EAID_4A9958C7_4213_4fb7_B055_5E8FD13BDE89"
         slot_uri: cim:ConductorInfo.rAC50
@@ -1875,7 +1875,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       rAC75:
-        description: "AC resistance per unit length of the conductor at 75 �C."
+        description: "AC resistance per unit length of the conductor at 75  C."
         annotations:
           ea_guid: "EAID_F9963A5A_E2F1_4531_838E_F8CA3DF922B6"
         slot_uri: cim:ConductorInfo.rAC75
@@ -1883,7 +1883,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       rDC20:
-        description: "DC resistance per unit length of the conductor at 20 �C."
+        description: "DC resistance per unit length of the conductor at 20  C."
         annotations:
           ea_guid: "EAID_A4EC8486_CE58_47e8_A85E_CBBB83233C49"
         slot_uri: cim:ConductorInfo.rDC20
@@ -2082,7 +2082,7 @@ classes:
       TopologicalNode:
         description: "The topological node to which this connectivity node is assigned.  May depend on the current state of switches in the network."
         annotations:
-          ea_guid: "EAID_F7BCEBE0_8272_4b0c_AA60_43469F7EBB21-A"
+          ea_guid: "EAID_ACD76E10_125A_4f7a_A20A_475AC4334414-A"
         slot_uri: cim:ConnectivityNode.TopologicalNode
         range: TopologicalNode
         minimum_cardinality: 0
@@ -2597,7 +2597,7 @@ classes:
     class_uri: cim:DCConductingAssetInfo
     attributes: 
   DCConverterUnit:
-    description: "Indivisible operative unit comprising all equipment between the point of common coupling on the AC side and the point of common coupling � DC side, essentially one or more converters, together with one or more converter transformers, converter control equipment, essential protective and switching devices and auxiliaries, if any, used for conversion."
+    description: "Indivisible operative unit comprising all equipment between the point of common coupling on the AC side and the point of common coupling   DC side, essentially one or more converters, together with one or more converter transformers, converter control equipment, essential protective and switching devices and auxiliaries, if any, used for conversion."
     annotations:
       ea_guid: "EAID_C9C13B9F_32C9_48cc_B9A5_1019739572D7"
     is_a: EquipmentContainer
@@ -2643,7 +2643,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
   DateTimeInterval:
-    description: "rdfs:label : Date-time interval@enrdfs:comment : 'intervalo de fecha-hora' es una subclase de 'intervalo propio', definida utilizando el multi-elemento 'descripci�n de fecha-hora'.@es<http://www.w3.org/2004/02/skos/core#note> : 'intervalo de fecha-hora' se puede utilizar s�lo para un intervalo cuyos l�mites coinciden con un elemento de fecha-hora alineados con el calendario y la zona horaria indicados. Por ejemplo, aunque ambos tienen una duraci�n de un d�a, el intervalo de 24 horas que empieza en la media noche del comienzo del 8 mayo en Europa Central se puede expresar como un 'intervalo de fecha-hora', el intervalo de 24 horas que empieza a las 1:30pm no.@esrdfs:label : intervalo de fecha-hora@es<http://www.w3.org/2004/02/skos/core#definition> : DateTimeInterval is a subclass of ProperInterval, defined using the multi-element DateTimeDescription.@enrdfs:comment : DateTimeInterval is a subclass of ProperInterval, defined using the multi-element DateTimeDescription.@en<http://www.w3.org/2004/02/skos/core#note> : :DateTimeInterval can only be used for an interval whose limits coincide with a date-time element aligned to the calendar and timezone indicated. For example, while both have a duration of one day, the 24-hour interval beginning at midnight at the beginning of 8 May in Central Europe can be expressed as a :DateTimeInterval, but the 24-hour interval starting at 1:30pm cannot.@en<http://www.w3.org/2004/02/skos/core#definition> : 'intervalo de fecha-hora' es una subclase de 'intervalo propio', definida utilizando el multi-elemento 'descripci�n de fecha-hora'.@es"
+    description: "rdfs:label : Date-time interval@enrdfs:comment : 'intervalo de fecha-hora' es una subclase de 'intervalo propio', definida utilizando el multi-elemento 'descripci n de fecha-hora'.@es<http://www.w3.org/2004/02/skos/core#note> : 'intervalo de fecha-hora' se puede utilizar s lo para un intervalo cuyos l mites coinciden con un elemento de fecha-hora alineados con el calendario y la zona horaria indicados. Por ejemplo, aunque ambos tienen una duraci n de un d a, el intervalo de 24 horas que empieza en la media noche del comienzo del 8 mayo en Europa Central se puede expresar como un 'intervalo de fecha-hora', el intervalo de 24 horas que empieza a las 1:30pm no.@esrdfs:label : intervalo de fecha-hora@es<http://www.w3.org/2004/02/skos/core#definition> : DateTimeInterval is a subclass of ProperInterval, defined using the multi-element DateTimeDescription.@enrdfs:comment : DateTimeInterval is a subclass of ProperInterval, defined using the multi-element DateTimeDescription.@en<http://www.w3.org/2004/02/skos/core#note> : :DateTimeInterval can only be used for an interval whose limits coincide with a date-time element aligned to the calendar and timezone indicated. For example, while both have a duration of one day, the 24-hour interval beginning at midnight at the beginning of 8 May in Central Europe can be expressed as a :DateTimeInterval, but the 24-hour interval starting at 1:30pm cannot.@en<http://www.w3.org/2004/02/skos/core#definition> : 'intervalo de fecha-hora' es una subclase de 'intervalo propio', definida utilizando el multi-elemento 'descripci n de fecha-hora'.@es"
     annotations:
       ea_guid: "EAID_0fbe4edd_b529_4b83_a82d_c40789cf9060"
     class_uri: cim:DateTimeInterval
@@ -3101,7 +3101,7 @@ classes:
   EnergyConsumerPhase:
     description: "A single phase of an energy consumer."
     annotations:
-      ea_guid: "EAID_2933FF4A_CF68_4099_B3FE_DBE8919C85AE"
+      ea_guid: "EAID_660F58C3_CAA2_4fd4_94AD_2071492B3C6C"
     is_a: PowerSystemResource
     abstract: true
     class_uri: cim:EnergyConsumerPhase
@@ -3133,7 +3133,7 @@ classes:
       phase:
         description: "Phase of this energy consumer component.   If the energy consumer is wye connected, the connection is from the indicated phase to the central ground or neutral point.  If the energy consumer is delta connected, the phase indicates an energy consumer connected from the indicated phase to the next logical non-neutral phase."
         annotations:
-          ea_guid: "EAID_58399B74_5465_48b8_9E03_F04C4DBC4462"
+          ea_guid: "EAID_5455085A_5EB0_467f_9669_0A1A55362BFA"
         slot_uri: cim:EnergyConsumerPhase.phase
         range: SinglePhaseKind
         minimum_cardinality: 0
@@ -3469,7 +3469,7 @@ classes:
     class_uri: cim:ExtendedWardEquivalent
     attributes: 
   ExternalNetworkInjection:
-    description: "This class represents the external network for use in power flow and short-circuit calculations.In the power flow domain the external network is modelled as a power injection with power limits and a power-frequency bias. For short-circuit calculations the external network is modelled as the �network feeders� element defined in section 6.2 of IEC60909-0:2016. Boolean flag ikSecond allows short-circuit calculations using the superposition method to detect that the maximum and minimum initial symmetrical short-circuit currents have to be corrected for the fact that they were calculated according the IEC60909-0 method."
+    description: "This class represents the external network for use in power flow and short-circuit calculations.In the power flow domain the external network is modelled as a power injection with power limits and a power-frequency bias. For short-circuit calculations the external network is modelled as the  network feeders  element defined in section 6.2 of IEC60909-0:2016. Boolean flag ikSecond allows short-circuit calculations using the superposition method to detect that the maximum and minimum initial symmetrical short-circuit currents have to be corrected for the fact that they were calculated according the IEC60909-0 method."
     annotations:
       ea_guid: "EAID_B7E110A4_CE7A_4414_9477_4310D44B43D0"
     is_a: RegulatingCondEq
@@ -3485,7 +3485,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       ikSecond:
-        description: "Indicates whether the maximum and minimum initial symmetrical short-circuit currents (Ik� max and Ik� min) have been calculated according to the IEC 60909-0 method. Is only used in short-circuit calculations done according to the superposition method."
+        description: "Indicates whether the maximum and minimum initial symmetrical short-circuit currents (Ik  max and Ik  min) have been calculated according to the IEC 60909-0 method. Is only used in short-circuit calculations done according to the superposition method."
         annotations:
           ea_guid: "EAID_8CE33CA0_BF90_4ffb_8094_3E13248C294D"
         slot_uri: cim:ExternalNetworkInjection.ikSecond
@@ -3493,7 +3493,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       maxInitialSymShCCurrent:
-        description: "Maximum initial symmetrical short-circuit current (Ik max) in A. Ik� is defined in clause 3.5 of IEC 60909-0:2016."
+        description: "Maximum initial symmetrical short-circuit current (Ik max) in A. Ik  is defined in clause 3.5 of IEC 60909-0:2016."
         annotations:
           ea_guid: "EAID_A9F4F42E_246F_4da4_AE34_14AE148CF3BF"
         slot_uri: cim:ExternalNetworkInjection.maxInitialSymShCCurrent
@@ -3541,7 +3541,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       minInitialSymShCCurrent:
-        description: "Minimum initial symmetrical short-circuit current (Ik min) in A. Ik� is defined in clause 3.5 of IEC 60909-0:2016."
+        description: "Minimum initial symmetrical short-circuit current (Ik min) in A. Ik  is defined in clause 3.5 of IEC 60909-0:2016."
         annotations:
           ea_guid: "EAID_CEA5D0C1_40FF_4bc9_9887_7E2C67B4A121"
         slot_uri: cim:ExternalNetworkInjection.minInitialSymShCCurrent
@@ -3613,7 +3613,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       voltageFactor:
-        description: "Voltage factor (c) in pu which has been used to calculate the maximum and minimum initial symmetrical short-circuit currents (Ik� max and Ik� min). Is only used in short-circuit calculations done according to the superposition method. The voltage factor is defined in clause 3.15 of IEC 60909-0:2016."
+        description: "Voltage factor (c) in pu which has been used to calculate the maximum and minimum initial symmetrical short-circuit currents (Ik  max and Ik  min). Is only used in short-circuit calculations done according to the superposition method. The voltage factor is defined in clause 3.15 of IEC 60909-0:2016."
         annotations:
           ea_guid: "EAID_F0AAD163_7313_4376_9CED_46F863F38E66"
         slot_uri: cim:ExternalNetworkInjection.voltageFactor
@@ -3955,7 +3955,7 @@ classes:
     class_uri: cim:FuseCharacteristicCurve
     attributes: 
   GeneralDateTimeDescription:
-    description: "rdfs:label : descripci�n de fecha-hora generalizada@esrdfs:label : Generalized date-time description@en<http://www.w3.org/2004/02/skos/core#note> : Some combinations of properties are redundant - for example, within a specified :year if :dayOfYear is provided then :day and :month can be computed, and vice versa. Individual values should be consistent with each other and the calendar, indicated through the value of the :hasTRS property.^^xsd:stringrdfs:comment : Description of date and time structured with separate values for the various elements of a calendar-clock system@enrdfs:comment : Descripci�n de fecha y hora estructurada con valores separados para los distintos elementos de un sistema calendario-reloj.@es<http://www.w3.org/2004/02/skos/core#definition> : Description of date and time structured with separate values for the various elements of a calendar-clock system@en<http://www.w3.org/2004/02/skos/core#definition> : Descripci�n de fecha y hora estructurada con valores separados para los distintos elementos de un sistema calendario-reloj.^^xsd:string<http://www.w3.org/2004/02/skos/core#note> : Algunas combinaciones de propiedades son redundantes - por ejemplo, dentro de un 'a�o' especificado si se proporciona 'd�a del a�o' entonces 'd�a' y 'mes' se pueden computar, y viceversa. Los valores individuales deber�an ser consistentes entre ellos y con el calendario, indicado a trav�s del valor de la propiedad 'tiene TRS'.@es"
+    description: "rdfs:label : descripci n de fecha-hora generalizada@esrdfs:label : Generalized date-time description@en<http://www.w3.org/2004/02/skos/core#note> : Some combinations of properties are redundant - for example, within a specified :year if :dayOfYear is provided then :day and :month can be computed, and vice versa. Individual values should be consistent with each other and the calendar, indicated through the value of the :hasTRS property.^^xsd:stringrdfs:comment : Description of date and time structured with separate values for the various elements of a calendar-clock system@enrdfs:comment : Descripci n de fecha y hora estructurada con valores separados para los distintos elementos de un sistema calendario-reloj.@es<http://www.w3.org/2004/02/skos/core#definition> : Description of date and time structured with separate values for the various elements of a calendar-clock system@en<http://www.w3.org/2004/02/skos/core#definition> : Descripci n de fecha y hora estructurada con valores separados para los distintos elementos de un sistema calendario-reloj.^^xsd:string<http://www.w3.org/2004/02/skos/core#note> : Algunas combinaciones de propiedades son redundantes - por ejemplo, dentro de un 'a o' especificado si se proporciona 'd a del a o' entonces 'd a' y 'mes' se pueden computar, y viceversa. Los valores individuales deber an ser consistentes entre ellos y con el calendario, indicado a trav s del valor de la propiedad 'tiene TRS'.@es"
     annotations:
       ea_guid: "EAID_9e89d7f1_1fbf_4040_9617_5e93c4dd2b7c"
     abstract: true
@@ -6165,7 +6165,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       grpDly:
-        description: "Phasor measurement group delay including all filters and estimation windows in effect. Value is in �s"
+        description: "Phasor measurement group delay including all filters and estimation windows in effect. Value is in  s"
         annotations:
           ea_guid: "EAID_4B68F7A5_1887_4877_AE61_6343245C78E9"
         slot_uri: cim:PMUConfiguration.grpDly
@@ -6189,7 +6189,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       pmuDataRate:
-        description: "Rate of data transmissions from this PMU. 2-B integer word (�32 767 to +32 767) e.g., PMU_DATA_RATE = 15 is 15 frames per second"
+        description: "Rate of data transmissions from this PMU. 2-B integer word ( 32 767 to +32 767) e.g., PMU_DATA_RATE = 15 is 15 frames per second"
         annotations:
           ea_guid: "EAID_B1FC38C6_4A55_4e36_8B15_48C8728EBC9A"
         slot_uri: cim:PMUConfiguration.pmuDataRate
@@ -6213,7 +6213,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       window:
-        description: "Phasor measurement window length including all filters and estimation windows in effect. Value is in �s"
+        description: "Phasor measurement window length including all filters and estimation windows in effect. Value is in  s"
         annotations:
           ea_guid: "EAID_650D6414_D0F2_4b24_9774_38DE6BCD668B"
         slot_uri: cim:PMUConfiguration.window
@@ -6297,7 +6297,7 @@ classes:
     class_uri: cim:PMUValueQuality
     attributes: 
       dataBad:
-        description: "0 = Normal data.1 = Do not use.PMU data is included in the data frame, but PDC�s ask users to not use it."
+        description: "0 = Normal data.1 = Do not use.PMU data is included in the data frame, but PDC s ask users to not use it."
         annotations:
           ea_guid: "EAID_4167619A_6637_4dc6_B9F9_7FA305C62B28"
         slot_uri: cim:PMUValueQuality.dataBad
@@ -6387,6 +6387,13 @@ classes:
           ea_guid: "EAID_3347ABB5_1CE3_4d94_B97F_88CA24E8816F"
         slot_uri: cim:PerLengthImpedance.xg
         range: ReactancePerLength
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      WireAssemblyInfo:
+        annotations:
+          ea_guid: "EAID_166A0543_F28F_436f_977E_9E25E1EB8F0F-B"
+        slot_uri: cim:PerLengthImpedance.WireAssemblyInfo
+        range: WireAssemblyInfo
         minimum_cardinality: 0
         maximum_cardinality: 1
   PerLengthLineParameter:
@@ -6855,7 +6862,6 @@ classes:
   PointOnWaveValue:
     annotations:
       ea_guid: "EAID_99EC8F34_BAE2_4945_B431_90A1AE7FDEA5"
-    is_a: RegularIntervalSchedule
     abstract: true
     class_uri: cim:PointOnWaveValue
     attributes: 
@@ -7313,6 +7319,20 @@ classes:
           ea_guid: "EAID_5A4A0AC2_AE76_4849_9563_015909DD9F2F"
         slot_uri: cim:PowerTransformer.vectorGroup
         range: string
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerImpedanceMatrix:
+        annotations:
+          ea_guid: "EAID_687487DA_A362_4c0e_87ED_53FA08C075B7-A"
+        slot_uri: cim:PowerTransformer.TransformerImpedanceMatrix
+        range: TranformerImpedanceMatrix
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerTemplate:
+        annotations:
+          ea_guid: "EAID_44A20CC5_BC95_4377_8FE1_76EA84BDEF0A-A"
+        slot_uri: cim:PowerTransformer.TransformerTemplate
+        range: TransformerTemplate
         minimum_cardinality: 0
         maximum_cardinality: 1
   PowerTransformerEnd:
@@ -7823,7 +7843,7 @@ classes:
         minimum_cardinality: 1
         maximum_cardinality: 1
   RelativeHeight:
-    description: "Used to specify the height of a physical object relative to a specified reference. The X, Y, and Z positions for a given point describe the position of a point in space expressed in appropriate coordinate system units. In general, the Z-position will represent the ground-level altitude above sea level for the point. At times it is beneficial to know the height above ground level at which a particular piece of equipment is installed. For example, the location of a pole-mounted weather station may be specified as �10 meters above ground level� by specifying a vertical offset of �10 meters� and a vertical offset reference of �Ground Level�. Alternately, it could be specified as �1 meter below the top of the pole� using a vertical offset of �-1 meter� and vertical offset reference of �Pole Top�."
+    description: "Used to specify the height of a physical object relative to a specified reference. The X, Y, and Z positions for a given point describe the position of a point in space expressed in appropriate coordinate system units. In general, the Z-position will represent the ground-level altitude above sea level for the point. At times it is beneficial to know the height above ground level at which a particular piece of equipment is installed. For example, the location of a pole-mounted weather station may be specified as  10 meters above ground level  by specifying a vertical offset of  10 meters  and a vertical offset reference of  Ground Level . Alternately, it could be specified as  1 meter below the top of the pole  using a vertical offset of  -1 meter  and vertical offset reference of  Pole Top ."
     annotations:
       ea_guid: "EAID_FD9A286D_6BD2_4d6b_BE69_610F1A868D1C"
     abstract: true
@@ -8010,7 +8030,7 @@ classes:
         minimum_cardinality: 0
         maximum_cardinality: 1
       deltaX:
-        description: "Reactance delta for the solution algorithm. The solution �outer-loop� algorithm is based on a secant method which needs two initial points. The second point is calculated from the first one by either adding or subtracting this �delta�. The �seed� is assumed to be 0 ohms."
+        description: "Reactance delta for the solution algorithm. The solution  outer-loop  algorithm is based on a secant method which needs two initial points. The second point is calculated from the first one by either adding or subtracting this  delta . The  seed  is assumed to be 0 ohms."
         annotations:
           ea_guid: "EAID_5D0D223D_4AD5_418f_966B_88B190079CED"
         slot_uri: cim:SSSCSimulationSettings.deltaX
@@ -8284,7 +8304,7 @@ classes:
   ShuntCompensator:
     description: "A shunt capacitor or reactor or switchable bank of shunt capacitors or reactors. A section of a shunt compensator is an individual capacitor or reactor. A negative value for bPerSection indicates that the compensator is a reactor. ShuntCompensator is a single terminal device.  Ground is implied."
     annotations:
-      ea_guid: "EAID_92B30569_5ED0_4fc0_B796_984D9BF75453"
+      ea_guid: "EAID_37C5529B_170E_41dd_BD0A_F251BE4AB231"
     is_a: RegulatingCondEq
     abstract: true
     class_uri: cim:ShuntCompensator
@@ -8311,6 +8331,13 @@ classes:
           ea_guid: "EAID_A38AEF78_95E1_44c8_B060_2ABC1D8C921E"
         slot_uri: cim:ShuntCompensator.maximumSections
         range: integer
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      nomQ:
+        annotations:
+          ea_guid: "EAID_FF54934A_E24F_459e_BF0D_D60FFF926F43"
+        slot_uri: cim:ShuntCompensator.nomQ
+        range: ReactivePower
         minimum_cardinality: 0
         maximum_cardinality: 1
       nomU:
@@ -8403,7 +8430,7 @@ classes:
   ShuntCompensatorPhase:
     description: "Single phase of a multi-phase shunt compensator when its attributes might be different per phase."
     annotations:
-      ea_guid: "EAID_081B186A_D45B_44d1_81DF_94EE3918A4D5"
+      ea_guid: "EAID_540320EF_1A06_4f5d_BB42_162CB45A16E0"
     is_a: PowerSystemResource
     abstract: true
     class_uri: cim:ShuntCompensatorPhase
@@ -8414,6 +8441,13 @@ classes:
           ea_guid: "EAID_2C99794B_45D6_49f5_A824_9C28E00B58DD"
         slot_uri: cim:ShuntCompensatorPhase.maximumSections
         range: integer
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      nomQ:
+        annotations:
+          ea_guid: "EAID_5F363C20_1267_448a_B3BB_9DBCFFDC2666"
+        slot_uri: cim:ShuntCompensatorPhase.nomQ
+        range: ReactivePower
         minimum_cardinality: 0
         maximum_cardinality: 1
       normalSections:
@@ -8427,7 +8461,7 @@ classes:
       phase:
         description: "Phase of this shunt compensator component.   If the shunt compensator is wye connected, the connection is from the indicated phase to the central ground or neutral point.  If the shunt compensator is delta connected, the phase indicates a shunt compensator connected from the indicated phase to the next logical non-neutral phase."
         annotations:
-          ea_guid: "EAID_623751D6_D4B2_463b_8D77_0E4BD5D0A99B"
+          ea_guid: "EAID_41E4CC56_1C0F_4ce9_8E2A_27D15B8D6CE4"
         slot_uri: cim:ShuntCompensatorPhase.phase
         range: SinglePhaseKind
         minimum_cardinality: 0
@@ -9063,7 +9097,7 @@ classes:
       open:
         description: "The attribute tells if the switch is considered open when used as input to topology processing."
         annotations:
-          ea_guid: "EAID_F68C3D2E_E682_4214_97F3_53F698848077"
+          ea_guid: "EAID_7FC100AA_9641_4d45_AC84_8B90D9FC4D3F"
         slot_uri: cim:Switch.open
         range: boolean
         minimum_cardinality: 0
@@ -9079,7 +9113,7 @@ classes:
       retained:
         description: "Branch is retained in the topological solution. The flow through retained switches will normally be calculated in power flow."
         annotations:
-          ea_guid: "EAID_D3885743_115B_4c3c_B926_77EF2FF88B75"
+          ea_guid: "EAID_5E9C873C_F052_49f6_9247_D7274CDA570A"
         slot_uri: cim:Switch.retained
         range: boolean
         minimum_cardinality: 0
@@ -10045,7 +10079,7 @@ classes:
       phases:
         description: "Represents the normal network phasing condition. If the attribute is missing, three phases (ABC) shall be assumed, except for terminals of grounding classes (specializations of EarthFaultCompensator, GroundDisconnector, and Ground) which will be assumed to be N. Therefore, phase code ABCN is explicitly declared when needed, e.g. for star point grounding equipment.The phase code on terminals connecting the same ConnectivityNode or TopologicalNode as well as for equipment between two terminals shall be consistent."
         annotations:
-          ea_guid: "EAID_82506064_E83E_48b6_B7B7_BC2237E96120"
+          ea_guid: "EAID_8C0E221E_4988_48bf_BFC3_F9FFD7E7E075"
         slot_uri: cim:Terminal.phases
         range: PhaseCode
         minimum_cardinality: 0
@@ -10083,7 +10117,7 @@ classes:
       ConnectivityNode:
         description: "The connectivity node to which this terminal connects with zero impedance."
         annotations:
-          ea_guid: "EAID_68D282E2_210D_419a_9CE9_A16032A3F73D-A"
+          ea_guid: "EAID_C7E01609_F4E6_4a6e_8ACF_BDD413E62DE3-A"
         slot_uri: cim:Terminal.ConnectivityNode
         range: ConnectivityNode
         minimum_cardinality: 0
@@ -10107,7 +10141,7 @@ classes:
       TopologicalNode:
         description: "The topological node associated with the terminal.   This can be used as an alternative to the connectivity node path to topological node, thus making it unnecessary to model connectivity nodes in some cases.   Note that the if connectivity nodes are in the model, this association would probably not be used as an input specification."
         annotations:
-          ea_guid: "EAID_78A2C57C_3F23_4b10_BAEC_CE806BC54664-A"
+          ea_guid: "EAID_F490BFCA_36A8_4fe2_B28B_66466134B41E-A"
         slot_uri: cim:Terminal.TopologicalNode
         range: TopologicalNode
         minimum_cardinality: 0
@@ -10287,7 +10321,7 @@ classes:
   TopologicalNode:
     description: "For a detailed substation model a topological node is a set of connectivity nodes that, in the current network state, are connected together through any type of closed switches, including  jumpers. Topological nodes change as the current network state changes (i.e., switches, breakers, etc. change state).For a planning model, switch statuses are not used to form topological nodes. Instead they are manually created or deleted in a model builder tool. Topological nodes maintained this way are also called busses."
     annotations:
-      ea_guid: "EAID_5FAB6DAF_573A_410b_90C2_15F1005D4F41"
+      ea_guid: "EAID_82489582_0ECB_4066_970D_A265B1065315"
     is_a: IdentifiedObject
     abstract: true
     class_uri: cim:TopologicalNode
@@ -10309,7 +10343,7 @@ classes:
       pInjection:
         description: "The active power injected into the bus at this location in addition to injections from equipment.  Positive sign means injection into the TopologicalNode (bus).Starting value for a steady state solution."
         annotations:
-          ea_guid: "EAID_4AE21166_EF4F_41ba_9600_BDB12F8DAA72"
+          ea_guid: "EAID_2C6F17C9_E8CD_4fdb_8029_A612C4EF7C6D"
         slot_uri: cim:TopologicalNode.pInjection
         range: ActivePower
         minimum_cardinality: 0
@@ -10333,7 +10367,7 @@ classes:
       BaseVoltage:
         description: "The base voltage of the topological node."
         annotations:
-          ea_guid: "EAID_160FD74B_367C_44ec_9F3F_26032D6E2875-A"
+          ea_guid: "EAID_6F37A2BE_FB37_4a6c_8BB1_CFC6690C1867-A"
         slot_uri: cim:TopologicalNode.BaseVoltage
         range: BaseVoltage
         minimum_cardinality: 0
@@ -10368,6 +10402,40 @@ classes:
           ea_guid: "EAID_C890568A_2C06_4a80_B381_F84EBB81CE0A-A"
         slot_uri: cim:TopologicalNode.TopologicalIsland
         range: TopologicalIsland
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+  TranformerImpedanceMatrix:
+    description: "Template class for specifying"
+    annotations:
+      ea_guid: "EAID_FC91BFD2_BCCF_4f4b_BC0A_C34EA012AF5A"
+    abstract: true
+    class_uri: cim:TranformerImpedanceMatrix
+    attributes: 
+  TransformerCore:
+    annotations:
+      ea_guid: "EAID_EA646B0D_09CC_4e3d_A9D6_16F336978D68"
+    abstract: true
+    class_uri: cim:TransformerCore
+    attributes: 
+      legCount:
+        annotations:
+          ea_guid: "EAID_15841946_1C4A_45dc_B952_4F650AE7FBE7"
+        slot_uri: cim:TransformerCore.legCount
+        range: integer
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerCoreAdmittance:
+        annotations:
+          ea_guid: "EAID_199F7A2A_8E11_4e7e_804D_6BE90DDE8075-A"
+        slot_uri: cim:TransformerCore.TransformerCoreAdmittance
+        range: TransformerCoreAdmittance
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerTank:
+        annotations:
+          ea_guid: "EAID_76A7605A_C994_47cf_9584_50184CC758D1-A"
+        slot_uri: cim:TransformerCore.TransformerTank
+        range: TransformerTank
         minimum_cardinality: 0
         maximum_cardinality: 1
   TransformerCoreAdmittance:
@@ -10410,16 +10478,15 @@ classes:
         range: Conductance
         minimum_cardinality: 0
         maximum_cardinality: 1
-      TransformerEndInfo:
-        description: "Transformer end datasheet used to calculate this core admittance."
+      TransformerCore:
         annotations:
-          ea_guid: "EAID_B327563C_A528_49f8_827D_F19F78BD5C59-B"
-        slot_uri: cim:TransformerCoreAdmittance.TransformerEndInfo
-        range: TransformerEndInfo
+          ea_guid: "EAID_199F7A2A_8E11_4e7e_804D_6BE90DDE8075-B"
+        slot_uri: cim:TransformerCoreAdmittance.TransformerCore
+        range: TransformerCore
         minimum_cardinality: 0
         maximum_cardinality: 1
   TransformerEnd:
-    description: "A conducting connection point of a power transformer. It corresponds to a physical transformer winding terminal. In earlier CIM versions, the TransformerWinding class served a similar purpose, but this class is more flexible because it associates to terminal but is not a specialization of ConductingEquipment."
+    description: "A mathematical / topological aggregate of the transformer terminal and winding for use within a pi or delta model"
     annotations:
       ea_guid: "EAID_6E6AF445_8CD5_434b_8E74_08970A4E6D95"
     is_a: IdentifiedObject
@@ -10634,6 +10701,56 @@ classes:
         range: TransformerTankInfo
         minimum_cardinality: 1
         maximum_cardinality: 1
+  TransformerLug:
+    annotations:
+      ea_guid: "EAID_58CC8A02_1039_4520_A208_A72432E786CC"
+    abstract: true
+    class_uri: cim:TransformerLug
+    attributes: 
+      designation:
+        annotations:
+          ea_guid: "EAID_69062C94_005C_40a6_B4A1_0F3906EB1FFD"
+        slot_uri: cim:TransformerLug.designation
+        range: string
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      AutoTransformerWinding:
+        annotations:
+          ea_guid: "EAID_1A79DEAD_EDBE_4a27_BD27_6D06EC2A8D7E-B"
+        slot_uri: cim:TransformerLug.AutoTransformerWinding
+        range: TransformerWinding
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      ToTransformerWinding:
+        annotations:
+          ea_guid: "EAID_F9515F92_E524_4d44_A378_B289D988F578-B"
+        slot_uri: cim:TransformerLug.ToTransformerWinding
+        range: TransformerWinding
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerEnd:
+        description: "The mathematical TransformerEnd corresponding to the physical terminal lug"
+        annotations:
+          ea_guid: "EAID_A52C359A_8535_4706_8765_0577CAE159B1-A"
+        slot_uri: cim:TransformerLug.TransformerEnd
+        range: TransformerEnd
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerTank:
+        annotations:
+          ea_guid: "EAID_3E5A665E_9CA2_48ba_A5D1_DCF934053487-A"
+        slot_uri: cim:TransformerLug.TransformerTank
+        range: TransformerTank
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerWinding:
+        description: "The winding for which this end is seen as the from terminal"
+        annotations:
+          ea_guid: "EAID_5F5E9231_5544_471b_8A81_5ACD0311B4D0-B"
+        slot_uri: cim:TransformerLug.TransformerWinding
+        range: TransformerWinding
+        minimum_cardinality: 0
+        maximum_cardinality: 1
   TransformerMeshImpedance:
     description: "Transformer mesh impedance (Delta-model) between transformer ends.The typical case is that this class describes the impedance between two transformer ends pair-wise, i.e. the cardinalities at both transformer end associations are 1. However, in cases where two or more transformer ends are modelled the cardinalities are larger than 1."
     annotations:
@@ -10642,6 +10759,22 @@ classes:
     abstract: true
     class_uri: cim:TransformerMeshImpedance
     attributes: 
+      cs:
+        description: "Positive-sequence stray capacitance between the 'from' and 'to' ends, seen from the 'from' end. Lumped equivalent of distributed stray capacitance, often reported in pF in datasheets"
+        annotations:
+          ea_guid: "EAID_AE112E86_F079_44dc_809A_2B7451095B06"
+        slot_uri: cim:TransformerMeshImpedance.cs
+        range: Capacitance
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      cs0:
+        description: "Zero-sequence stray capacitance between the 'from' and 'to' ends."
+        annotations:
+          ea_guid: "EAID_E8D1F075_9229_45dc_9C55_2DE26323282C"
+        slot_uri: cim:TransformerMeshImpedance.cs0
+        range: Capacitance
+        minimum_cardinality: 0
+        maximum_cardinality: 1
       r:
         description: "Resistance between the 'from' and the 'to' end, seen from the 'from' end."
         annotations:
@@ -10690,6 +10823,13 @@ classes:
         range: TransformerEndInfo
         minimum_cardinality: 0
         maximum_cardinality: 1
+      FromWinding:
+        annotations:
+          ea_guid: "EAID_87167669_083B_4ab9_A745_5D92E543326C-B"
+        slot_uri: cim:TransformerMeshImpedance.FromWinding
+        range: TransformerWinding
+        minimum_cardinality: 0
+        maximum_cardinality: 1
       ToTransformerEnd:
         description: "All transformer ends this mesh impedance is connected to."
         annotations:
@@ -10706,6 +10846,13 @@ classes:
         range: TransformerEndInfo
         minimum_cardinality: 0
         multivalued: true
+      ToWinding:
+        annotations:
+          ea_guid: "EAID_32E64BED_15C1_43e6_A92D_4A25EDC4A4AB-B"
+        slot_uri: cim:TransformerMeshImpedance.ToWinding
+        range: TransformerWinding
+        minimum_cardinality: 0
+        maximum_cardinality: 1
   TransformerStarImpedance:
     description: "Transformer star impedance (Pi-model) that accurately reflects impedance for transformers with 2 or 3 windings. For transformers with 4 or more windings, TransformerMeshImpedance class shall be used.For transmission networks use PowerTransformerEnd impedances (r, r0, x, x0, b, b0, g and g0)."
     annotations:
@@ -10762,6 +10909,34 @@ classes:
     abstract: true
     class_uri: cim:TransformerTank
     attributes: 
+      fullLoadLoss:
+        annotations:
+          ea_guid: "EAID_453C0B2A_8EF4_4064_92F8_43E178F23EFB"
+        slot_uri: cim:TransformerTank.fullLoadLoss
+        range: ActivePower
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      noLoadLoss:
+        annotations:
+          ea_guid: "EAID_AFDC1E2C_8422_47ff_A32A_910C3B307944"
+        slot_uri: cim:TransformerTank.noLoadLoss
+        range: ActivePower
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      percentImpedance:
+        annotations:
+          ea_guid: "EAID_ABC3D93D_E090_455d_9551_F081EF7D3712"
+        slot_uri: cim:TransformerTank.percentImpedance
+        range: PerCent
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      percentMagnetizingCurrent:
+        annotations:
+          ea_guid: "EAID_D77217C6_A25D_4914_BCCC_230DB02087E2"
+        slot_uri: cim:TransformerTank.percentMagnetizingCurrent
+        range: PerCent
+        minimum_cardinality: 0
+        maximum_cardinality: 1
       PowerTransformer:
         description: "Bank this transformer belongs to."
         annotations:
@@ -10777,6 +10952,13 @@ classes:
         range: TransformerTankInfo
         minimum_cardinality: 0
         maximum_cardinality: 1
+      TransformerTemplate:
+        annotations:
+          ea_guid: "EAID_3A830E61_1790_499b_8893_9077B486C458-A"
+        slot_uri: cim:TransformerTank.TransformerTemplate
+        range: TransformerTemplate
+        minimum_cardinality: 0
+        maximum_cardinality: 1
   TransformerTankEnd:
     description: "Transformer tank end represents an individual winding for unbalanced models or for transformer tanks connected into a bank (and bank is modelled with the PowerTransformer)."
     annotations:
@@ -10784,13 +10966,35 @@ classes:
     is_a: TransformerEnd
     abstract: true
     class_uri: cim:TransformerTankEnd
-    attributes: 
+    attributes:
+      phase:
+        description: "Phase carried by this individual winding end (single-phase or split-phase tank models). Extension: not in the base CIM standard, added alongside the compound `phases` code for per-end unbalanced tank modeling."
+        annotations:
+          ea_guid: "EAID_EXT_TRANSFORMERTANKEND_PHASE"
+        slot_uri: cim:TransformerTankEnd.phase
+        range: SinglePhaseKind
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      phaseNeutralU:
+        annotations:
+          ea_guid: "EAID_7A8A8861_913E_46d2_951C_EF99250F86B9"
+        slot_uri: cim:TransformerTankEnd.phaseNeutralU
+        range: Voltage
+        minimum_cardinality: 0
+        maximum_cardinality: 1
       phases:
         description: "Describes the phases carried by a conducting equipment."
         annotations:
           ea_guid: "EAID_ECEAD537_8731_44da_A641_EDEF7450C23A"
         slot_uri: cim:TransformerTankEnd.phases
         range: PhaseCode
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      sequenceNumber:
+        annotations:
+          ea_guid: "EAID_C97320B1_0269_4373_B025_6576C6D2140C"
+        slot_uri: cim:TransformerTankEnd.sequenceNumber
+        range: integer
         minimum_cardinality: 0
         maximum_cardinality: 1
       TransformerTank:
@@ -10817,6 +11021,12 @@ classes:
         range: PowerTransformerInfo
         minimum_cardinality: 1
         maximum_cardinality: 1
+  TransformerTemplate:
+    annotations:
+      ea_guid: "EAID_0B22C889_7B6F_47a6_8FD0_87D956C0C5DC"
+    abstract: true
+    class_uri: cim:TransformerTemplate
+    attributes: 
   TransformerTest:
     description: "Test result for transformer ends, such as short-circuit, open-circuit (excitation) or no-load test."
     annotations:
@@ -10825,6 +11035,138 @@ classes:
     abstract: true
     class_uri: cim:TransformerTest
     attributes: 
+      basePower:
+        description: "Base power at which the tests are conducted, usually equal to the rateds of one of the involved transformer ends."
+        annotations:
+          ea_guid: "EAID_056471A6_B8A8_433c_9FB2_095E6C4C2F8E"
+        slot_uri: cim:TransformerTest.basePower
+        range: ApparentPower
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      temperature:
+        description: "Temperature at which the test is conducted."
+        annotations:
+          ea_guid: "EAID_88CF359F_297E_409b_864E_7DBEFBC169B4"
+        slot_uri: cim:TransformerTest.temperature
+        range: Temperature
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+  TransformerWinding:
+    annotations:
+      ea_guid: "EAID_380EA620_7CEC_4fa5_9C84_F8F6C151A884"
+    abstract: true
+    class_uri: cim:TransformerWinding
+    attributes: 
+      baseS:
+        annotations:
+          ea_guid: "EAID_5C4BFEDD_2960_4d66_B405_44BDC6D3E528"
+        slot_uri: cim:TransformerWinding.baseS
+        range: ApparentPower
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      baseU:
+        annotations:
+          ea_guid: "EAID_5FBB19B8_354D_4d72_8D3F_74123801EFF8"
+        slot_uri: cim:TransformerWinding.baseU
+        range: Voltage
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      nominalU:
+        annotations:
+          ea_guid: "EAID_A07AEA35_10A2_4c49_B2A8_4B7E46EE2FF2"
+        slot_uri: cim:TransformerWinding.nominalU
+        range: Voltage
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      phaseAngleClock:
+        description: "Terminal voltage phase angle displacement where 360 degrees are represented with clock hours. The valid values are 0 to 11."
+        annotations:
+          ea_guid: "EAID_F5B88DD6_E625_435f_99D1_D6B6699AE10A"
+        slot_uri: cim:TransformerWinding.phaseAngleClock
+        range: integer
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      ratedS:
+        description: "Normal apparent power rating.The attribute shall be a positive value. For a two-winding transformer the values for the high and low voltage sides shall be identical."
+        annotations:
+          ea_guid: "EAID_00A90A8E_60E7_4b2c_B9E8_B45338D5D365"
+        slot_uri: cim:TransformerWinding.ratedS
+        range: ApparentPower
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      ratedU:
+        description: "Rated voltage: phase-phase for three-phase windings, and either phase-phase or phase-neutral for single-phase windings.A high voltage side, as given by TransformerEnd.endNumber, shall have a ratedU that is greater than or equal to ratedU for the lower voltage sides.The attribute shall be a positive value."
+        annotations:
+          ea_guid: "EAID_88677AE8_5E57_4f12_9D2B_10B4540CB998"
+        slot_uri: cim:TransformerWinding.ratedU
+        range: Voltage
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      AutoTransformerLug:
+        annotations:
+          ea_guid: "EAID_1A79DEAD_EDBE_4a27_BD27_6D06EC2A8D7E-A"
+        slot_uri: cim:TransformerWinding.AutoTransformerLug
+        range: TransformerLug
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      FromMeshImpedance:
+        annotations:
+          ea_guid: "EAID_87167669_083B_4ab9_A745_5D92E543326C-A"
+        slot_uri: cim:TransformerWinding.FromMeshImpedance
+        range: TransformerMeshImpedance
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      FromTransformerEnd:
+        annotations:
+          ea_guid: "EAID_EC2DD82A_EE50_4902_AEB8_CB9E91D25E1E-B"
+        slot_uri: cim:TransformerWinding.FromTransformerEnd
+        range: TransformerEnd
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      FromTransformerLug:
+        description: "The TransformerLug with lowest designation number (e.g. H1) serving as the energizing terminal of the winding. For balanced three-phase transformers, this is the only end that needs to be specified. For unbalanced per-tank modeling, the from and to need to be specified."
+        annotations:
+          ea_guid: "EAID_5F5E9231_5544_471b_8A81_5ACD0311B4D0-A"
+        slot_uri: cim:TransformerWinding.FromTransformerLug
+        range: TransformerLug
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      ToMeshImpedance:
+        annotations:
+          ea_guid: "EAID_32E64BED_15C1_43e6_A92D_4A25EDC4A4AB-A"
+        slot_uri: cim:TransformerWinding.ToMeshImpedance
+        range: TransformerMeshImpedance
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      ToTransformerEnd:
+        annotations:
+          ea_guid: "EAID_8ABC970C_7C4E_4dd0_AB42_30B47F721155-B"
+        slot_uri: cim:TransformerWinding.ToTransformerEnd
+        range: TransformerEnd
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      ToTransformerLug:
+        annotations:
+          ea_guid: "EAID_F9515F92_E524_4d44_A378_B289D988F578-A"
+        slot_uri: cim:TransformerWinding.ToTransformerLug
+        range: TransformerLug
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerCore:
+        annotations:
+          ea_guid: "EAID_6F208207_A16E_4a14_BA50_A3B1E095E7D2-B"
+        slot_uri: cim:TransformerWinding.TransformerCore
+        range: TransformerCore
+        minimum_cardinality: 0
+        maximum_cardinality: 1
+      TransformerTank:
+        description: "The transformer tank in which the winding is contained"
+        annotations:
+          ea_guid: "EAID_6452BA91_7936_44ab_9468_39209F70C509-A"
+        slot_uri: cim:TransformerWinding.TransformerTank
+        range: TransformerTank
+        minimum_cardinality: 0
+        maximum_cardinality: 1
   TransmissionControlArea:
     annotations:
       ea_guid: "EAID_B3E698EF_670F_4644_AB27_3A47AC851712"
@@ -11457,6 +11799,14 @@ types:
       ea_guid: "EAID_BD3D15F2_CB39_41a5_935D_7B8F490ECBF8"
       cim_data_type: true
       uri: cim:Area
+  Capacitance:
+    uri: xsd:float
+    base: float
+    description: "Capacitive part of reactance (imaginary part of impedance), at rated frequency."
+    annotations:
+      ea_guid: "EAID_B2C696FA_9529_4b58_9D82_4062406AEACF"
+      cim_data_type: true
+      uri: cim:Capacitance
   Classification:
     uri: xsd:integer
     base: int
@@ -12192,6 +12542,19 @@ enums:
         description: "Water."
         annotations:
           ea_guid: "EAID_037AFDDD_4C06_4531_B227_53B16C4327A8"
+  CoreConstructionKind:
+    annotations:
+      ea_guid: "EAID_7C21AEDF_E74A_404a_B587_2B08727FF6C5"
+    enum_uri:  http://cim.ucaiug.io/cim101/draft#CoreConstructionKind
+    permissible_values:
+      coreForm:
+        meaning:  cim:CoreConstructionKind.coreForm
+        annotations:
+          ea_guid: "EAID_C9B39A78_74D0_4ba7_8873_D217C9E64C00"
+      shellForm:
+        meaning:  cim:CoreConstructionKind.shellForm
+        annotations:
+          ea_guid: "EAID_4CF0BFAF_D22A_4845_ADEC_6376A5889BA6"
   Currency:
     description: "Monetary currencies.  ISO 4217 standard including 3-character currency code."
     annotations:
@@ -14211,6 +14574,31 @@ enums:
         description: "Denotes a bypass switch in a transmission substation, either for maintenance or to bypass a SeriesCompensator. May require Switch.Retained be set to True."
         annotations:
           ea_guid: "EAID_071BBE51_BBC8_4ac4_86D0_0141186A70EF"
+  TransformerLegKind:
+    annotations:
+      ea_guid: "EAID_D8454778_EA46_4b7f_A63C_B300805ED8A2"
+    enum_uri:  http://cim.ucaiug.io/cim101/draft#TransformerLegKind
+    permissible_values:
+      fiveLeg:
+        meaning:  cim:TransformerLegKind.fiveLeg
+        annotations:
+          ea_guid: "EAID_1DBC67C4_5D78_48b6_9046_0216E40FE502"
+      fourLeg:
+        meaning:  cim:TransformerLegKind.fourLeg
+        annotations:
+          ea_guid: "EAID_1417FB40_CA2E_4dd5_BFF9_D02A62957A37"
+      sevenLeg:
+        meaning:  cim:TransformerLegKind.sevenLeg
+        annotations:
+          ea_guid: "EAID_22BED82F_847E_46fe_A56E_6FF269B0737A"
+      threeLeg:
+        meaning:  cim:TransformerLegKind.threeLeg
+        annotations:
+          ea_guid: "EAID_224F2A08_2F34_4824_88B6_AA6336C9D04B"
+      twoLeg:
+        meaning:  cim:TransformerLegKind.twoLeg
+        annotations:
+          ea_guid: "EAID_4DB5687A_6FEA_4fba_89AF_C354B175C305"
   UnitMultiplier:
     description: "The unit multipliers defined for the CIM. When applied to unit symbols, the unit symbol is treated as a derived unit. Regardless of the contents of the unit symbol text, the unit symbol shall be treated as if it were a single-character unit symbol. Unit symbols should not contain multipliers, and it should be left to the multiplier to define the multiple for an entire data type.For example, if a unit symbol is m2Pers and the multiplier is k, then the value is k(m**2/s), and the multiplier applies to the entire final value, not to any individual part of the value. This can be conceptualized by substituting a derived unit symbol for the unit type. If one imagines that the symbol &#222; represents the derived unit m2Pers, then applying the multiplier k can be conceptualized simply as k&#222;.For example, the SI unit for mass is kg and not g.  If the unit symbol is defined as kg, then the multiplier is applied to kg as a whole and does not replace the k in front of the g. In this case, the multiplier of m would be used with the unit symbol of kg to represent one gram.  As a text string, this violates the instructions in IEC 80000-1. However, because the unit symbol in CIM is treated as a derived unit instead of as an SI unit, it makes more sense to conceptualize the kg as if it were replaced by one of the proposed replacements for the SI mass symbol. If one imagines that the kg were replaced by a symbol &#222;, then it is easier to conceptualize the multiplier m as creating the proper unit m&#222;, and not the forbidden unit mkg."
     annotations:
@@ -14730,7 +15118,7 @@ enums:
           ea_guid: "EAID_8187AD67_24E6_4cc1_931D_FC0964171586"
       cosPhi:
         meaning:  cim:UnitSymbol.cosPhi
-        description: "Power factor, dimensionless.Note 1: This definition of power factor only holds for balanced systems. See the alternative definition under code 153.Note 2�: Beware of differing sign conventions in use between the IEC and EEI. It is assumed that the data consumer understands the type of meter in use and the sign convention in use by the utility."
+        description: "Power factor, dimensionless.Note 1: This definition of power factor only holds for balanced systems. See the alternative definition under code 153.Note 2 : Beware of differing sign conventions in use between the IEC and EEI. It is assumed that the data consumer understands the type of meter in use and the sign convention in use by the utility."
         annotations:
           ea_guid: "EAID_3FF3E24E_53F5_45ae_8408_47C453D360C2"
       count:
@@ -15057,7 +15445,7 @@ enums:
   WindingConnection:
     description: "Winding connection type."
     annotations:
-      ea_guid: "EAID_FF3816E1_1CFE_4051_9F75_0F3E94DABAFB"
+      ea_guid: "EAID_77ECE947_F15B_4a74_B7C4_1988A1A610F5"
     enum_uri:  http://cim.ucaiug.io/cim101/draft#WindingConnection
     permissible_values:
       A:

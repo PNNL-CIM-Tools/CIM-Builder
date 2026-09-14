@@ -1,1 +1,52 @@
 // Phase 1: FIXED grammar (design: CIMTBL_DESIGN.md §2.1, §3).
+//
+// Line-oriented: each statement starts at column 0 and ends at a line break.
+// Table data rows are indented but that indentation is not significant to
+// the grammar - a row is just "a line that isn't a new top-level keyword".
+// Comments are %ignore'd inline (never swallowing their own newline), so a
+// comment-only line lexes down to a bare _NL - indistinguishable from a
+// blank line. Every statement/row terminator is therefore _NL+ (one or more
+// newlines), which absorbs any number of blank/comment-only lines between
+// real content, and the top level tolerates leading/trailing blank runs too.
+
+start: _NL* statement*
+
+statement: object_stmt
+         | table_stmt
+         | import_stmt
+         | profile_stmt
+
+profile_stmt: PROFILE "=" NAME _NL+
+
+import_stmt: IMPORT FILENAME _NL+
+
+object_stmt: OBJECT NAME ":" assignment_list _NL+
+
+table_stmt: TABLE NAME ":" header_list _NL+ table_row*
+
+assignment_list: assignment ("," assignment)*
+assignment: NAME unit? "=" cell
+
+header_list: header_cell ("," header_cell)*
+header_cell: NAME unit?
+unit: "(" UNIT_TEXT ")"
+
+table_row: cell ("," cell)* _NL+
+
+cell: VALUE -> value
+    | -> blank
+
+PROFILE.3: "Profile"
+IMPORT.3: "Import"
+OBJECT.3: "Object"
+TABLE.3: "Table"
+NAME.2: /[A-Za-z_][A-Za-z0-9_]*/
+VALUE: /[^,()\n#]+/
+UNIT_TEXT: /[^()\n]+/
+FILENAME: /[^\s#][^\n#]*\.cimtbl/
+
+_NL: /\r?\n/
+
+%ignore /[ \t]+/
+%ignore /#[^\n]*/
+%ignore /[ \t]+(?=\r?\n)/

@@ -6,8 +6,10 @@ str->float/int coercion, and rejecting unknown columns. This module wraps
 that with a fail-fast, profile-anchored error message (naming the closest
 valid attribute on an unknown column, per §8's Phase 2 exit criterion) and
 unwraps the validated instance into the plain <Class>Row dataclass pinned by
-§12.2 - binding every float-range field into a Qty using the record's units
-(§3.2), which the LinkML schema itself does not carry.
+§12.2 - binding every physical-quantity field (§4.3: a named float-based type
+like Voltage/ActivePower/ResistancePerLength, not bare `float` itself) into a
+Qty using the record's units (§3.2), which the LinkML schema itself does not
+carry.
 
 FK slots (BaseVoltage, PerLengthImpedance, LoadResponse, ...) keep the real
 cimhub_2026 class's own object-valued range (rows.yaml does not narrow
@@ -43,13 +45,23 @@ class CimtblValidationError(ValueError):
     """Fail-fast, profile-anchored validation error (§8 Phase 2 exit criterion)."""
 
 
+def _is_quantity_range(range_name: str | None) -> bool:
+    """True for a physical-quantity type (Voltage, ActivePower, ResistancePerLength,
+    ...) - a named type whose base is float, but not the bare `float` type itself
+    (dimensionless values like ZIP coefficients stay plain floats, not Qty)."""
+    if range_name is None or range_name == 'float':
+        return False
+    range_type = _schema_view.get_type(range_name)
+    return range_type is not None and range_type.base == 'float'
+
+
 def _quantity_slots(row_cls_name: str) -> set[str]:
-    """Names of the class's float-range slots - every one is a physical
-    quantity that may carry a unit suffix on its .cimtbl column header."""
+    """Names of the class's physical-quantity slots (§4.3) - every one may
+    carry a unit suffix on its .cimtbl column header and is bound into a Qty."""
     return {
         slot_name
         for slot_name in _schema_view.class_slots(row_cls_name)
-        if _schema_view.induced_slot(slot_name, row_cls_name).range == 'float'
+        if _is_quantity_range(_schema_view.induced_slot(slot_name, row_cls_name).range)
     }
 
 

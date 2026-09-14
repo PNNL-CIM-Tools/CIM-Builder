@@ -1,5 +1,5 @@
 # Auto generated from main.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-09-14T12:12:04
+# Generation date: 2026-09-14T15:22:38
 # Schema: cimtbl
 #
 # id: https://github.com/AAndersn/CIM-Builder/cimtbl
@@ -125,6 +125,14 @@ class Area(float):
     type_class_curie = "xsd:float"
     type_name = "Area"
     type_model_uri = CIMTBL.Area
+
+
+class Capacitance(float):
+    """ Capacitive part of reactance (imaginary part of impedance), at rated frequency. """
+    type_class_uri = XSD["float"]
+    type_class_curie = "xsd:float"
+    type_name = "Capacitance"
+    type_model_uri = CIMTBL.Capacitance
 
 
 class Classification(int):
@@ -571,10 +579,10 @@ class DateInterval(YAMLRoot):
 class DateTimeInterval(YAMLRoot):
     """
     rdfs:label : Date-time interval@enrdfs:comment : 'intervalo de fecha-hora' es una subclase de 'intervalo propio',
-    definida utilizando el multi-elemento 'descripci�n de fecha-hora'.@es<http://www.w3.org/2004/02/skos/core#note> :
-    'intervalo de fecha-hora' se puede utilizar s�lo para un intervalo cuyos l�mites coinciden con un elemento de
-    fecha-hora alineados con el calendario y la zona horaria indicados. Por ejemplo, aunque ambos tienen una duraci�n
-    de un d�a, el intervalo de 24 horas que empieza en la media noche del comienzo del 8 mayo en Europa Central se
+    definida utilizando el multi-elemento 'descripci n de fecha-hora'.@es<http://www.w3.org/2004/02/skos/core#note> :
+    'intervalo de fecha-hora' se puede utilizar s lo para un intervalo cuyos l mites coinciden con un elemento de
+    fecha-hora alineados con el calendario y la zona horaria indicados. Por ejemplo, aunque ambos tienen una duraci n
+    de un d a, el intervalo de 24 horas que empieza en la media noche del comienzo del 8 mayo en Europa Central se
     puede expresar como un 'intervalo de fecha-hora', el intervalo de 24 horas que empieza a las 1:30pm
     no.@esrdfs:label : intervalo de fecha-hora@es<http://www.w3.org/2004/02/skos/core#definition> : DateTimeInterval
     is a subclass of ProperInterval, defined using the multi-element DateTimeDescription.@enrdfs:comment :
@@ -584,7 +592,7 @@ class DateTimeInterval(YAMLRoot):
     example, while both have a duration of one day, the 24-hour interval beginning at midnight at the beginning of 8
     May in Central Europe can be expressed as a :DateTimeInterval, but the 24-hour interval starting at 1:30pm
     cannot.@en<http://www.w3.org/2004/02/skos/core#definition> : 'intervalo de fecha-hora' es una subclase de
-    'intervalo propio', definida utilizando el multi-elemento 'descripci�n de fecha-hora'.@es
+    'intervalo propio', definida utilizando el multi-elemento 'descripci n de fecha-hora'.@es
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -670,21 +678,21 @@ class FloatQuantity(YAMLRoot):
 
 class GeneralDateTimeDescription(YAMLRoot):
     """
-    rdfs:label : descripci�n de fecha-hora generalizada@esrdfs:label : Generalized date-time
+    rdfs:label : descripci n de fecha-hora generalizada@esrdfs:label : Generalized date-time
     description@en<http://www.w3.org/2004/02/skos/core#note> : Some combinations of properties are redundant - for
     example, within a specified :year if :dayOfYear is provided then :day and :month can be computed, and vice versa.
     Individual values should be consistent with each other and the calendar, indicated through the value of the
     :hasTRS property.^^xsd:stringrdfs:comment : Description of date and time structured with separate values for the
-    various elements of a calendar-clock system@enrdfs:comment : Descripci�n de fecha y hora estructurada con valores
+    various elements of a calendar-clock system@enrdfs:comment : Descripci n de fecha y hora estructurada con valores
     separados para los distintos elementos de un sistema
     calendario-reloj.@es<http://www.w3.org/2004/02/skos/core#definition> : Description of date and time structured
     with separate values for the various elements of a calendar-clock
-    system@en<http://www.w3.org/2004/02/skos/core#definition> : Descripci�n de fecha y hora estructurada con valores
+    system@en<http://www.w3.org/2004/02/skos/core#definition> : Descripci n de fecha y hora estructurada con valores
     separados para los distintos elementos de un sistema
     calendario-reloj.^^xsd:string<http://www.w3.org/2004/02/skos/core#note> : Algunas combinaciones de propiedades son
-    redundantes - por ejemplo, dentro de un 'a�o' especificado si se proporciona 'd�a del a�o' entonces 'd�a' y 'mes'
-    se pueden computar, y viceversa. Los valores individuales deber�an ser consistentes entre ellos y con el
-    calendario, indicado a trav�s del valor de la propiedad 'tiene TRS'.@es
+    redundantes - por ejemplo, dentro de un 'a o' especificado si se proporciona 'd a del a o' entonces 'd a' y 'mes'
+    se pueden computar, y viceversa. Los valores individuales deber an ser consistentes entre ellos y con el
+    calendario, indicado a trav s del valor de la propiedad 'tiene TRS'.@es
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -3542,6 +3550,7 @@ class PerLengthImpedance(PerLengthLineParameter):
     isUserDefined: Optional[Union[bool, Bool]] = None
     rg: Optional[float] = None
     xg: Optional[float] = None
+    WireAssemblyInfo: Optional[Union[dict, "WireAssemblyInfo"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self.calculatedFrequency is not None and not isinstance(self.calculatedFrequency, float):
@@ -3558,6 +3567,9 @@ class PerLengthImpedance(PerLengthLineParameter):
 
         if self.xg is not None and not isinstance(self.xg, float):
             self.xg = float(self.xg)
+
+        if self.WireAssemblyInfo is not None and not isinstance(self.WireAssemblyInfo, WireAssemblyInfo):
+            self.WireAssemblyInfo = WireAssemblyInfo(**as_dict(self.WireAssemblyInfo))
 
         super().__post_init__(**kwargs)
 
@@ -3744,6 +3756,24 @@ class PhasorMeasurementValue(MeasurementVector):
     class_class_curie: ClassVar[str] = "cim:PhasorMeasurementValue"
     class_name: ClassVar[str] = "PhasorMeasurementValue"
     class_model_uri: ClassVar[URIRef] = CIMTBL.PhasorMeasurementValue
+
+
+@dataclass(repr=False)
+class PointOnWaveValue(YAMLRoot):
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = CIM["PointOnWaveValue"]
+    class_class_curie: ClassVar[str] = "cim:PointOnWaveValue"
+    class_name: ClassVar[str] = "PointOnWaveValue"
+    class_model_uri: ClassVar[URIRef] = CIMTBL.PointOnWaveValue
+
+    Analog: Optional[Union[dict, Analog]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.Analog is not None and not isinstance(self.Analog, Analog):
+            self.Analog = Analog(**as_dict(self.Analog))
+
+        super().__post_init__(**kwargs)
 
 
 @dataclass(repr=False)
@@ -4781,7 +4811,7 @@ class ConnectivityArea(EquipmentContainer):
 class DCConverterUnit(EquipmentContainer):
     """
     Indivisible operative unit comprising all equipment between the point of common coupling on the AC side and the
-    point of common coupling � DC side, essentially one or more converters, together with one or more converter
+    point of common coupling DC side, essentially one or more converters, together with one or more converter
     transformers, converter control equipment, essential protective and switching devices and auxiliaries, if any,
     used for conversion.
     """
@@ -5691,6 +5721,8 @@ class PowerTransformer(ConductingEquipment):
     isPartOfGeneratorUnit: Optional[Union[bool, Bool]] = None
     operationalValuesConsidered: Optional[Union[bool, Bool]] = None
     vectorGroup: Optional[str] = None
+    TransformerImpedanceMatrix: Optional[Union[dict, "TranformerImpedanceMatrix"]] = None
+    TransformerTemplate: Optional[Union[dict, "TransformerTemplate"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self.beforeShCircuitHighestOperatingCurrent is not None and not isinstance(self.beforeShCircuitHighestOperatingCurrent, float):
@@ -5713,6 +5745,12 @@ class PowerTransformer(ConductingEquipment):
 
         if self.vectorGroup is not None and not isinstance(self.vectorGroup, str):
             self.vectorGroup = str(self.vectorGroup)
+
+        if self.TransformerImpedanceMatrix is not None and not isinstance(self.TransformerImpedanceMatrix, TranformerImpedanceMatrix):
+            self.TransformerImpedanceMatrix = TranformerImpedanceMatrix()
+
+        if self.TransformerTemplate is not None and not isinstance(self.TransformerTemplate, TransformerTemplate):
+            self.TransformerTemplate = TransformerTemplate()
 
         super().__post_init__(**kwargs)
 
@@ -5831,24 +5869,6 @@ class RegularIntervalSchedule(BasicIntervalSchedule):
 
 
 @dataclass(repr=False)
-class PointOnWaveValue(RegularIntervalSchedule):
-    _inherited_slots: ClassVar[list[str]] = []
-
-    class_class_uri: ClassVar[URIRef] = CIM["PointOnWaveValue"]
-    class_class_curie: ClassVar[str] = "cim:PointOnWaveValue"
-    class_name: ClassVar[str] = "PointOnWaveValue"
-    class_model_uri: ClassVar[URIRef] = CIMTBL.PointOnWaveValue
-
-    Analog: Optional[Union[dict, Analog]] = None
-
-    def __post_init__(self, *_: str, **kwargs: Any):
-        if self.Analog is not None and not isinstance(self.Analog, Analog):
-            self.Analog = Analog(**as_dict(self.Analog))
-
-        super().__post_init__(**kwargs)
-
-
-@dataclass(repr=False)
 class RegularTimePoint(YAMLRoot):
     """
     Time point for a schedule where the time between the consecutive points is constant.
@@ -5920,8 +5940,8 @@ class ExternalNetworkInjection(RegulatingCondEq):
     """
     This class represents the external network for use in power flow and short-circuit calculations.In the power flow
     domain the external network is modelled as a power injection with power limits and a power-frequency bias. For
-    short-circuit calculations the external network is modelled as the �network feeders� element defined in section
-    6.2 of IEC60909-0:2016. Boolean flag ikSecond allows short-circuit calculations using the superposition method to
+    short-circuit calculations the external network is modelled as the network feeders element defined in section 6.2
+    of IEC60909-0:2016. Boolean flag ikSecond allows short-circuit calculations using the superposition method to
     detect that the maximum and minimum initial symmetrical short-circuit currents have to be corrected for the fact
     that they were calculated according the IEC60909-0 method.
     """
@@ -6297,10 +6317,10 @@ class RelativeHeight(YAMLRoot):
     given point describe the position of a point in space expressed in appropriate coordinate system units. In
     general, the Z-position will represent the ground-level altitude above sea level for the point. At times it is
     beneficial to know the height above ground level at which a particular piece of equipment is installed. For
-    example, the location of a pole-mounted weather station may be specified as �10 meters above ground level� by
-    specifying a vertical offset of �10 meters� and a vertical offset reference of �Ground Level�. Alternately, it
-    could be specified as �1 meter below the top of the pole� using a vertical offset of �-1 meter� and vertical
-    offset reference of �Pole Top�.
+    example, the location of a pole-mounted weather station may be specified as 10 meters above ground level by
+    specifying a vertical offset of 10 meters and a vertical offset reference of Ground Level . Alternately, it could
+    be specified as 1 meter below the top of the pole using a vertical offset of -1 meter and vertical offset
+    reference of Pole Top .
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -6791,6 +6811,7 @@ class ShuntCompensator(RegulatingCondEq):
     aVRDelay: Optional[float] = None
     grounded: Optional[Union[bool, Bool]] = None
     maximumSections: Optional[int] = None
+    nomQ: Optional[float] = None
     nomU: Optional[float] = None
     normalSections: Optional[int] = None
     phaseConnection: Optional[Union[str, "PhaseShuntConnectionKind"]] = None
@@ -6809,6 +6830,9 @@ class ShuntCompensator(RegulatingCondEq):
 
         if self.maximumSections is not None and not isinstance(self.maximumSections, int):
             self.maximumSections = int(self.maximumSections)
+
+        if self.nomQ is not None and not isinstance(self.nomQ, float):
+            self.nomQ = float(self.nomQ)
 
         if self.nomU is not None and not isinstance(self.nomU, float):
             self.nomU = float(self.nomU)
@@ -6939,6 +6963,7 @@ class ShuntCompensatorPhase(PowerSystemResource):
     class_model_uri: ClassVar[URIRef] = CIMTBL.ShuntCompensatorPhase
 
     maximumSections: Optional[int] = None
+    nomQ: Optional[float] = None
     normalSections: Optional[int] = None
     phase: Optional[Union[str, "SinglePhaseKind"]] = None
     sections: Optional[float] = None
@@ -6947,6 +6972,9 @@ class ShuntCompensatorPhase(PowerSystemResource):
     def __post_init__(self, *_: str, **kwargs: Any):
         if self.maximumSections is not None and not isinstance(self.maximumSections, int):
             self.maximumSections = int(self.maximumSections)
+
+        if self.nomQ is not None and not isinstance(self.nomQ, float):
+            self.nomQ = float(self.nomQ)
 
         if self.normalSections is not None and not isinstance(self.normalSections, int):
             self.normalSections = int(self.normalSections)
@@ -9181,6 +9209,44 @@ class TopologicalNode(IdentifiedObject):
         super().__post_init__(**kwargs)
 
 
+class TranformerImpedanceMatrix(YAMLRoot):
+    """
+    Template class for specifying
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = CIM["TranformerImpedanceMatrix"]
+    class_class_curie: ClassVar[str] = "cim:TranformerImpedanceMatrix"
+    class_name: ClassVar[str] = "TranformerImpedanceMatrix"
+    class_model_uri: ClassVar[URIRef] = CIMTBL.TranformerImpedanceMatrix
+
+
+@dataclass(repr=False)
+class TransformerCore(YAMLRoot):
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = CIM["TransformerCore"]
+    class_class_curie: ClassVar[str] = "cim:TransformerCore"
+    class_name: ClassVar[str] = "TransformerCore"
+    class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerCore
+
+    legCount: Optional[int] = None
+    TransformerCoreAdmittance: Optional[Union[dict, "TransformerCoreAdmittance"]] = None
+    TransformerTank: Optional[Union[dict, "TransformerTank"]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.legCount is not None and not isinstance(self.legCount, int):
+            self.legCount = int(self.legCount)
+
+        if self.TransformerCoreAdmittance is not None and not isinstance(self.TransformerCoreAdmittance, TransformerCoreAdmittance):
+            self.TransformerCoreAdmittance = TransformerCoreAdmittance(**as_dict(self.TransformerCoreAdmittance))
+
+        if self.TransformerTank is not None and not isinstance(self.TransformerTank, TransformerTank):
+            self.TransformerTank = TransformerTank(**as_dict(self.TransformerTank))
+
+        super().__post_init__(**kwargs)
+
+
 @dataclass(repr=False)
 class TransformerCoreAdmittance(IdentifiedObject):
     """
@@ -9198,7 +9264,7 @@ class TransformerCoreAdmittance(IdentifiedObject):
     b0: Optional[float] = None
     g: Optional[float] = None
     g0: Optional[float] = None
-    TransformerEndInfo: Optional[Union[dict, "TransformerEndInfo"]] = None
+    TransformerCore: Optional[Union[dict, TransformerCore]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self.b is not None and not isinstance(self.b, float):
@@ -9213,8 +9279,8 @@ class TransformerCoreAdmittance(IdentifiedObject):
         if self.g0 is not None and not isinstance(self.g0, float):
             self.g0 = float(self.g0)
 
-        if self.TransformerEndInfo is not None and not isinstance(self.TransformerEndInfo, TransformerEndInfo):
-            self.TransformerEndInfo = TransformerEndInfo(**as_dict(self.TransformerEndInfo))
+        if self.TransformerCore is not None and not isinstance(self.TransformerCore, TransformerCore):
+            self.TransformerCore = TransformerCore(**as_dict(self.TransformerCore))
 
         super().__post_init__(**kwargs)
 
@@ -9222,9 +9288,7 @@ class TransformerCoreAdmittance(IdentifiedObject):
 @dataclass(repr=False)
 class TransformerEnd(IdentifiedObject):
     """
-    A conducting connection point of a power transformer. It corresponds to a physical transformer winding terminal.
-    In earlier CIM versions, the TransformerWinding class served a similar purpose, but this class is more flexible
-    because it associates to terminal but is not a specialization of ConductingEquipment.
+    A mathematical / topological aggregate of the transformer terminal and winding for use within a pi or delta model
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -9439,6 +9503,44 @@ class TransformerEndInfo(ConductingAssetInfo):
 
 
 @dataclass(repr=False)
+class TransformerLug(YAMLRoot):
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = CIM["TransformerLug"]
+    class_class_curie: ClassVar[str] = "cim:TransformerLug"
+    class_name: ClassVar[str] = "TransformerLug"
+    class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerLug
+
+    designation: Optional[str] = None
+    AutoTransformerWinding: Optional[Union[dict, "TransformerWinding"]] = None
+    ToTransformerWinding: Optional[Union[dict, "TransformerWinding"]] = None
+    TransformerEnd: Optional[Union[dict, TransformerEnd]] = None
+    TransformerTank: Optional[Union[dict, "TransformerTank"]] = None
+    TransformerWinding: Optional[Union[dict, "TransformerWinding"]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.designation is not None and not isinstance(self.designation, str):
+            self.designation = str(self.designation)
+
+        if self.AutoTransformerWinding is not None and not isinstance(self.AutoTransformerWinding, TransformerWinding):
+            self.AutoTransformerWinding = TransformerWinding(**as_dict(self.AutoTransformerWinding))
+
+        if self.ToTransformerWinding is not None and not isinstance(self.ToTransformerWinding, TransformerWinding):
+            self.ToTransformerWinding = TransformerWinding(**as_dict(self.ToTransformerWinding))
+
+        if self.TransformerEnd is not None and not isinstance(self.TransformerEnd, TransformerEnd):
+            self.TransformerEnd = TransformerEnd(**as_dict(self.TransformerEnd))
+
+        if self.TransformerTank is not None and not isinstance(self.TransformerTank, TransformerTank):
+            self.TransformerTank = TransformerTank(**as_dict(self.TransformerTank))
+
+        if self.TransformerWinding is not None and not isinstance(self.TransformerWinding, TransformerWinding):
+            self.TransformerWinding = TransformerWinding(**as_dict(self.TransformerWinding))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
 class TransformerMeshImpedance(IdentifiedObject):
     """
     Transformer mesh impedance (Delta-model) between transformer ends.The typical case is that this class describes
@@ -9452,16 +9554,26 @@ class TransformerMeshImpedance(IdentifiedObject):
     class_name: ClassVar[str] = "TransformerMeshImpedance"
     class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerMeshImpedance
 
+    cs: Optional[float] = None
+    cs0: Optional[float] = None
     r: Optional[float] = None
     r0: Optional[float] = None
     x: Optional[float] = None
     x0: Optional[float] = None
     FromTransformerEnd: Optional[Union[dict, TransformerEnd]] = None
     FromTransformerEndInfo: Optional[Union[dict, TransformerEndInfo]] = None
+    FromWinding: Optional[Union[dict, "TransformerWinding"]] = None
     ToTransformerEnd: Optional[Union[Union[dict, TransformerEnd], list[Union[dict, TransformerEnd]]]] = empty_list()
     ToTransformerEndInfos: Optional[Union[Union[dict, TransformerEndInfo], list[Union[dict, TransformerEndInfo]]]] = empty_list()
+    ToWinding: Optional[Union[dict, "TransformerWinding"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
+        if self.cs is not None and not isinstance(self.cs, float):
+            self.cs = float(self.cs)
+
+        if self.cs0 is not None and not isinstance(self.cs0, float):
+            self.cs0 = float(self.cs0)
+
         if self.r is not None and not isinstance(self.r, float):
             self.r = float(self.r)
 
@@ -9480,6 +9592,9 @@ class TransformerMeshImpedance(IdentifiedObject):
         if self.FromTransformerEndInfo is not None and not isinstance(self.FromTransformerEndInfo, TransformerEndInfo):
             self.FromTransformerEndInfo = TransformerEndInfo(**as_dict(self.FromTransformerEndInfo))
 
+        if self.FromWinding is not None and not isinstance(self.FromWinding, TransformerWinding):
+            self.FromWinding = TransformerWinding(**as_dict(self.FromWinding))
+
         if not isinstance(self.ToTransformerEnd, list):
             self.ToTransformerEnd = [self.ToTransformerEnd] if self.ToTransformerEnd is not None else []
         self.ToTransformerEnd = [v if isinstance(v, TransformerEnd) else TransformerEnd(**as_dict(v)) for v in self.ToTransformerEnd]
@@ -9487,6 +9602,9 @@ class TransformerMeshImpedance(IdentifiedObject):
         if not isinstance(self.ToTransformerEndInfos, list):
             self.ToTransformerEndInfos = [self.ToTransformerEndInfos] if self.ToTransformerEndInfos is not None else []
         self.ToTransformerEndInfos = [v if isinstance(v, TransformerEndInfo) else TransformerEndInfo(**as_dict(v)) for v in self.ToTransformerEndInfos]
+
+        if self.ToWinding is not None and not isinstance(self.ToWinding, TransformerWinding):
+            self.ToWinding = TransformerWinding(**as_dict(self.ToWinding))
 
         super().__post_init__(**kwargs)
 
@@ -9544,15 +9662,35 @@ class TransformerTank(Equipment):
     class_name: ClassVar[str] = "TransformerTank"
     class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerTank
 
+    fullLoadLoss: Optional[float] = None
+    noLoadLoss: Optional[float] = None
+    percentImpedance: Optional[float] = None
+    percentMagnetizingCurrent: Optional[float] = None
     PowerTransformer: Optional[Union[dict, PowerTransformer]] = None
     TransformerTankInfo: Optional[Union[dict, "TransformerTankInfo"]] = None
+    TransformerTemplate: Optional[Union[dict, "TransformerTemplate"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
+        if self.fullLoadLoss is not None and not isinstance(self.fullLoadLoss, float):
+            self.fullLoadLoss = float(self.fullLoadLoss)
+
+        if self.noLoadLoss is not None and not isinstance(self.noLoadLoss, float):
+            self.noLoadLoss = float(self.noLoadLoss)
+
+        if self.percentImpedance is not None and not isinstance(self.percentImpedance, float):
+            self.percentImpedance = float(self.percentImpedance)
+
+        if self.percentMagnetizingCurrent is not None and not isinstance(self.percentMagnetizingCurrent, float):
+            self.percentMagnetizingCurrent = float(self.percentMagnetizingCurrent)
+
         if self.PowerTransformer is not None and not isinstance(self.PowerTransformer, PowerTransformer):
             self.PowerTransformer = PowerTransformer(**as_dict(self.PowerTransformer))
 
         if self.TransformerTankInfo is not None and not isinstance(self.TransformerTankInfo, TransformerTankInfo):
             self.TransformerTankInfo = TransformerTankInfo(**as_dict(self.TransformerTankInfo))
+
+        if self.TransformerTemplate is not None and not isinstance(self.TransformerTemplate, TransformerTemplate):
+            self.TransformerTemplate = TransformerTemplate()
 
         super().__post_init__(**kwargs)
 
@@ -9570,12 +9708,24 @@ class TransformerTankEnd(TransformerEnd):
     class_name: ClassVar[str] = "TransformerTankEnd"
     class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerTankEnd
 
+    phase: Optional[Union[str, "SinglePhaseKind"]] = None
+    phaseNeutralU: Optional[float] = None
     phases: Optional[Union[str, "PhaseCode"]] = None
+    sequenceNumber: Optional[int] = None
     TransformerTank: Optional[Union[dict, TransformerTank]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
+        if self.phase is not None and not isinstance(self.phase, SinglePhaseKind):
+            self.phase = SinglePhaseKind(self.phase)
+
+        if self.phaseNeutralU is not None and not isinstance(self.phaseNeutralU, float):
+            self.phaseNeutralU = float(self.phaseNeutralU)
+
         if self.phases is not None and not isinstance(self.phases, PhaseCode):
             self.phases = PhaseCode(self.phases)
+
+        if self.sequenceNumber is not None and not isinstance(self.sequenceNumber, int):
+            self.sequenceNumber = int(self.sequenceNumber)
 
         if self.TransformerTank is not None and not isinstance(self.TransformerTank, TransformerTank):
             self.TransformerTank = TransformerTank(**as_dict(self.TransformerTank))
@@ -9604,6 +9754,16 @@ class TransformerTankInfo(AssetInfo):
         super().__post_init__(**kwargs)
 
 
+class TransformerTemplate(YAMLRoot):
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = CIM["TransformerTemplate"]
+    class_class_curie: ClassVar[str] = "cim:TransformerTemplate"
+    class_name: ClassVar[str] = "TransformerTemplate"
+    class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerTemplate
+
+
+@dataclass(repr=False)
 class TransformerTest(IdentifiedObject):
     """
     Test result for transformer ends, such as short-circuit, open-circuit (excitation) or no-load test.
@@ -9614,6 +9774,18 @@ class TransformerTest(IdentifiedObject):
     class_class_curie: ClassVar[str] = "cim:TransformerTest"
     class_name: ClassVar[str] = "TransformerTest"
     class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerTest
+
+    basePower: Optional[float] = None
+    temperature: Optional[float] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.basePower is not None and not isinstance(self.basePower, float):
+            self.basePower = float(self.basePower)
+
+        if self.temperature is not None and not isinstance(self.temperature, float):
+            self.temperature = float(self.temperature)
+
+        super().__post_init__(**kwargs)
 
 
 @dataclass(repr=False)
@@ -9766,6 +9938,80 @@ class ShortCircuitTest(TransformerTest):
         if not isinstance(self.GroundedEnds, list):
             self.GroundedEnds = [self.GroundedEnds] if self.GroundedEnds is not None else []
         self.GroundedEnds = [v if isinstance(v, TransformerEndInfo) else TransformerEndInfo(**as_dict(v)) for v in self.GroundedEnds]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class TransformerWinding(YAMLRoot):
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = CIM["TransformerWinding"]
+    class_class_curie: ClassVar[str] = "cim:TransformerWinding"
+    class_name: ClassVar[str] = "TransformerWinding"
+    class_model_uri: ClassVar[URIRef] = CIMTBL.TransformerWinding
+
+    baseS: Optional[float] = None
+    baseU: Optional[float] = None
+    nominalU: Optional[float] = None
+    phaseAngleClock: Optional[int] = None
+    ratedS: Optional[float] = None
+    ratedU: Optional[float] = None
+    AutoTransformerLug: Optional[Union[dict, TransformerLug]] = None
+    FromMeshImpedance: Optional[Union[dict, TransformerMeshImpedance]] = None
+    FromTransformerEnd: Optional[Union[dict, TransformerEnd]] = None
+    FromTransformerLug: Optional[Union[dict, TransformerLug]] = None
+    ToMeshImpedance: Optional[Union[dict, TransformerMeshImpedance]] = None
+    ToTransformerEnd: Optional[Union[dict, TransformerEnd]] = None
+    ToTransformerLug: Optional[Union[dict, TransformerLug]] = None
+    TransformerCore: Optional[Union[dict, TransformerCore]] = None
+    TransformerTank: Optional[Union[dict, TransformerTank]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.baseS is not None and not isinstance(self.baseS, float):
+            self.baseS = float(self.baseS)
+
+        if self.baseU is not None and not isinstance(self.baseU, float):
+            self.baseU = float(self.baseU)
+
+        if self.nominalU is not None and not isinstance(self.nominalU, float):
+            self.nominalU = float(self.nominalU)
+
+        if self.phaseAngleClock is not None and not isinstance(self.phaseAngleClock, int):
+            self.phaseAngleClock = int(self.phaseAngleClock)
+
+        if self.ratedS is not None and not isinstance(self.ratedS, float):
+            self.ratedS = float(self.ratedS)
+
+        if self.ratedU is not None and not isinstance(self.ratedU, float):
+            self.ratedU = float(self.ratedU)
+
+        if self.AutoTransformerLug is not None and not isinstance(self.AutoTransformerLug, TransformerLug):
+            self.AutoTransformerLug = TransformerLug(**as_dict(self.AutoTransformerLug))
+
+        if self.FromMeshImpedance is not None and not isinstance(self.FromMeshImpedance, TransformerMeshImpedance):
+            self.FromMeshImpedance = TransformerMeshImpedance(**as_dict(self.FromMeshImpedance))
+
+        if self.FromTransformerEnd is not None and not isinstance(self.FromTransformerEnd, TransformerEnd):
+            self.FromTransformerEnd = TransformerEnd(**as_dict(self.FromTransformerEnd))
+
+        if self.FromTransformerLug is not None and not isinstance(self.FromTransformerLug, TransformerLug):
+            self.FromTransformerLug = TransformerLug(**as_dict(self.FromTransformerLug))
+
+        if self.ToMeshImpedance is not None and not isinstance(self.ToMeshImpedance, TransformerMeshImpedance):
+            self.ToMeshImpedance = TransformerMeshImpedance(**as_dict(self.ToMeshImpedance))
+
+        if self.ToTransformerEnd is not None and not isinstance(self.ToTransformerEnd, TransformerEnd):
+            self.ToTransformerEnd = TransformerEnd(**as_dict(self.ToTransformerEnd))
+
+        if self.ToTransformerLug is not None and not isinstance(self.ToTransformerLug, TransformerLug):
+            self.ToTransformerLug = TransformerLug(**as_dict(self.ToTransformerLug))
+
+        if self.TransformerCore is not None and not isinstance(self.TransformerCore, TransformerCore):
+            self.TransformerCore = TransformerCore(**as_dict(self.TransformerCore))
+
+        if self.TransformerTank is not None and not isinstance(self.TransformerTank, TransformerTank):
+            self.TransformerTank = TransformerTank(**as_dict(self.TransformerTank))
 
         super().__post_init__(**kwargs)
 
@@ -11489,6 +11735,19 @@ class CoolantType(EnumDefinitionImpl):
     _defn = EnumDefinition(
         name="CoolantType",
         description="Method of cooling a machine.",
+    )
+
+class CoreConstructionKind(EnumDefinitionImpl):
+
+    coreForm = PermissibleValue(
+        text="coreForm",
+        meaning=CIM["CoreConstructionKind.coreForm"])
+    shellForm = PermissibleValue(
+        text="shellForm",
+        meaning=CIM["CoreConstructionKind.shellForm"])
+
+    _defn = EnumDefinition(
+        name="CoreConstructionKind",
     )
 
 class Currency(EnumDefinitionImpl):
@@ -13262,6 +13521,28 @@ class TopologicalUsageKind(EnumDefinitionImpl):
         description="""Usage of switch as a boundary device across persistent connectivity areas, such as across a transmission-distribution boundary""",
     )
 
+class TransformerLegKind(EnumDefinitionImpl):
+
+    fiveLeg = PermissibleValue(
+        text="fiveLeg",
+        meaning=CIM["TransformerLegKind.fiveLeg"])
+    fourLeg = PermissibleValue(
+        text="fourLeg",
+        meaning=CIM["TransformerLegKind.fourLeg"])
+    sevenLeg = PermissibleValue(
+        text="sevenLeg",
+        meaning=CIM["TransformerLegKind.sevenLeg"])
+    threeLeg = PermissibleValue(
+        text="threeLeg",
+        meaning=CIM["TransformerLegKind.threeLeg"])
+    twoLeg = PermissibleValue(
+        text="twoLeg",
+        meaning=CIM["TransformerLegKind.twoLeg"])
+
+    _defn = EnumDefinition(
+        name="TransformerLegKind",
+    )
+
 class UnitMultiplier(EnumDefinitionImpl):
     """
     The unit multipliers defined for the CIM. When applied to unit symbols, the unit symbol is treated as a derived
@@ -13710,7 +13991,7 @@ class UnitSymbol(EnumDefinitionImpl):
         meaning=CIM["UnitSymbol.character"])
     cosPhi = PermissibleValue(
         text="cosPhi",
-        description="""Power factor, dimensionless.Note 1: This definition of power factor only holds for balanced systems. See the alternative definition under code 153.Note 2�: Beware of differing sign conventions in use between the IEC and EEI. It is assumed that the data consumer understands the type of meter in use and the sign convention in use by the utility.""",
+        description="""Power factor, dimensionless.Note 1: This definition of power factor only holds for balanced systems. See the alternative definition under code 153.Note 2 : Beware of differing sign conventions in use between the IEC and EEI. It is assumed that the data consumer understands the type of meter in use and the sign convention in use by the utility.""",
         meaning=CIM["UnitSymbol.cosPhi"])
     count = PermissibleValue(
         text="count",
@@ -16074,6 +16355,9 @@ slots.perLengthImpedance__rg = Slot(uri=CIM['PerLengthImpedance.rg'], name="perL
 slots.perLengthImpedance__xg = Slot(uri=CIM['PerLengthImpedance.xg'], name="perLengthImpedance__xg", curie=CIM.curie('PerLengthImpedance.xg'),
                    model_uri=CIMTBL.perLengthImpedance__xg, domain=None, range=Optional[float])
 
+slots.perLengthImpedance__WireAssemblyInfo = Slot(uri=CIM['PerLengthImpedance.WireAssemblyInfo'], name="perLengthImpedance__WireAssemblyInfo", curie=CIM.curie('PerLengthImpedance.WireAssemblyInfo'),
+                   model_uri=CIMTBL.perLengthImpedance__WireAssemblyInfo, domain=None, range=Optional[Union[dict, WireAssemblyInfo]])
+
 slots.perLengthLineParameter__WireAssemblyInfo = Slot(uri=CIM['PerLengthLineParameter.WireAssemblyInfo'], name="perLengthLineParameter__WireAssemblyInfo", curie=CIM.curie('PerLengthLineParameter.WireAssemblyInfo'),
                    model_uri=CIMTBL.perLengthLineParameter__WireAssemblyInfo, domain=None, range=Optional[Union[dict, WireAssemblyInfo]])
 
@@ -16322,6 +16606,12 @@ slots.powerTransformer__operationalValuesConsidered = Slot(uri=CIM['PowerTransfo
 
 slots.powerTransformer__vectorGroup = Slot(uri=CIM['PowerTransformer.vectorGroup'], name="powerTransformer__vectorGroup", curie=CIM.curie('PowerTransformer.vectorGroup'),
                    model_uri=CIMTBL.powerTransformer__vectorGroup, domain=None, range=Optional[str])
+
+slots.powerTransformer__TransformerImpedanceMatrix = Slot(uri=CIM['PowerTransformer.TransformerImpedanceMatrix'], name="powerTransformer__TransformerImpedanceMatrix", curie=CIM.curie('PowerTransformer.TransformerImpedanceMatrix'),
+                   model_uri=CIMTBL.powerTransformer__TransformerImpedanceMatrix, domain=None, range=Optional[Union[dict, TranformerImpedanceMatrix]])
+
+slots.powerTransformer__TransformerTemplate = Slot(uri=CIM['PowerTransformer.TransformerTemplate'], name="powerTransformer__TransformerTemplate", curie=CIM.curie('PowerTransformer.TransformerTemplate'),
+                   model_uri=CIMTBL.powerTransformer__TransformerTemplate, domain=None, range=Optional[Union[dict, TransformerTemplate]])
 
 slots.powerTransformerEnd__b = Slot(uri=CIM['PowerTransformerEnd.b'], name="powerTransformerEnd__b", curie=CIM.curie('PowerTransformerEnd.b'),
                    model_uri=CIMTBL.powerTransformerEnd__b, domain=None, range=Optional[float])
@@ -16608,6 +16898,9 @@ slots.shuntCompensator__grounded = Slot(uri=CIM['ShuntCompensator.grounded'], na
 slots.shuntCompensator__maximumSections = Slot(uri=CIM['ShuntCompensator.maximumSections'], name="shuntCompensator__maximumSections", curie=CIM.curie('ShuntCompensator.maximumSections'),
                    model_uri=CIMTBL.shuntCompensator__maximumSections, domain=None, range=Optional[int])
 
+slots.shuntCompensator__nomQ = Slot(uri=CIM['ShuntCompensator.nomQ'], name="shuntCompensator__nomQ", curie=CIM.curie('ShuntCompensator.nomQ'),
+                   model_uri=CIMTBL.shuntCompensator__nomQ, domain=None, range=Optional[float])
+
 slots.shuntCompensator__nomU = Slot(uri=CIM['ShuntCompensator.nomU'], name="shuntCompensator__nomU", curie=CIM.curie('ShuntCompensator.nomU'),
                    model_uri=CIMTBL.shuntCompensator__nomU, domain=None, range=Optional[float])
 
@@ -16634,6 +16927,9 @@ slots.shuntCompensator__StaticVarCompensatorSystemDynamics = Slot(uri=CIM['Shunt
 
 slots.shuntCompensatorPhase__maximumSections = Slot(uri=CIM['ShuntCompensatorPhase.maximumSections'], name="shuntCompensatorPhase__maximumSections", curie=CIM.curie('ShuntCompensatorPhase.maximumSections'),
                    model_uri=CIMTBL.shuntCompensatorPhase__maximumSections, domain=None, range=Optional[int])
+
+slots.shuntCompensatorPhase__nomQ = Slot(uri=CIM['ShuntCompensatorPhase.nomQ'], name="shuntCompensatorPhase__nomQ", curie=CIM.curie('ShuntCompensatorPhase.nomQ'),
+                   model_uri=CIMTBL.shuntCompensatorPhase__nomQ, domain=None, range=Optional[float])
 
 slots.shuntCompensatorPhase__normalSections = Slot(uri=CIM['ShuntCompensatorPhase.normalSections'], name="shuntCompensatorPhase__normalSections", curie=CIM.curie('ShuntCompensatorPhase.normalSections'),
                    model_uri=CIMTBL.shuntCompensatorPhase__normalSections, domain=None, range=Optional[int])
@@ -17220,6 +17516,15 @@ slots.topologicalNode__StateShortCircuitResult = Slot(uri=CIM['TopologicalNode.S
 slots.topologicalNode__TopologicalIsland = Slot(uri=CIM['TopologicalNode.TopologicalIsland'], name="topologicalNode__TopologicalIsland", curie=CIM.curie('TopologicalNode.TopologicalIsland'),
                    model_uri=CIMTBL.topologicalNode__TopologicalIsland, domain=None, range=Optional[Union[dict, TopologicalIsland]])
 
+slots.transformerCore__legCount = Slot(uri=CIM['TransformerCore.legCount'], name="transformerCore__legCount", curie=CIM.curie('TransformerCore.legCount'),
+                   model_uri=CIMTBL.transformerCore__legCount, domain=None, range=Optional[int])
+
+slots.transformerCore__TransformerCoreAdmittance = Slot(uri=CIM['TransformerCore.TransformerCoreAdmittance'], name="transformerCore__TransformerCoreAdmittance", curie=CIM.curie('TransformerCore.TransformerCoreAdmittance'),
+                   model_uri=CIMTBL.transformerCore__TransformerCoreAdmittance, domain=None, range=Optional[Union[dict, TransformerCoreAdmittance]])
+
+slots.transformerCore__TransformerTank = Slot(uri=CIM['TransformerCore.TransformerTank'], name="transformerCore__TransformerTank", curie=CIM.curie('TransformerCore.TransformerTank'),
+                   model_uri=CIMTBL.transformerCore__TransformerTank, domain=None, range=Optional[Union[dict, TransformerTank]])
+
 slots.transformerCoreAdmittance__b = Slot(uri=CIM['TransformerCoreAdmittance.b'], name="transformerCoreAdmittance__b", curie=CIM.curie('TransformerCoreAdmittance.b'),
                    model_uri=CIMTBL.transformerCoreAdmittance__b, domain=None, range=Optional[float])
 
@@ -17232,8 +17537,8 @@ slots.transformerCoreAdmittance__g = Slot(uri=CIM['TransformerCoreAdmittance.g']
 slots.transformerCoreAdmittance__g0 = Slot(uri=CIM['TransformerCoreAdmittance.g0'], name="transformerCoreAdmittance__g0", curie=CIM.curie('TransformerCoreAdmittance.g0'),
                    model_uri=CIMTBL.transformerCoreAdmittance__g0, domain=None, range=Optional[float])
 
-slots.transformerCoreAdmittance__TransformerEndInfo = Slot(uri=CIM['TransformerCoreAdmittance.TransformerEndInfo'], name="transformerCoreAdmittance__TransformerEndInfo", curie=CIM.curie('TransformerCoreAdmittance.TransformerEndInfo'),
-                   model_uri=CIMTBL.transformerCoreAdmittance__TransformerEndInfo, domain=None, range=Optional[Union[dict, TransformerEndInfo]])
+slots.transformerCoreAdmittance__TransformerCore = Slot(uri=CIM['TransformerCoreAdmittance.TransformerCore'], name="transformerCoreAdmittance__TransformerCore", curie=CIM.curie('TransformerCoreAdmittance.TransformerCore'),
+                   model_uri=CIMTBL.transformerCoreAdmittance__TransformerCore, domain=None, range=Optional[Union[dict, TransformerCore]])
 
 slots.transformerEnd__bmagSat = Slot(uri=CIM['TransformerEnd.bmagSat'], name="transformerEnd__bmagSat", curie=CIM.curie('TransformerEnd.bmagSat'),
                    model_uri=CIMTBL.transformerEnd__bmagSat, domain=None, range=Optional[float])
@@ -17310,6 +17615,30 @@ slots.transformerEndInfo__TransformerStarImpedance = Slot(uri=CIM['TransformerEn
 slots.transformerEndInfo__TransformerTankInfo = Slot(uri=CIM['TransformerEndInfo.TransformerTankInfo'], name="transformerEndInfo__TransformerTankInfo", curie=CIM.curie('TransformerEndInfo.TransformerTankInfo'),
                    model_uri=CIMTBL.transformerEndInfo__TransformerTankInfo, domain=None, range=Optional[Union[dict, TransformerTankInfo]])
 
+slots.transformerLug__designation = Slot(uri=CIM['TransformerLug.designation'], name="transformerLug__designation", curie=CIM.curie('TransformerLug.designation'),
+                   model_uri=CIMTBL.transformerLug__designation, domain=None, range=Optional[str])
+
+slots.transformerLug__AutoTransformerWinding = Slot(uri=CIM['TransformerLug.AutoTransformerWinding'], name="transformerLug__AutoTransformerWinding", curie=CIM.curie('TransformerLug.AutoTransformerWinding'),
+                   model_uri=CIMTBL.transformerLug__AutoTransformerWinding, domain=None, range=Optional[Union[dict, TransformerWinding]])
+
+slots.transformerLug__ToTransformerWinding = Slot(uri=CIM['TransformerLug.ToTransformerWinding'], name="transformerLug__ToTransformerWinding", curie=CIM.curie('TransformerLug.ToTransformerWinding'),
+                   model_uri=CIMTBL.transformerLug__ToTransformerWinding, domain=None, range=Optional[Union[dict, TransformerWinding]])
+
+slots.transformerLug__TransformerEnd = Slot(uri=CIM['TransformerLug.TransformerEnd'], name="transformerLug__TransformerEnd", curie=CIM.curie('TransformerLug.TransformerEnd'),
+                   model_uri=CIMTBL.transformerLug__TransformerEnd, domain=None, range=Optional[Union[dict, TransformerEnd]])
+
+slots.transformerLug__TransformerTank = Slot(uri=CIM['TransformerLug.TransformerTank'], name="transformerLug__TransformerTank", curie=CIM.curie('TransformerLug.TransformerTank'),
+                   model_uri=CIMTBL.transformerLug__TransformerTank, domain=None, range=Optional[Union[dict, TransformerTank]])
+
+slots.transformerLug__TransformerWinding = Slot(uri=CIM['TransformerLug.TransformerWinding'], name="transformerLug__TransformerWinding", curie=CIM.curie('TransformerLug.TransformerWinding'),
+                   model_uri=CIMTBL.transformerLug__TransformerWinding, domain=None, range=Optional[Union[dict, TransformerWinding]])
+
+slots.transformerMeshImpedance__cs = Slot(uri=CIM['TransformerMeshImpedance.cs'], name="transformerMeshImpedance__cs", curie=CIM.curie('TransformerMeshImpedance.cs'),
+                   model_uri=CIMTBL.transformerMeshImpedance__cs, domain=None, range=Optional[float])
+
+slots.transformerMeshImpedance__cs0 = Slot(uri=CIM['TransformerMeshImpedance.cs0'], name="transformerMeshImpedance__cs0", curie=CIM.curie('TransformerMeshImpedance.cs0'),
+                   model_uri=CIMTBL.transformerMeshImpedance__cs0, domain=None, range=Optional[float])
+
 slots.transformerMeshImpedance__r = Slot(uri=CIM['TransformerMeshImpedance.r'], name="transformerMeshImpedance__r", curie=CIM.curie('TransformerMeshImpedance.r'),
                    model_uri=CIMTBL.transformerMeshImpedance__r, domain=None, range=Optional[float])
 
@@ -17328,11 +17657,17 @@ slots.transformerMeshImpedance__FromTransformerEnd = Slot(uri=CIM['TransformerMe
 slots.transformerMeshImpedance__FromTransformerEndInfo = Slot(uri=CIM['TransformerMeshImpedance.FromTransformerEndInfo'], name="transformerMeshImpedance__FromTransformerEndInfo", curie=CIM.curie('TransformerMeshImpedance.FromTransformerEndInfo'),
                    model_uri=CIMTBL.transformerMeshImpedance__FromTransformerEndInfo, domain=None, range=Optional[Union[dict, TransformerEndInfo]])
 
+slots.transformerMeshImpedance__FromWinding = Slot(uri=CIM['TransformerMeshImpedance.FromWinding'], name="transformerMeshImpedance__FromWinding", curie=CIM.curie('TransformerMeshImpedance.FromWinding'),
+                   model_uri=CIMTBL.transformerMeshImpedance__FromWinding, domain=None, range=Optional[Union[dict, TransformerWinding]])
+
 slots.transformerMeshImpedance__ToTransformerEnd = Slot(uri=CIM['TransformerMeshImpedance.ToTransformerEnd'], name="transformerMeshImpedance__ToTransformerEnd", curie=CIM.curie('TransformerMeshImpedance.ToTransformerEnd'),
                    model_uri=CIMTBL.transformerMeshImpedance__ToTransformerEnd, domain=None, range=Optional[Union[Union[dict, TransformerEnd], list[Union[dict, TransformerEnd]]]])
 
 slots.transformerMeshImpedance__ToTransformerEndInfos = Slot(uri=CIM['TransformerMeshImpedance.ToTransformerEndInfos'], name="transformerMeshImpedance__ToTransformerEndInfos", curie=CIM.curie('TransformerMeshImpedance.ToTransformerEndInfos'),
                    model_uri=CIMTBL.transformerMeshImpedance__ToTransformerEndInfos, domain=None, range=Optional[Union[Union[dict, TransformerEndInfo], list[Union[dict, TransformerEndInfo]]]])
+
+slots.transformerMeshImpedance__ToWinding = Slot(uri=CIM['TransformerMeshImpedance.ToWinding'], name="transformerMeshImpedance__ToWinding", curie=CIM.curie('TransformerMeshImpedance.ToWinding'),
+                   model_uri=CIMTBL.transformerMeshImpedance__ToWinding, domain=None, range=Optional[Union[dict, TransformerWinding]])
 
 slots.transformerStarImpedance__r = Slot(uri=CIM['TransformerStarImpedance.r'], name="transformerStarImpedance__r", curie=CIM.curie('TransformerStarImpedance.r'),
                    model_uri=CIMTBL.transformerStarImpedance__r, domain=None, range=Optional[float])
@@ -17349,20 +17684,95 @@ slots.transformerStarImpedance__x0 = Slot(uri=CIM['TransformerStarImpedance.x0']
 slots.transformerStarImpedance__TransformerEndInfo = Slot(uri=CIM['TransformerStarImpedance.TransformerEndInfo'], name="transformerStarImpedance__TransformerEndInfo", curie=CIM.curie('TransformerStarImpedance.TransformerEndInfo'),
                    model_uri=CIMTBL.transformerStarImpedance__TransformerEndInfo, domain=None, range=Optional[Union[dict, TransformerEndInfo]])
 
+slots.transformerTank__fullLoadLoss = Slot(uri=CIM['TransformerTank.fullLoadLoss'], name="transformerTank__fullLoadLoss", curie=CIM.curie('TransformerTank.fullLoadLoss'),
+                   model_uri=CIMTBL.transformerTank__fullLoadLoss, domain=None, range=Optional[float])
+
+slots.transformerTank__noLoadLoss = Slot(uri=CIM['TransformerTank.noLoadLoss'], name="transformerTank__noLoadLoss", curie=CIM.curie('TransformerTank.noLoadLoss'),
+                   model_uri=CIMTBL.transformerTank__noLoadLoss, domain=None, range=Optional[float])
+
+slots.transformerTank__percentImpedance = Slot(uri=CIM['TransformerTank.percentImpedance'], name="transformerTank__percentImpedance", curie=CIM.curie('TransformerTank.percentImpedance'),
+                   model_uri=CIMTBL.transformerTank__percentImpedance, domain=None, range=Optional[float])
+
+slots.transformerTank__percentMagnetizingCurrent = Slot(uri=CIM['TransformerTank.percentMagnetizingCurrent'], name="transformerTank__percentMagnetizingCurrent", curie=CIM.curie('TransformerTank.percentMagnetizingCurrent'),
+                   model_uri=CIMTBL.transformerTank__percentMagnetizingCurrent, domain=None, range=Optional[float])
+
 slots.transformerTank__PowerTransformer = Slot(uri=CIM['TransformerTank.PowerTransformer'], name="transformerTank__PowerTransformer", curie=CIM.curie('TransformerTank.PowerTransformer'),
                    model_uri=CIMTBL.transformerTank__PowerTransformer, domain=None, range=Optional[Union[dict, PowerTransformer]])
 
 slots.transformerTank__TransformerTankInfo = Slot(uri=CIM['TransformerTank.TransformerTankInfo'], name="transformerTank__TransformerTankInfo", curie=CIM.curie('TransformerTank.TransformerTankInfo'),
                    model_uri=CIMTBL.transformerTank__TransformerTankInfo, domain=None, range=Optional[Union[dict, TransformerTankInfo]])
 
+slots.transformerTank__TransformerTemplate = Slot(uri=CIM['TransformerTank.TransformerTemplate'], name="transformerTank__TransformerTemplate", curie=CIM.curie('TransformerTank.TransformerTemplate'),
+                   model_uri=CIMTBL.transformerTank__TransformerTemplate, domain=None, range=Optional[Union[dict, TransformerTemplate]])
+
+slots.transformerTankEnd__phase = Slot(uri=CIM['TransformerTankEnd.phase'], name="transformerTankEnd__phase", curie=CIM.curie('TransformerTankEnd.phase'),
+                   model_uri=CIMTBL.transformerTankEnd__phase, domain=None, range=Optional[Union[str, "SinglePhaseKind"]])
+
+slots.transformerTankEnd__phaseNeutralU = Slot(uri=CIM['TransformerTankEnd.phaseNeutralU'], name="transformerTankEnd__phaseNeutralU", curie=CIM.curie('TransformerTankEnd.phaseNeutralU'),
+                   model_uri=CIMTBL.transformerTankEnd__phaseNeutralU, domain=None, range=Optional[float])
+
 slots.transformerTankEnd__phases = Slot(uri=CIM['TransformerTankEnd.phases'], name="transformerTankEnd__phases", curie=CIM.curie('TransformerTankEnd.phases'),
                    model_uri=CIMTBL.transformerTankEnd__phases, domain=None, range=Optional[Union[str, "PhaseCode"]])
+
+slots.transformerTankEnd__sequenceNumber = Slot(uri=CIM['TransformerTankEnd.sequenceNumber'], name="transformerTankEnd__sequenceNumber", curie=CIM.curie('TransformerTankEnd.sequenceNumber'),
+                   model_uri=CIMTBL.transformerTankEnd__sequenceNumber, domain=None, range=Optional[int])
 
 slots.transformerTankEnd__TransformerTank = Slot(uri=CIM['TransformerTankEnd.TransformerTank'], name="transformerTankEnd__TransformerTank", curie=CIM.curie('TransformerTankEnd.TransformerTank'),
                    model_uri=CIMTBL.transformerTankEnd__TransformerTank, domain=None, range=Optional[Union[dict, TransformerTank]])
 
 slots.transformerTankInfo__PowerTransformerInfo = Slot(uri=CIM['TransformerTankInfo.PowerTransformerInfo'], name="transformerTankInfo__PowerTransformerInfo", curie=CIM.curie('TransformerTankInfo.PowerTransformerInfo'),
                    model_uri=CIMTBL.transformerTankInfo__PowerTransformerInfo, domain=None, range=Optional[Union[dict, PowerTransformerInfo]])
+
+slots.transformerTest__basePower = Slot(uri=CIM['TransformerTest.basePower'], name="transformerTest__basePower", curie=CIM.curie('TransformerTest.basePower'),
+                   model_uri=CIMTBL.transformerTest__basePower, domain=None, range=Optional[float])
+
+slots.transformerTest__temperature = Slot(uri=CIM['TransformerTest.temperature'], name="transformerTest__temperature", curie=CIM.curie('TransformerTest.temperature'),
+                   model_uri=CIMTBL.transformerTest__temperature, domain=None, range=Optional[float])
+
+slots.transformerWinding__baseS = Slot(uri=CIM['TransformerWinding.baseS'], name="transformerWinding__baseS", curie=CIM.curie('TransformerWinding.baseS'),
+                   model_uri=CIMTBL.transformerWinding__baseS, domain=None, range=Optional[float])
+
+slots.transformerWinding__baseU = Slot(uri=CIM['TransformerWinding.baseU'], name="transformerWinding__baseU", curie=CIM.curie('TransformerWinding.baseU'),
+                   model_uri=CIMTBL.transformerWinding__baseU, domain=None, range=Optional[float])
+
+slots.transformerWinding__nominalU = Slot(uri=CIM['TransformerWinding.nominalU'], name="transformerWinding__nominalU", curie=CIM.curie('TransformerWinding.nominalU'),
+                   model_uri=CIMTBL.transformerWinding__nominalU, domain=None, range=Optional[float])
+
+slots.transformerWinding__phaseAngleClock = Slot(uri=CIM['TransformerWinding.phaseAngleClock'], name="transformerWinding__phaseAngleClock", curie=CIM.curie('TransformerWinding.phaseAngleClock'),
+                   model_uri=CIMTBL.transformerWinding__phaseAngleClock, domain=None, range=Optional[int])
+
+slots.transformerWinding__ratedS = Slot(uri=CIM['TransformerWinding.ratedS'], name="transformerWinding__ratedS", curie=CIM.curie('TransformerWinding.ratedS'),
+                   model_uri=CIMTBL.transformerWinding__ratedS, domain=None, range=Optional[float])
+
+slots.transformerWinding__ratedU = Slot(uri=CIM['TransformerWinding.ratedU'], name="transformerWinding__ratedU", curie=CIM.curie('TransformerWinding.ratedU'),
+                   model_uri=CIMTBL.transformerWinding__ratedU, domain=None, range=Optional[float])
+
+slots.transformerWinding__AutoTransformerLug = Slot(uri=CIM['TransformerWinding.AutoTransformerLug'], name="transformerWinding__AutoTransformerLug", curie=CIM.curie('TransformerWinding.AutoTransformerLug'),
+                   model_uri=CIMTBL.transformerWinding__AutoTransformerLug, domain=None, range=Optional[Union[dict, TransformerLug]])
+
+slots.transformerWinding__FromMeshImpedance = Slot(uri=CIM['TransformerWinding.FromMeshImpedance'], name="transformerWinding__FromMeshImpedance", curie=CIM.curie('TransformerWinding.FromMeshImpedance'),
+                   model_uri=CIMTBL.transformerWinding__FromMeshImpedance, domain=None, range=Optional[Union[dict, TransformerMeshImpedance]])
+
+slots.transformerWinding__FromTransformerEnd = Slot(uri=CIM['TransformerWinding.FromTransformerEnd'], name="transformerWinding__FromTransformerEnd", curie=CIM.curie('TransformerWinding.FromTransformerEnd'),
+                   model_uri=CIMTBL.transformerWinding__FromTransformerEnd, domain=None, range=Optional[Union[dict, TransformerEnd]])
+
+slots.transformerWinding__FromTransformerLug = Slot(uri=CIM['TransformerWinding.FromTransformerLug'], name="transformerWinding__FromTransformerLug", curie=CIM.curie('TransformerWinding.FromTransformerLug'),
+                   model_uri=CIMTBL.transformerWinding__FromTransformerLug, domain=None, range=Optional[Union[dict, TransformerLug]])
+
+slots.transformerWinding__ToMeshImpedance = Slot(uri=CIM['TransformerWinding.ToMeshImpedance'], name="transformerWinding__ToMeshImpedance", curie=CIM.curie('TransformerWinding.ToMeshImpedance'),
+                   model_uri=CIMTBL.transformerWinding__ToMeshImpedance, domain=None, range=Optional[Union[dict, TransformerMeshImpedance]])
+
+slots.transformerWinding__ToTransformerEnd = Slot(uri=CIM['TransformerWinding.ToTransformerEnd'], name="transformerWinding__ToTransformerEnd", curie=CIM.curie('TransformerWinding.ToTransformerEnd'),
+                   model_uri=CIMTBL.transformerWinding__ToTransformerEnd, domain=None, range=Optional[Union[dict, TransformerEnd]])
+
+slots.transformerWinding__ToTransformerLug = Slot(uri=CIM['TransformerWinding.ToTransformerLug'], name="transformerWinding__ToTransformerLug", curie=CIM.curie('TransformerWinding.ToTransformerLug'),
+                   model_uri=CIMTBL.transformerWinding__ToTransformerLug, domain=None, range=Optional[Union[dict, TransformerLug]])
+
+slots.transformerWinding__TransformerCore = Slot(uri=CIM['TransformerWinding.TransformerCore'], name="transformerWinding__TransformerCore", curie=CIM.curie('TransformerWinding.TransformerCore'),
+                   model_uri=CIMTBL.transformerWinding__TransformerCore, domain=None, range=Optional[Union[dict, TransformerCore]])
+
+slots.transformerWinding__TransformerTank = Slot(uri=CIM['TransformerWinding.TransformerTank'], name="transformerWinding__TransformerTank", curie=CIM.curie('TransformerWinding.TransformerTank'),
+                   model_uri=CIMTBL.transformerWinding__TransformerTank, domain=None, range=Optional[Union[dict, TransformerTank]])
 
 slots.vehicleInfo__make = Slot(uri=CIM['VehicleInfo.make'], name="vehicleInfo__make", curie=CIM.curie('VehicleInfo.make'),
                    model_uri=CIMTBL.vehicleInfo__make, domain=None, range=Optional[str])
