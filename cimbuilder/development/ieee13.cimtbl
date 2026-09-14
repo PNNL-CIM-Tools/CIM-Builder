@@ -1,0 +1,139 @@
+Object EnergySource: name=IEEE13nodeckt 
+
+Object BaseFrequency: name=base_freq, frequency=60
+
+Object BasePower: name=sbase, basePower (MVA)=100
+
+# Define catalog data first
+
+Import wire_infos.cimtbl
+
+Table PerLengthPhaseImpedance: name, conductorCount, calculatedFrequency
+    mtx601, 3, 60
+    mtx603, 2, 60
+
+Table PhaseImpedanceData: row, column, fromPhase, toPhase, r (ohm/mile), x (ohm/mile), b (siemens/mile), g (siemens/mile), PhaseImpedance
+    1, 1, A, A, 0.3465, 1.0179, , , mtx601
+    2, 1, B, A, 0.1535, 0.3849, , , mtx601
+    2, 2, B, B, 0.3375, 1.0478, , , mtx601
+    3, 1, C, A, 0.1580, 0.4236, , , mtx601
+    3, 2, C, B, 0.1560, 0.5017, , , mtx601
+    3, 3, C, C, 0.3414, 1.0348, , , mtx601
+
+    1, 1, A, A, 1.3238, 1.3569, , , mtx603
+    2, 1, B, A, 0.2066, 0.4591, , , mtx603
+    2, 2, B, B, 1.3294, 1.3471, , , mtx603
+
+
+
+Table ConductorDistanceSpacing: name
+    spacing_500601
+
+Table ConductorDistance: fromSequenceNumber, fromPhase, toSequenceNumber, toPhase, distance (ft)
+    1, A, 2, B, 2.5
+    1, A, 3, C, 4.5
+    2, B, 3, C, 7.0
+    3, C, 4, N, 5.656554
+    1, A, 4, N, 4.272002
+    2, B, 4, N, 5.0
+
+# Transformer Template
+
+Object TransformerAssembly: name=padmount_template
+
+Table TransformerTank: name, noLoadLoss (W), fullLoadLoss (W), percentMagnetizingCurrent, percentImpedance, TransformerAssembly
+    padmount, 310, 2050, 0.5, 2.56,  padmount_template
+
+Table TransformerTankEnd: name, endNumber, sequenceNumber, phase, phaseNeutralU (V), TransformerTank
+    pad_end_1, 1, 1, A, 2400, padmount
+    pad_end_2, 1, 2, B, 2400, padmount
+    pad_end_3, 2, 3, s1, 120, padmount
+    pad_end_4, 2, 4, N, 0, padmount
+    pad_end_5, 2, 5, s2, 120, padmount
+
+Table TransformerWinding: name, ratedS (kVA), ratedU (V), FromTransformerEnd, ToTransformerEnd
+    pad_wdg1, 250, 4160, pad_end_1, pad_end_4
+    pad_wdg2, 125, 240, pad_end_3, pad_end_4
+    pad_wdg3, 125, 240, pad_end_4, pad_end_5
+
+
+
+Table BaseVoltage: name, nominalVoltage (V)
+    base_115, 115000
+    base_4160, 4160
+    base_480, 480
+
+Table LoadResponseCharacteristic: name, pConstantPower, pConstantImpedance, pConstantCurrent, qConstantPower, qConstantImpedance, qConstantCurrent
+    zip_constantPQ, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0
+    zip_constantZ, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0
+
+Table ACLineSegment: name, bus1, bus2, circuitNumber, r (pu), x (pu), b (pu), BaseVoltage
+    line_1_2, topo_bus_1, topo_bus_2, 1, 1.93800E-2, 5.91700E-2, 0.05280, base_115
+
+Table ACLineSegment: name, node1, node2, phases, length (ft), PerLengthImpedance, BaseVoltage
+    650632, RG60, 362, ABCN, 2000, mtx601, base_4160
+    362670, MID,  670, ABCN, 667,  mtx601, base_4160
+    670671, 670,  671, ABCN, 671,  mtx601, base_4160
+    632645, 632,  645, BC,   500,  mtx603, base_4160
+
+Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponseCharacteristic
+    load_671, 671, 1155, 660, D, base_4160, zip_constantPQ
+    load_634, 634, , , Y, base_480, zip_constantPQ
+    load_646, 646, , , D, base_4160, zip_constantZ
+
+
+Table EnergyConsumerPhase: name, phase, p (kW), q (kW), EnergyConsumer
+    load_634a, A, 160, 110, load_634
+    load_634b, B, 120, 90,  load_634
+    load_634c, C, 120, 90, load_634
+    load_646bc, BC, 230, 132, load_646
+
+Table LinearShuntCompensator: name, node, nomS (kVAr), nomU (V), phaseConnection, maximumSections, BaseVoltage
+    cap_1, 675, 600.0, 4160, Y, 1, base_4160
+    cap_2, 611, 100.0, 4160, Y, 1, base_4160
+
+Table LinearShuntCompensatorPhase: name, phase, NomS (kVAr), LinearShuntCompensator
+    cap_2c, C, 100.0, cap_2
+
+Object LoadBreakSwitch: name=671692, node1=671, node2=692
+
+Table Fuse: name, node1, node2, ratedCurrent (A), open, normalOpen
+    fuse_1, 633, XF1, 100.0, false, false
+
+Table Sectionaliser: name, node1, node2, open, normalOpen
+    sect_1, 684, tap, false, false
+
+Table SwitchPhase: name, phaseSide1, phaseSide2, open, Switch
+    sect_1c, C, C, false, sect_1
+
+Table PowerElectronicsConnection: name, node, ratedS (kVA), ratedU (V), p (kW), q (kVAr)
+    pv_inverter, 634, 300, 480, 240, 0
+    batt_inverter, 634, 100, 480, 0, 0
+
+
+Table PhotoVoltaicUnit: name, minP, maxP, PowerElectronicsConnection
+    pv, 0, 300, pv_inverter
+
+Table BatteryUnit: name, minP, maxP, ratedE, storedE, batteryState, PowerElectronicsConnection
+    batt, -100, 100, 200, 100, discharging, batt_inverter
+
+Object PowerTransformer: name=Sub3
+
+# PI model represtation
+Table PowerTransformerEnd: name, node, endNumber, r (ohm), x (ohm), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer
+    sub3_end1, SourceBus, 1, 2.645, 21.160, 5000, 115, D, base_115, Sub3
+    sub3_end2, 650, 2, 0, 0, 5000, 4.16, Y, base_4160, Sub3
+
+Table PowerTransformerEnd: name, node, endNumber, r (percent), x (percent), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer
+    xfm_end1, XF1, 1, 1.10, 2.0, 500, 4160, Y, base_4160
+    xfm_end2, 634, 2, 0, 0, 500, 480, Y, base_480
+
+
+
+
+# Transformer Instance
+
+Object PowerTransformer: name = padmount_2341, Template = padmount_template
+Table PowerTransformerEnd: name, node, endNumber
+    pad_2341_1, 671, 1
+    pad_2341_2, House, 2

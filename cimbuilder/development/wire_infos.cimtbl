@@ -1,0 +1,6 @@
+Table OverheadWireInfo: name, radius (in), gmr (in), rAC25 (ohm/kft), rDC20 (ohm/kft), ratedCurrent
+    ACSR_556_5, 0.927, 0.37320, , 0.35227, 730
+    ACSR_4/0, 0.563, 0.09768, , 0.11212, 340
+
+Table OverheadWireInfo: name, radius (in), gmr (in), rAC25 (ohm/mile)
+    CU_1/0, 0.368, 0.13356, 0.607
