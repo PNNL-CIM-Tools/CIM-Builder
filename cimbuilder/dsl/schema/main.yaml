@@ -1,2 +1,20 @@
-# Phase 2: LinkML schema root (design: CIMTBL_DESIGN.md §8.1).
-# Class-family schemas live in classes/, shared units/enums in types/.
+id: https://github.com/AAndersn/CIM-Builder/cimtbl
+name: cimtbl
+description: >-
+  LinkML validation schema for the .cimtbl DSL (design: CIMTBL_DESIGN.md §2, §12.2).
+  <Class>Row classes (classes/rows.yaml) compose the real cimhub_2026 CIMTool
+  export with DSL-only mixins (classes/extensions.yaml) for connectivity,
+  phases, and Template columns that aren't real CIM attributes. Column units
+  live on the .cimtbl header (§3.2), not in this schema - float/int/str ranges
+  here are the coerced value only; validate.py binds units into Qty afterward.
+prefixes:
+  linkml: https://w3id.org/linkml/
+  cimtbl: https://github.com/AAndersn/CIM-Builder/cimtbl/
+default_prefix: cimtbl
+default_range: string
+
+imports:
+  - linkml:types
+  - cimhub_2026.linkml
+  - classes/extensions
+  - classes/rows

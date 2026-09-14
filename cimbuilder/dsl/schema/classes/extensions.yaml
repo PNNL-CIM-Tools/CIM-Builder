@@ -1,0 +1,67 @@
+id: https://github.com/AAndersn/CIM-Builder/cimtbl/extensions
+name: cimtbl_extensions
+description: >-
+  DSL-only mixin classes (design: CIMTBL_DESIGN.md §3.5-§3.7). These carry
+  columns .cimtbl recognizes that are NOT real CIM attributes: connectivity
+  shorthand (§3.5), the phases compound string (§3.6), and the Template FK
+  (§3.7). Layered onto real cimhub_2026 classes via `mixins:` in rows.yaml -
+  never `is_a`, since these are not CIM types themselves.
+prefixes:
+  linkml: https://w3id.org/linkml/
+  cimtbl: https://github.com/AAndersn/CIM-Builder/cimtbl/
+default_prefix: cimtbl
+default_range: string
+
+imports:
+  - linkml:types
+
+classes:
+  TwoNodeMixin:
+    mixin: true
+    description: >-
+      Node-breaker two-terminal connectivity (§3.5). Terminal 1/2 -> ConnectivityNode.
+    attributes:
+      node1:
+        range: string
+      node2:
+        range: string
+
+  TwoBusMixin:
+    mixin: true
+    description: >-
+      Bus-branch two-terminal connectivity (§3.5). Terminal 1/2 -> TopologicalNode.
+      Alternate header shape to TwoNodeMixin for the same class (§3.4) - never
+      both on the same row.
+    attributes:
+      bus1:
+        range: string
+      bus2:
+        range: string
+
+  OneNodeMixin:
+    mixin: true
+    description: >-
+      Node-breaker single-terminal connectivity (§3.5). Terminal -> ConnectivityNode.
+    attributes:
+      node:
+        range: string
+
+  PhasesMixin:
+    mixin: true
+    description: >-
+      Compound phase string (e.g. "ABCN", "BC") driving per-phase child
+      synthesis (§3.6). Not a CIM SinglePhaseKind - split into individual
+      phase values by the connectivity backend (Phase 4), not this schema.
+    attributes:
+      phases:
+        range: string
+
+  TemplateRefMixin:
+    mixin: true
+    description: >-
+      By-association template reference (§3.7), e.g. PowerTransformer.Template
+      -> TransformerAssembly, matched on endNumber. Plain FK-by-name string;
+      resolution is Phase 4/5, not this schema (§12.2).
+    attributes:
+      Template:
+        range: string
