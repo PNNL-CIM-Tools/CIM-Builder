@@ -108,6 +108,7 @@ Python API underneath it as a clean, shared, per-class core.
 | **Reflection** | Plain scalar attrs, plain FKs, and units are resolved reflectively against `network.cim`. Only *synthesis* (terminals, node-vs-bus, per-phase children, templates) is hand-coded per class. | Generic across profiles for the 90% case; explicit code only where CIM structure can't be inferred. |
 | **Unit context** | `%Z` / `pu` → ohm normalization lives **once, in the Builder**; `Qty` is a dumb carrier and defers relative-unit conversion to the builder, which supplies `z_base`. Base kind (system vs winding) is **declared PSSE-`CZ`-style**, not inferred. | User's top motivation ("tired of %Z→ohm by hand") + user's refinement (base must be explicit like RAW `CZ`, never guessed from whether a row has `ratedU`/`ratedS`). |
 | **Front-end unification** | **One** user-facing API, full breaking change. `from_catalog` → `from_dsl`; top-level `FeederBuilder` / `SubstationBuilder` become DSL parsers. | User's call. Cascading parse: `Table ACLineSegment` invokes `ACLineSegmentBuilder`. |
+| **Name lookup** | **CIM-Builder owns a `NameIndex`** (§5.5) — `dict[type, dict[str, object]]`, updated at the same call site as `add_to_graph`. Uniqueness enforced **within a class, not globally.** | `network.graph` is UUID-keyed only (linear scan today, `utils/utils.py:12-13`); cim-graph has no name index and no uniqueness check (issue [#81](https://github.com/PNNL-CIM-Tools/CIM-Graph/issues/81), stalled). `.cimtbl`'s FK-by-name model (§3.3) makes this the hot path — CIM-Builder can't wait on upstream. |
 
 ---
 
@@ -122,6 +123,18 @@ Python API underneath it as a clean, shared, per-class core.
 - **`Import <file>.cimtbl`** — textual composition (catalogs, wire infos).
 - **`# comment`** — line comment.
 - **Blank cell** — attribute unset (`load_634` with empty `p`,`q`).
+
+**`Object` vs `Table` is a cardinality choice, not a raggedness one.** Use
+`Object` when the file declares **exactly one** instance of that class in that
+context (`EnergySource`, `BaseFrequency`, `BasePower`, the one `PowerTransformer`
+a `Template` line hangs off of). Use `Table` when there are **many** instances —
+even if their attribute sets are ragged (blank cells are already legal in a
+`Table`, per `load_634`/`load_646` above). A one-row `Table` is never wrong, but
+`Object` reads better for a true singleton because the CLASS name and the sole
+instance's data sit on one line — there's nothing to align into columns. This
+also settles the writer's inverse (§6): the writer emits `Object` for a class
+with exactly one instance in the model and `Table` for every class with more
+than one, independent of how many attributes are populated.
 
 ### 3.2 Units live on the column header
 
@@ -156,7 +169,6 @@ A small fixed vocabulary of column names means "make a Terminal and wire it":
 |---|---|
 | `node`, `node1`, `node2` | Terminal → **ConnectivityNode** (node-breaker / detailed) |
 | `bus`, `bus1`, `bus2` | Terminal → **TopologicalNode** (bus-branch / transmission) |
-| `from`, `to` | alias pair, context-dependent |
 
 Terminal count = number of connectivity columns present. `sequenceNumber`
 follows column order. This vocabulary is documented in the LinkML schema and
@@ -165,7 +177,7 @@ system relies on.
 
 ### 3.6 `phases` → per-phase child synthesis
 
-A `phases` column (`ABCN`, `BC`, `D`, `Y`) drives creation of the per-phase
+A `phases` column (`ABCN`, `BC`) drives creation of the per-phase
 child objects for that class:
 
 | Parent | Child | Seen in `ieee13.cimtbl` |
@@ -179,6 +191,8 @@ The child rows may *also* be given explicitly as their own `Table` (e.g.
 `EnergyConsumerPhase` with an `EnergyConsumer` FK). Both paths converge on the
 same synthesis code in the backend. This is exactly `line.py::_create_line_phases`
 generalized.
+
+Note that `D` `Y` phaseConnection objects are enumerations of wye vs delta and not actual phase designations.
 
 ### 3.7 `Template` — true by-association, keyed on `endNumber`
 
@@ -260,9 +274,10 @@ class ObjectBuilder(ABC):
 
     # --- two entry points, same object ---
     def create(self, *, name: str) -> Self: ...          # power-user start
-    def from_table(self, row: dict, header: Header) -> Self:  # DSL / bulk start
-        """Skinny adapter: unpack a validated .cimtbl row + header (with units)
-        into the create()/add_*() calls below. This is where a Table row lands."""
+    def from_table(self, row: "<Class>Row") -> Self:  # DSL / bulk start
+        """Skinny adapter: unpack a validated, typed row dataclass (§12.1 —
+        NOT a dict; produced by Phase 2's LinkML gen-python) into the
+        create()/add_*() calls below. This is where a Table row lands."""
 
     # --- profile-part population, each returns self ---
     def add_connectivity(self, **node_cols) -> Self: ...  # → connectivity backend
@@ -277,10 +292,11 @@ class ObjectBuilder(ABC):
 
 The DSL parser does **not** know how to build an `ACLineSegment`. It parses a
 `Table ACLineSegment` block into **typed `ACLineSegmentRow` dataclasses**
-(LinkML `gen-python`, str→float/int/enum coerced and validated *at parse time*)
-and hands each to `ACLineSegmentBuilder().from_table(row).build()`. All CIM
-knowledge lives in the Builder. This is the "cascading parse" the user described,
-and it mirrors `cimhub_opendss`'s `convert_line(dss_line: dss.Line)` exactly:
+(LinkML `gen-python`, str→float/int/enum coerced and validated *at parse time*,
+exact shape pinned in §12.1) and hands each to
+`ACLineSegmentBuilder().from_table(row).build()`. All CIM knowledge lives in the
+Builder. This is the "cascading parse" the user described, and it mirrors
+`cimhub_opendss`'s `convert_line(dss_line: dss.Line)` exactly:
 
 ```
 Table ACLineSegment ─parse+validate─▶ [ACLineSegmentRow, …] ─dispatch─▶ ACLineSegmentBuilder.from_table(row)
@@ -353,6 +369,53 @@ silent wrong write (per `BUILDER_API.md` error rules).
   for the one value that differs.
 - **Default per unit** when neither is given: `percent`→`winding`, `pu`→`system`.
 
+### 4.4 Builder modules are packages, split by construction style
+
+**Problem this fixes.** `cimhub_opendss/importer/lines/line.py` is 531 lines with
+one public entry point (`convert_line`) and ten private module-level `_helpers`
+covering four genuinely different construction styles (per-length + matrix
+impedance, per-length + wire/spacing geometry, sequence/pu impedance, earth
+resistivity) with no structural grouping between them — a reader has to hold the
+whole file in their head to find which `_functions` belong to which style. This
+is exactly the readability problem the design goals (§0) rule out.
+
+**The fix: a Builder is a *package*, not a module — one file per construction
+style, imported into a thin class body.** Each CIM class that has multiple
+`.cimtbl` header shapes (§3.4) gets one file per shape, plus a `base.py` holding
+the class itself:
+
+```
+builders/
+  line/
+    __init__.py          # re-exports ACLineSegmentBuilder
+    base.py               # class ACLineSegmentBuilder(ObjectBuilder): create/build/from_table dispatch
+    by_matrix.py           # add_electrical() for PerLengthPhaseImpedance / PhaseImpedanceData rows
+    by_sequence.py          # add_electrical() for bus1/bus2 + r,x,b (pu) rows
+    by_geometry.py           # add_electrical() for wire + ConductorDistanceSpacing rows (future)
+  transformer/
+    __init__.py
+    base.py                # class PowerTransformerBuilder(ObjectBuilder)
+    by_end_data.py          # add_electrical() from literal PowerTransformerEnd rows (ohm/percent)
+    by_template.py           # Template=/TransformerAssembly resolution (§3.7, endNumber match)
+```
+
+`base.py` holds the class declaration and the dispatch: `from_table` inspects
+which columns are present (§3.4) and calls the one `add_electrical` variant that
+applies — imported as a plain function from the sibling module and bound as a
+method, or mixed in via a small `Mixin` class per file (whichever reads more
+like ordinary Python; no metaclass machinery either way, per `~/.claude/CLAUDE.md`
+KISS/no-over-abstraction). The point is **one file, one construction style,
+readable start to finish** — never "scroll past nine unrelated `_helpers` to find
+the one that handles matrices."
+
+This directly abstracts `line.py`: `_set_line_impedance`'s three-way dispatch
+(sequence/matrix/geometry) becomes the `base.py` dispatch, and each branch's
+body becomes its own `by_*.py`. Applies to any class with >1 header shape
+(`ACLineSegment`, `PowerTransformerEnd` ohm-vs-percent-vs-template); a class with
+only one shape (`EnergyConsumer`, `LinearShuntCompensator`) stays a single file —
+this is a split for genuine construction-style variety, not a mandatory pattern
+per class (YAGNI).
+
 ---
 
 ## 5. The connectivity backend (the heavy component)
@@ -371,6 +434,98 @@ One module, shared by every Builder and both front ends. Responsibilities:
 4. **Per-phase child synthesis** — `phases=ABCN` on an `ACLineSegment` →
    4 `ACLineSegmentPhase` with correct `SinglePhaseKind` and `sequenceNumber`.
    Generalizes `line.py::_create_line_phases` / `_attach_wire_phases`.
+
+### 5.5 The name/mRID index (CIM-Builder owns it, since cim-graph doesn't)
+
+**Every** FK cell in `.cimtbl` (§3.3) — `node1`, `bus1`, `PerLengthImpedance`,
+`BaseVoltage`, `Template`, `EnergyConsumer`, … — is a **name-based lookup**
+against the live graph. That lookup is the load-bearing operation of the whole
+format, and today it's expensive:
+
+- `network.graph` is `dict[type, dict[UUID, object]]` (cim-graph
+  `GraphModel.graph`, `cimgraph/models/graph_model.py:18,26`) — keyed by UUID,
+  **not** by name. A name lookup is a **linear scan** over one class's dict
+  (`utils/utils.py:12-13` already does exactly this: `for node_obj in
+  network.graph[cim.ConnectivityNode].values(): if node_obj.name == node`).
+  With `Import`-composed catalogs (§3.3) and templates resolved per-row (§3.7),
+  this scan runs on the hot path of every parse, repeatedly, per class.
+- `add_to_graph` (`graph_model.py:51-57`) keys strictly on `(type(obj),
+  obj.identifier)` and **silently no-ops on a UUID collision** — line 56 is `if
+  obj.identifier not in graph[type(obj)]:`, so a second object with a
+  colliding UUID is dropped with no error, no warning. There is no name or
+  mRID uniqueness check anywhere in cim-graph today.
+- The UUID itself is already deterministic from name — `identity.py`'s
+  `UUID_Meta.generate_uuid` seeds `Random(seed).getrandbits(128)` from
+  `f'{ClassName}:{name}'` when no explicit mRID/URI is given
+  (`identity.py:293-294,120-121`). So **within one class, `name` already
+  determines the UUID** — the missing piece is a fast reverse index
+  (`name → UUID`/object) and a check that catches a second, different `name`
+  that happens to collide, or the same `name` reused for two different
+  intended objects.
+
+**This was raised upstream and stalled: cim-graph issue
+[#81](https://github.com/PNNL-CIM-Tools/CIM-Graph/issues/81)** ("create a UUID
+manager class that can keep track of master set of uuids for uniqueness and
+also whether a certain object has been queried for") — filed by the user,
+unassigned in practice, not a cim-graph dev priority.
+
+**Decision: CIM-Builder owns this, not cim-graph.** `.cimtbl` is what actually
+needs it on every parse; cim-graph's own callers (SPARQL/RDF hydration) don't
+lean on name lookups the way a name-native authoring format does. Rather than
+wait on upstream, add an index **alongside** `network.graph`, populated by the
+same `add_to_graph` call every Builder already makes:
+
+```python
+# core/graph_write.py — one new structure, updated at the same call site as add_to_graph()
+
+@dataclass
+class NameIndex:
+    """name -> object, scoped per class. Built incrementally as objects are
+    added; not a cim-graph change — CIM-Builder maintains this next to
+    network.graph, the same way network.graph itself is populated."""
+    by_class: dict[type, dict[str, object]] = field(default_factory=dict)
+
+    def add(self, obj) -> None:
+        bucket = self.by_class.setdefault(type(obj), {})
+        existing = bucket.get(obj.name)
+        if existing is not None and existing.identifier != obj.identifier:
+            raise ValueError(
+                f"duplicate name {obj.name!r} within {type(obj).__name__}: "
+                f"{existing.identifier} vs {obj.identifier}")
+        bucket[obj.name] = obj
+
+    def get(self, cim_cls: type, name: str) -> object | None:
+        return self.by_class.get(cim_cls, {}).get(name)   # O(1), vs O(n) scan today
+```
+
+- Lives on the network/model object as `network.name_index` (or
+  `network.mrid_map` — naming TBD, not load-bearing) built and maintained by
+  CIM-Builder's `graph_write.add_to_graph()` wrapper, which calls both
+  `network.add_to_graph(obj)` **and** `name_index.add(obj)` in one place — every
+  Builder already routes through this wrapper (§2 diagram), so there's exactly
+  one call site to update, not one per builder.
+- **Uniqueness scope: within a class, not global (locked).** Two different
+  classes may legitimately share a `name` string in real feeders (a
+  `LoadResponseCharacteristic` named the same as an `EnergyConsumer`, say);
+  nothing in `.cimtbl` or CIM requires cross-class uniqueness, and enforcing it
+  would reject legal files. `NameIndex` is scoped `dict[type, dict[str, object]]`
+  to match — same granularity as `network.graph` itself. **User's call:**
+  "arguably sloppy, but matches how power engineers think" — a `name` is only
+  ever disambiguated by its class in practice (nobody confuses a bus named
+  `634` with a device named `634`), so the index should mirror that mental
+  model rather than impose a stricter global namespace no one asked for.
+- Every FK resolution in the connectivity backend and in `from_table` routes
+  through `name_index.get(cls, name)` instead of a `.values()` scan. This is a
+  straight drop-in for `utils/utils.py`'s existing scan and every future FK
+  lookup — no behavior change, only complexity (`O(1)` vs `O(n)` per lookup).
+- **Duplicate-name detection is a byproduct, not the primary goal** — but a
+  fail-fast one: two `.cimtbl` rows of the same class emitting the same `name`
+  with different data now raises immediately (`NameIndex.add`) instead of
+  silently colliding in `network.graph` per `add_to_graph`'s current no-op.
+- If cim-graph #81 ever ships, `NameIndex` becomes a thin wrapper delegating to
+  it; CIM-Builder is not blocked waiting for that, and nothing above is
+  cim-graph-version-sensitive (it never reaches into cim-graph internals beyond
+  the existing `obj.identifier`/`obj.name`/`type(obj)` contract).
 
 This backend is the direct abstraction of the CIM-construction helpers currently
 buried in `cimhub_opendss/importer/lines/line.py`
@@ -410,9 +565,10 @@ CIM-Asset-Manager's output (§7.1) — `asset_infos.cimtbl` and `templates.cimtb
 are the files a datasheet-extraction pipeline produces and a feeder `Import`s.
 
 Design notes:
-- **Group by class → `Table`.** Objects of the same class with the same populated
-  attribute set become one `Table` block; singletons or ragged sets become
-  `Object` lines. (Mirrors the reader's two forms.)
+- **Group by class, by cardinality (§3.1).** A class with exactly one instance in
+  the model emits as `Object`; a class with more than one emits as `Table` —
+  raggedness (blank cells) never forces a split, since `Table` already tolerates
+  blanks. (Mirrors the reader's two forms; not a heuristic, a fixed rule.)
 - **Units on export** via `.to(header_unit)` — never manual scaling
   (`~/.claude/CLAUDE.md`). The writer picks a canonical display unit per attribute
   (kV, MW, ohm) and emits it in the header.
@@ -598,14 +754,16 @@ rather than committing either repo to it now.
 
 Phases are dependency-ordered, each a self-contained unit of work with a concrete
 exit criterion measured on `ieee13.cimtbl` / `ieee14.cimtbl` (real feeders, not
-toys). Lettered sub-phases can run same-day.
+toys). Lettered sub-phases can run same-day. **The exact data shape each phase
+hands to the next — not just its exit criterion — is pinned in §12; implement
+against §12, not just this table.**
 
 | Phase | Name | Depends on | Exit criterion (measured) |
 |---|---|---|---|
 | **0** | Design lock + repo scaffold | — | This doc reviewed; new package tree (§8.1) created; `uv sync` clean; empty modules import. |
 | **1** | Lark grammar → records | 0 | `ieee13.cimtbl` **and** `ieee14.cimtbl` parse to the intermediate record list; every `Object`/`Table`/`Import`/comment/blank-cell/`(unit)` case covered by a grammar test; ambiguity check passes. No CIM yet. |
 | **2** | LinkML validation gate + dataclass | 1 | LinkML schema for the `ieee13` class set; every record validates or fails with a profile-anchored message; a deliberately-broken column name fails fast naming the closest valid attribute. Records → validated dataclasses. |
-| **3** | Graph-write core + reflective binder | 2 | Simplest real classes end-to-end into a live `cimgraph` model: `BaseVoltage`, `BaseFrequency`, `BasePower`, `EnergySource`. `network.cim` read once; plain scalar attrs + units land correctly (verified via `.to()`). |
+| **3** | Graph-write core + reflective binder + `NameIndex` | 2 | Simplest real classes end-to-end into a live `cimgraph` model: `BaseVoltage`, `BaseFrequency`, `BasePower`, `EnergySource`. `network.cim` read once; plain scalar attrs + units land correctly (verified via `.to()`); `NameIndex` (§5.5) populated at the same `add_to_graph` call site, O(1) name lookup proven, duplicate-name-same-class raises. |
 | **4** | Connectivity backend | 3 | `ACLineSegment` with `node1`/`node2`/`phases` → terminals + N `ACLineSegmentPhase`; undeclared nodes auto-vivified; `bus*` → `TopologicalNode` disambiguation proven on the `line_1_2` sequence row. **This is the make-or-break phase.** |
 | **5** | Per-class Builders — PDE/PCE breadth | 4 | Builders for the `ieee13` population: `ACLineSegment`, `EnergyConsumer`(+Phase), `LinearShuntCompensator`(+Phase), `PowerTransformer`/`PowerTransformerEnd`, `Switch`/`Fuse`/`Sectionaliser`(+`SwitchPhase`), `PowerElectronicsConnection`(+PV/Battery). Each has `from_table`. |
 | **5b** | `%Z`/`pu`/`ohm` normalization | 5 | `xfm_end1` (`r (percent)`) and `sub3_end1` (`r (ohm)`) both produce correct ohms via one `add_electrical`; `pu` without base fails fast. |
@@ -638,15 +796,24 @@ cimbuilder/
       types/                  #   shared units + enums
   core/
     graph_write.py            # Phase 3: set_attr / link / add_to_graph / resolve
+    name_index.py             # Phase 3: NameIndex (§5.5) — name->object, per class
     binder.py                 # Phase 3: reflective column → attr/assoc/synthesis
     connectivity.py           # Phase 4: THE backend (node/bus/terminal/phase)
     units.py                  # Phase 5b: %Z / pu / ohm normalization helpers
-  builders/                   # Phase 5: one module per CIM class family
+  builders/                   # Phase 5: one module OR package per CIM class family
     base.py                   #   ObjectBuilder ABC + builder_base mixin
-    line.py                   #   ACLineSegmentBuilder (+ PerLengthImpedance)
+    line/                      #   ACLineSegmentBuilder — package (§4.4): >1 header
+      __init__.py              #     shape (matrix/sequence/geometry) → one file
+      base.py                  #     per construction style, not one 500-line file
+      by_matrix.py
+      by_sequence.py
     consumer.py               #   EnergyConsumerBuilder
     shunt.py                  #   LinearShuntCompensatorBuilder
-    transformer.py            #   PowerTransformer / PowerTransformerEnd
+    transformer/               #   PowerTransformer/End — package (§4.4): ohm vs
+      __init__.py               #     percent vs Template differ in construction
+      base.py
+      by_end_data.py
+      by_template.py
     switch.py                 #   Switch / Fuse / Sectionaliser
     inverter.py               #   PowerElectronicsConnection family
     source.py                 #   EnergySource / base objects
@@ -678,13 +845,12 @@ tests/
 
 ## 10. Open questions (decide before or during the phase they gate)
 
-1. **LinkML generation** — do we `gen-python` the validation dataclasses from the
-   schema (CIMHub pattern), or hand-write dataclasses and use LinkML only as the
-   validation ruleset? (Gates Phase 2.) *Leaning: LinkML-as-validator only; the
-   real typed objects are `network.cim` classes, so generated dataclasses would
-   duplicate the profile.*
-2. **Writer table-grouping heuristic** — how ragged an attribute set still shares
-   a `Table` vs. splits to `Object` lines? (Gates Phase R determinism.)
+1. **LinkML generation — RESOLVED.** `gen-python` the validation dataclasses from
+   the schema (CIMHub pattern) — one generated dataclass per CIM class, shape
+   pinned in §12.2. Not hand-written; regenerated on profile/schema change.
+2. **Writer table-grouping — RESOLVED.** Not a raggedness heuristic: `Object` for
+   a class with exactly one instance, `Table` for a class with more than one
+   (§3.1, §6). Deterministic by construction; nothing left to decide.
 3. **`.cimtbl` as CIM-Repair target** — §7.2. Needs the CIM-Repair owner and a
    re-examination of ROADMAP line 266. *Recommendation: defer until Phase R.*
 4. **Profile pin — RESOLVED.** Target profile is **`cimhub_2026`** (matches
@@ -696,6 +862,13 @@ tests/
    `PhaseImpedanceData` — exists under `cimhub_2026` before Phase 5, and update the
    `ieee13.cimtbl` sample (which still carries some `cimhub_2023`-era spellings) to
    the `cimhub_2026` names.
+5. **`NameIndex` attribute name and upstream path** — §5.5 owns the mechanism
+   (`dict[type, dict[str, object]]`, class-scoped uniqueness); not yet decided:
+   (a) exposed as `network.name_index` or `network.mrid_map` — cosmetic, pick at
+   Phase 3; (b) whether to eventually upstream it into cim-graph as a resolution
+   to issue #81 once it's proven here, or keep it a CIM-Builder-only layer
+   permanently — no need to decide before Phase 3, cim-graph's `add_to_graph`
+   contract is untouched either way.
 
 ---
 
@@ -709,6 +882,12 @@ tests/
 - `~/CIMHub_2_0/cimhub_core/.../LINKML_TEMPLATE.md` — LinkML annotation vocabulary.
 - `~/CIMHub_2_0/cimhub_opendss/.../importer/lines/line.py` — the ~530 lines Phase 8 abstracts.
 - `~/CIM-Repair/.development/ROADMAP.md` — §7.2 strategic-option target (line 266 tension).
+- [`CIM-Graph#81`](https://github.com/PNNL-CIM-Tools/CIM-Graph/issues/81) — the
+  stalled upstream UUID-manager ask that §5.5's `NameIndex` addresses locally.
+- `~/CIM-Graph/cimgraph/data_profile/identity.py` — deterministic
+  name→UUID seeding (`UUID_Meta.generate_uuid`, §5.5) that `NameIndex` builds on.
+- `~/CIM-Graph/cimgraph/models/graph_model.py` — `GraphModel.graph` (UUID-keyed
+  only) and `add_to_graph`'s silent-no-op-on-collision behavior (§5.5).
 - `~/PNNL-dss/` — the VS Code extension template for §6.5 / Phase V. Key files:
   `package.json` (manifest: `languages`/`grammars`/`themes` contributions),
   `src/opendss-validator.ts` (diagnostics from a JSON dictionary),
@@ -716,4 +895,158 @@ tests/
   `syntaxes/opendss.tmLanguage.json` (TextMate grammar),
   `script/config_generator.py` (schema → dictionary — the analog of our
   `export-editor-schema` CLI).
+
+---
+
+## 12. Interface contracts between phases (the handshakes)
+
+**Why this section exists.** §8's phase table pins *exit criteria* (what must
+work), not *call signatures* (what shape phase N hands to phase N+1). Two phases
+built independently against only the prose above could each make a locally
+reasonable but mutually incompatible choice — e.g. Phase 1 emitting an untyped
+record and Phase 5 expecting a typed dataclass. This section is the literal
+contract, written once, so every phase is implemented against the same shape.
+Nothing here is a new decision — it is §3/§4/§5's decisions made executable.
+**Any surviving `row: dict` or informal `<Class>Row` mention elsewhere in this
+doc is prose shorthand for the exact shapes below**, not a competing spec.
+
+### 12.1 Phase 1 → Phase 2 : parser output
+
+```python
+# dsl/records.py
+
+@dataclass
+class RawRecord:
+    """One Object/Table row, straight off the grammar. Every cell is still a
+    str (or None for a blank cell) — no CIM knowledge, no coercion. Phase 2
+    is the only consumer."""
+    form: Literal['Object', 'Table']
+    cim_class: str                       # e.g. "ACLineSegment" — not yet resolved
+                                          # against network.cim; just the grammar token
+    fields: dict[str, str | None]        # column/key -> raw cell text, blank = None
+    units: dict[str, str | None]         # column -> unit suffix text, e.g. {"r": "ohm"}
+    source_file: str
+    source_line: int                     # for fail-fast, line-numbered errors (§2.1)
+```
+
+`Import` records resolve inline during parsing (textual composition, §3.3) and
+never reach Phase 2 as their own `RawRecord` — by the time Phase 1 returns, the
+record list is already the fully-composed file. `Profile=` (§3.9) is consumed
+even earlier, before any `RawRecord` is built, since it must be known to resolve
+`network.cim`.
+
+### 12.2 Phase 2 → Phase 3/5 : the validated row
+
+```python
+# generated per CIM class by LinkML gen-python, e.g. dsl/schema/generated/ac_line_segment.py
+
+@dataclass
+class ACLineSegmentRow:
+    """One validated ACLineSegment record. Every field is already the correct
+    Python type (str/float/int/enum) and passed the LinkML schema — Phase 2's
+    output, Phase 5's Builder input. Units are pre-bound into Qty for any
+    field the schema marks as a physical quantity (§4.3); plain scalars and
+    FK-name strings pass through untyped-for-CIM (resolution is Phase 4/5's job,
+    not Phase 2's)."""
+    name: str
+    # --- header-shape-dependent fields (§3.4): only the columns present in
+    # THIS record's header are non-None; absent columns are None, not missing
+    # attributes -- one generated dataclass per CIM class, shared across all
+    # header shapes of that class.
+    node1: str | None = None
+    node2: str | None = None
+    bus1: str | None = None
+    bus2: str | None = None
+    phases: str | None = None
+    length: Qty | None = None
+    r: Qty | None = None
+    x: Qty | None = None
+    b: Qty | None = None
+    PerLengthImpedance: str | None = None     # FK by name, unresolved
+    BaseVoltage: str | None = None            # FK by name, unresolved
+    circuitNumber: int | None = None
+    source_file: str = ''
+    source_line: int = 0
+```
+
+This is the seam named in §4.1/§4.2/§4.4 as `"<Class>Row"` — one generated
+dataclass per CIM class (not per header shape). `from_table(row)` receives
+exactly this and is solely responsible for inspecting which optional fields are
+populated to select the right `by_*.py` construction style (§3.4/§4.4) — the
+dataclass itself carries no "which shape am I" flag; presence/absence of fields
+*is* the dispatch signal, same as today's `line.py::_set_line_impedance`.
+
+FK fields (`PerLengthImpedance`, `BaseVoltage`, `node1`, …) are **plain
+`str | None`** at this stage — Phase 2 validates that the referenced name syntax
+is legal, not that the reference resolves (resolution is deferred, §3.3). Phase
+3/5's `NameIndex.get(cls, name)` (§5.5) is the only thing that turns these
+strings into live objects, and it does so lazily, inside `add_connectivity`/
+`from_table`, never inside Phase 2.
+
+### 12.3 Phase 3 → Phase 4/5 : the graph-write core surface
+
+```python
+# core/graph_write.py — the ONLY functions a Builder or the connectivity
+# backend may call to mutate network state. No Builder touches
+# network.add_to_graph or network.graph directly.
+
+def set_attr(obj: object, attr: str, value: Qty | str | int | float | None) -> None: ...
+def link(obj: object, assoc: str, target: object) -> None: ...
+def add_to_graph(network, obj: object) -> None:
+    """network.add_to_graph(obj) + name_index.add(obj) (§5.5), one call site."""
+def resolve(network, cim_cls: type, name: str) -> object | None:
+    """NameIndex.get(cim_cls, name) — §5.5. Returns None if not (yet) declared;
+    caller (connectivity backend) decides whether that means auto-vivify or
+    error. Never raises on a missing name — only add_to_graph raises, and only
+    on a genuine duplicate (§5.5)."""
+```
+
+Phase 4 (connectivity backend) and every Phase 5 Builder are written **only**
+against these four functions plus `NameIndex.get` — never against
+`cimgraph.GraphModel` internals directly. This is what makes §5.5's "if #81
+ever ships, `NameIndex` becomes a thin wrapper" exit ramp real: only
+`graph_write.py` would need to change.
+
+### 12.4 Phase 4 → Phase 5 : the connectivity backend surface
+
+```python
+# core/connectivity.py
+
+def add_connectivity(network, obj: object, *, node_cols: dict[str, str]) -> list["Terminal"]:
+    """node_cols is the already-disambiguated {'node1': 'busA', 'bus2': 'busB', ...}
+    slice of a <Class>Row (§12.2) — the Builder picks which of its row's fields
+    are connectivity columns per §3.5's fixed vocabulary and passes only those.
+    Auto-vivifies any name not found via resolve() (§12.3). Returns Terminals in
+    column order (sequenceNumber = list index + 1) so the Builder can attach
+    per-phase children (§12.5) to the right terminal."""
+
+def add_phase_children(network, obj: object, terminals: list["Terminal"],
+                        *, phases: str, phase_cls: type) -> list[object]:
+    """phases='ABCN' -> phase_cls (e.g. ACLineSegmentPhase) instances per §3.6,
+    wired to obj and given correct SinglePhaseKind + sequenceNumber."""
+```
+
+A Builder's `add_connectivity` method (§4.1) is a thin wrapper: pull the
+connectivity/phase columns off its `<Class>Row`, call these two functions, keep
+the returned terminals if a later `add_electrical` needs them (e.g. per-terminal
+ratings). No Builder re-implements node-vs-bus disambiguation or phase synthesis
+— that logic exists exactly once, here.
+
+### 12.5 Phase 5 → Phase 6/7 : the Builder surface (recap, now literal)
+
+Already fully specified in §4.1 as the `ObjectBuilder` ABC — restated here only
+to close the chain: `from_table(row: <Class>Row) -> Self` (§12.2's dataclass),
+`build() -> object` returns the live cim-graph instance (already past
+`graph_write.add_to_graph`, §12.3). Phase 6 (catalogs/templates) and Phase 7
+(public surface) consume `build()`'s return value and nothing lower-level — a
+package/CLI author never needs `graph_write.py` or `connectivity.py` directly.
+
+### 12.6 Phase 6/7 → Phase R : nothing new, the writer reads the graph directly
+
+The writer (Phase R) does **not** consume any of §12.1–12.5 — it reads
+`network.graph`/`network.name_index` (§5.5) directly and produces `.cimtbl`
+text, the inverse direction. Called out explicitly so it's clear Phase R has no
+dependency on the Row dataclasses; a schema change that only touches parsing
+(e.g. a new column) does not require writer changes unless the writer also
+needs to *emit* that column.
 ```

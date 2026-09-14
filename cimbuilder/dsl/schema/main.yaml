@@ -1,0 +1,2 @@
+# Phase 2: LinkML schema root (design: CIMTBL_DESIGN.md §8.1).
+# Class-family schemas live in classes/, shared units/enums in types/.
