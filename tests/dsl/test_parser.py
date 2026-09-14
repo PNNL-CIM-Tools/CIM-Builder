@@ -92,6 +92,13 @@ def test_comment_lines_ignored():
     assert records[0].cim_class == 'BaseFrequency'
 
 
+def test_trailing_same_line_comment_ignored():
+    records, _ = _parse(
+        'Object BaseFrequency: name=base_freq, frequency=60  # trailing comment\n'
+    )
+    assert records[0].fields == {'name': 'base_freq', 'frequency': '60'}
+
+
 def test_blank_lines_between_statements():
     records, _ = _parse(
         '\n\n'
@@ -171,6 +178,30 @@ def test_import_splices_records_from_file():
     assert wire_records[0].source_file.endswith('wire_infos.cimtbl')
     names = [r.fields['name'] for r in wire_records]
     assert names == ['ACSR_556_5', 'ACSR_4/0', 'CU_1/0']
+
+
+def test_import_profile_mismatch_raises(tmp_path):
+    (tmp_path / 'catalog.cimtbl').write_text(
+        'Profile = cimhub_2023\n'
+        'Object BaseFrequency: name=base_freq, frequency=60\n'
+    )
+    (tmp_path / 'main.cimtbl').write_text(
+        'Profile = cimhub_2026\n'
+        'Import catalog.cimtbl\n'
+    )
+    with pytest.raises(ValueError, match='Profile mismatch'):
+        parser.parse_file(tmp_path / 'main.cimtbl')
+
+
+def test_import_profile_inherited_when_absent_locally(tmp_path):
+    (tmp_path / 'catalog.cimtbl').write_text(
+        'Profile = cimhub_2026\n'
+        'Object BaseFrequency: name=base_freq, frequency=60\n'
+    )
+    (tmp_path / 'main.cimtbl').write_text('Import catalog.cimtbl\n')
+    records, profile = parser.parse_file(tmp_path / 'main.cimtbl')
+    assert profile == 'cimhub_2026'
+    assert len(records) == 1
 
 
 # --- end to end: real sample files -----------------------------------------

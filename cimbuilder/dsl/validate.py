@@ -77,6 +77,26 @@ def _reference_slots(row_cls_name: str) -> set[str]:
     }
 
 
+_LINKML_BASE_TO_PYTHON: dict[str, type] = {
+    'int': int,
+    'float': float,
+    'bool': bool,
+    'str': str,
+}
+
+
+def _slot_python_type(row_cls_name: str, slot_name: str) -> type:
+    """The plain Python type a non-reference, non-quantity slot's value
+    holds at runtime (§12.2: "already the correct Python type"). The
+    generated LinkML class does the str->int/float/bool coercion already
+    (Bool.__new__ and friends return a plain bool/int/float, not a wrapper);
+    this only mirrors that in the <Class>Row dataclass's own annotation."""
+    range_name = _schema_view.induced_slot(slot_name, row_cls_name).range
+    range_type = _schema_view.get_type(range_name) if range_name else None
+    base = range_type.base if range_type else None
+    return _LINKML_BASE_TO_PYTHON.get(base, str)
+
+
 def _row_dataclass(row_cls_name: str) -> type:
     """The plain <Class>Row dataclass (§12.2), built once per class from the
     LinkML schema's slots - float slots become Qty | None, everything else
@@ -92,7 +112,10 @@ def _row_dataclass(row_cls_name: str) -> type:
     for slot_name in _schema_view.class_slots(row_cls_name):
         if slot_name == 'name':
             continue
-        field_type = Qty if slot_name in quantity_slots else str
+        if slot_name in quantity_slots:
+            field_type = Qty
+        else:
+            field_type = _slot_python_type(row_cls_name, slot_name)
         fields.append((slot_name, field_type | None, dataclasses.field(default=None)))
     fields.append(('source_file', str, dataclasses.field(default='')))
     fields.append(('source_line', int, dataclasses.field(default=0)))
@@ -150,6 +173,6 @@ def validate(record: records.RawRecord) -> object:
         elif slot_name in quantity_slots:
             row_kwargs[slot_name] = Qty(float(value), record.units.get(slot_name) or '')
         else:
-            row_kwargs[slot_name] = str(value)
+            row_kwargs[slot_name] = value
 
     return row_cls(**row_kwargs)

@@ -135,9 +135,9 @@ def parse_file(path: str | Path) -> tuple[list[RawRecord], str | None]:
     imported file is recursively parsed (relative to the importing file's
     directory) and its records spliced in at that position. Import records
     never reach the returned list themselves. Profile= is consumed before
-    any RawRecord is built and, once set by this file or an import, is not
-    overridden by a later Import's own Profile= (first one wins, per §3.9's
-    "one per file/Import chain").
+    any RawRecord is built; one per file/Import chain (§3.9) - an imported
+    file declaring a *different* Profile= than one already set earlier in
+    the chain is a fail-fast error, not a silent override.
     """
     path = Path(path)
     text = path.read_text()
@@ -151,6 +151,11 @@ def parse_file(path: str | Path) -> tuple[list[RawRecord], str | None]:
             records.extend(imported_records)
             if profile is None:
                 profile = imported_profile
+            elif imported_profile is not None and imported_profile != profile:
+                raise ValueError(
+                    f"Profile mismatch: {path} declares {profile!r} but "
+                    f"import {import_path} declares {imported_profile!r}"
+                )
             continue
         records.append(record)
 
