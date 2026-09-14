@@ -23,6 +23,11 @@ dev = [
 # cim-graph 0.5 and its deps (gridappsd-python) are pre-release builds
 prerelease = "allow"
 
+# Develop against the local cim-graph 0.5 checkout — it carries cgmes_3_0_0
+# profile fixes not yet in the published 0.5.0a2 wheel. Drop once published.
+[tool.uv.sources]
+cim-graph = { path = "/home/ande188/CIM-Graph", editable = true }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
