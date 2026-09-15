@@ -58,6 +58,62 @@ def test_table_form_multi_row():
     assert records[1].fields == {'name': 'base_4160', 'nominalVoltage': '4160'}
 
 
+def test_table_form_header_constant_applies_to_every_row():
+    records, _ = _parse(
+        'Table ACLineSegment: name, bus1, bus2, EquipmentContainer=ieee_13_debug\n'
+        '    line_1, topo_1, topo_2\n'
+        '    line_2, topo_3, topo_4\n'
+    )
+    assert len(records) == 2
+    assert records[0].fields == {
+        'name': 'line_1', 'bus1': 'topo_1', 'bus2': 'topo_2',
+        'EquipmentContainer': 'ieee_13_debug',
+    }
+    assert records[1].fields == {
+        'name': 'line_2', 'bus1': 'topo_3', 'bus2': 'topo_4',
+        'EquipmentContainer': 'ieee_13_debug',
+    }
+
+
+def test_table_form_bare_columns_unaffected_by_header_constants():
+    # Regression guard: a header with no `=` cells behaves exactly like
+    # today (test_table_form_multi_row's shape), even after adding support
+    # for defaulted columns elsewhere in the grammar.
+    records, _ = _parse(
+        'Table BaseVoltage: name, nominalVoltage (V)\n'
+        '    base_115, 115000\n'
+    )
+    assert records[0].fields == {'name': 'base_115', 'nominalVoltage': '115000'}
+
+
+def test_table_form_mixed_header_shapes_coexist():
+    # plain column, unit-suffixed plain column, defaulted column - all three
+    # header_cell shapes in one header_list.
+    records, _ = _parse(
+        'Table ACLineSegment: name, length (ft), EquipmentContainer=ieee_13_debug\n'
+        '    line_1, 2000\n'
+    )
+    rec = records[0]
+    assert rec.fields == {
+        'name': 'line_1', 'length': '2000', 'EquipmentContainer': 'ieee_13_debug',
+    }
+    assert rec.units['length'] == 'ft'
+
+
+def test_table_form_row_overrides_header_constant():
+    # A row with an extra trailing cell beyond its plain columns supplies its
+    # own value for a defaulted column - the row's value wins.
+    records, _ = _parse(
+        'Table EnergyConsumer: name, node, EquipmentContainer=ieee_13_debug\n'
+        '    load_671, 671\n'
+        '    load_sub, SourceBus, sub\n'
+    )
+    load_671 = next(r for r in records if r.fields['name'] == 'load_671')
+    load_sub = next(r for r in records if r.fields['name'] == 'load_sub')
+    assert load_671.fields['EquipmentContainer'] == 'ieee_13_debug'
+    assert load_sub.fields['EquipmentContainer'] == 'sub'
+
+
 def test_table_form_zero_rows():
     records, _ = _parse('Table SynchronousMachine: name, bus, p, q\n')
     assert records == []
@@ -208,7 +264,7 @@ def test_import_profile_inherited_when_absent_locally(tmp_path):
 
 def test_ieee13_parses_end_to_end():
     records, profile = parser.parse_file(SAMPLES_DIR / 'ieee13.cimtbl')
-    assert len(records) == 70
+    assert len(records) == 74
     assert profile is None
 
     line_1_2 = next(r for r in records if r.fields.get('name') == 'line_1_2')
@@ -237,6 +293,10 @@ _KNOWN_SCHEMA_GAPS = {
     # cimbuilder/dsl/schema/classes/rows.yaml's description).
     'OverheadWireInfo', 'TransformerAssembly', 'TransformerWinding',
     'ConductorDistanceSpacing',
+    # Container classes referenced by the sample's EquipmentContainer= header
+    # constants (see grammar.lark's header_cell default) - not yet given
+    # their own <Class>Row in rows.yaml.
+    'Line', 'Substation', 'Feeder',
 }
 
 
@@ -250,7 +310,7 @@ def test_ieee13_validates_end_to_end_through_phase2():
             continue
         validate.validate(record)
         checked += 1
-    assert checked == 61
+    assert checked == 62
 
 
 def test_grammar_builds_lalr_without_ambiguity():

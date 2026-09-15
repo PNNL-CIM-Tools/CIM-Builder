@@ -4,6 +4,10 @@ Object BaseFrequency: name=base_freq, frequency=60
 
 Object BasePower: name=sbase, basePower (MVA)=100
 
+Object Line: name=transmission_line
+Object Substation: name=sub
+Object Feeder: name=ieee_13_debug, NormalEnergizingSubstation=sub
+
 # Define catalog data first
 
 Import wire_infos.cimtbl
@@ -67,22 +71,21 @@ Table LoadResponseCharacteristic: name, pConstantPower, pConstantImpedance, pCon
     zip_constantPQ, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0
     zip_constantZ, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0
 
-Table ACLineSegment: name, bus1, bus2, circuitNumber, r (pu), x (pu), bch (pu), BaseVoltage
-    line_1_2, topo_bus_1, topo_bus_2, 1, 1.93800E-2, 5.91700E-2, 0.05280, base_115
+Table ACLineSegment: name, bus1, bus2, circuitNumber, r (pu), x (pu), bch (pu), BaseVoltage, EquipmentContainer
+    line_1_2, topo_bus_1, topo_bus_2, 1, 1.93800E-2, 5.91700E-2, 0.05280, base_115, transmission_line
 
-Table ACLineSegment: name, node1, node2, phases, length (ft), PerLengthImpedance, BaseVoltage
+Table ACLineSegment: name, node1, node2, phases, length (ft), PerLengthImpedance, BaseVoltage, EquipmentContainer=ieee_13_debug
     650632, RG60, 362, ABCN, 2000, mtx601, base_4160
     362670, MID,  670, ABCN, 667,  mtx601, base_4160
     670671, 670,  671, ABCN, 671,  mtx601, base_4160
     632645, 632,  645, BC,   500,  mtx603, base_4160
 
-Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponse
+Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponse, EquipmentContainer=ieee_13_debug
     load_671, 671, 1155, 660, D, base_4160, zip_constantPQ
     load_634, 634, , , Y, base_480, zip_constantPQ
     load_646, 646, , , D, base_4160, zip_constantZ
+    load_sub, SourceBus, 2000, 1000, Y, base_115, zip_constantPQ, sub
 
-Table Analog: name, minValue, maxValue, phases, measurementType
-    power_in_a, 0, 200, ABCN, 
 
 Table EnergyConsumerPhase: name, phase, p (kW), q (kW), EnergyConsumer
     load_634a, A, 160, 110, load_634
@@ -90,25 +93,25 @@ Table EnergyConsumerPhase: name, phase, p (kW), q (kW), EnergyConsumer
     load_634c, C, 120, 90, load_634
     load_646bc, BC, 230, 132, load_646
 
-Table LinearShuntCompensator: name, node, nomQ (kVAr), nomU (V), sections, phaseConnection, maximumSections, BaseVoltage
+Table LinearShuntCompensator: name, node, nomQ (kVAr), nomU (V), sections, phaseConnection, maximumSections, BaseVoltage, EquipmentContainer=ieee_13_debug
     cap_1, 675, 600.0, 4160, 1, Y, 1, base_4160
     cap_2, 611, 100.0, 4160, 1, Y, 1, base_4160
 
 Table LinearShuntCompensatorPhase: name, phase, nomQ (kVAr), sections, ShuntCompensator
     cap_2c, C, 100.0, 1, cap_2
 
-Object LoadBreakSwitch: name=671692, node1=671, node2=692
+Object LoadBreakSwitch: name=671692, node1=671, node2=692, EquipmentContainer=ieee_13_debug
 
-Table Fuse: name, node1, node2, ratedCurrent (A), open, normalOpen
+Table Fuse: name, node1, node2, ratedCurrent (A), open, normalOpen, EquipmentContainer=ieee_13_debug
     fuse_1, 633, XF1, 100.0, false, false
 
-Table Sectionaliser: name, node1, node2, open, normalOpen
+Table Sectionaliser: name, node1, node2, open, normalOpen, EquipmentContainer=ieee_13_debug
     sect_1, 684, tap, false, false
 
 Table SwitchPhase: name, phaseSide1, phaseSide2, open, Switch
     sect_1c, C, C, false, sect_1
 
-Table PowerElectronicsConnection: name, node, ratedS (kVA), ratedU (V), p (kW), q (kVAr)
+Table PowerElectronicsConnection: name, node, ratedS (kVA), ratedU (V), p (kW), q (kVAr), EquipmentContainer=ieee_13_debug
     pv_inverter, 634, 300, 480, 240, 0
     batt_inverter, 634, 100, 480, 0, 0
 
@@ -119,7 +122,7 @@ Table PhotoVoltaicUnit: name, minP, maxP, PowerElectronicsConnection
 Table BatteryUnit: name, minP, maxP, ratedE, storedE, batteryState, PowerElectronicsConnection
     batt, -100, 100, 200, 100, discharging, batt_inverter
 
-Object PowerTransformer: name=Sub3
+Object PowerTransformer: name=Sub3, EquipmentContainer=sub
 
 # PI model represtation
 Table PowerTransformerEnd: name, node, endNumber, r (ohm), x (ohm), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer

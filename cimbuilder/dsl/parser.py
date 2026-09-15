@@ -27,12 +27,19 @@ def _cell_text(cell_node: lark.Tree) -> str | None:
     return text or None
 
 
-def _header_cell_name_and_unit(header_cell_node: lark.Tree) -> tuple[str, str | None]:
+def _header_cell_name_unit_default(header_cell_node: lark.Tree) -> tuple[str, str | None, str | None]:
+    """A header_cell is NAME unit? ("=" cell)? - unpack whichever of the two
+    optional children are present by node type rather than position, since
+    either, both, or neither may appear."""
     name = str(header_cell_node.children[0])
-    if len(header_cell_node.children) > 1:
-        unit_node = header_cell_node.children[1]
-        return name, str(unit_node.children[0]).strip()
-    return name, None
+    unit: str | None = None
+    default: str | None = None
+    for child in header_cell_node.children[1:]:
+        if child.data == 'unit':
+            unit = str(child.children[0]).strip()
+        else:
+            default = _cell_text(child)
+    return name, unit, default
 
 
 class _RecordBuilder(lark.Transformer):
@@ -66,19 +73,42 @@ class _RecordBuilder(lark.Transformer):
         keyword_token, name_token, header_list, *table_rows = children
         cim_class = str(name_token)
 
-        columns: list[str] = []
+        columns: list[str] = []  # header order, for fields dict ordering
+        row_columns: list[str] = []  # non-defaulted columns - always consume a row-cell position
+        defaulted_columns: list[str] = []  # header order - a row may override in this order too
         units: dict[str, str | None] = {}
+        constants: dict[str, str | None] = {}
         for header_cell in header_list.children:
-            name, unit = _header_cell_name_and_unit(header_cell)
+            name, unit, default = _header_cell_name_unit_default(header_cell)
             columns.append(name)
             units[name] = unit
+            has_default = len(header_cell.children) > 1 and header_cell.children[-1].data != 'unit'
+            if has_default:
+                constants[name] = default
+                defaulted_columns.append(name)
+            else:
+                row_columns.append(name)
 
+        # A row's cells fill row_columns first (positional, always present),
+        # then any *extra* trailing cells fill defaulted_columns in header
+        # order - letting a row override a subset of the header's defaults
+        # (e.g. `load_sub`'s own EquipmentContainer cell in ieee13.cimtbl).
         records: list[RawRecord] = []
         for row in table_rows:
             cell_nodes = row.children
+            row_values = {
+                col: _cell_text(cell_nodes[i])
+                for i, col in enumerate(row_columns) if i < len(cell_nodes)
+            }
+            overrides = {
+                col: _cell_text(cell_nodes[len(row_columns) + i])
+                for i, col in enumerate(defaulted_columns) if len(row_columns) + i < len(cell_nodes)
+            }
             fields = {
-                col: _cell_text(cell_nodes[i]) if i < len(cell_nodes) else None
-                for i, col in enumerate(columns)
+                col: row_values[col] if col in row_values
+                else overrides[col] if col in overrides
+                else constants.get(col)
+                for col in columns
             }
             records.append(RawRecord(
                 form='Table', cim_class=cim_class, fields=fields, units=dict(units),

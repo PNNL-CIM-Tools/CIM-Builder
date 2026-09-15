@@ -28,7 +28,7 @@ assignment_list: assignment ("," assignment)*
 assignment: NAME unit? "=" cell
 
 header_list: header_cell ("," header_cell)*
-header_cell: NAME unit?
+header_cell: NAME unit? ("=" cell)?
 unit: "(" UNIT_TEXT ")"
 
 table_row: cell ("," cell)* _NL+
