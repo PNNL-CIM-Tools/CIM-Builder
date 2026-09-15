@@ -81,6 +81,8 @@ Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage
     load_634, 634, , , Y, base_480, zip_constantPQ
     load_646, 646, , , D, base_4160, zip_constantZ
 
+Table Analog: name, minValue, maxValue, phases, measurementType
+    power_in_a, 0, 200, ABCN, 
 
 Table EnergyConsumerPhase: name, phase, p (kW), q (kW), EnergyConsumer
     load_634a, A, 160, 110, load_634
