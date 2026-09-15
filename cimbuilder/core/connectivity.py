@@ -69,24 +69,21 @@ def add_connectivity(network: GraphModel, obj: object, *, node_cols: dict[str, s
             graph_write.add_to_graph(network, node_obj)
 
         if has_container and node_obj.ConnectivityNodeContainer is None:
-            graph_write.link(node_obj, 'ConnectivityNodeContainer', resolved_container)
+            graph_write.set_assc(node_obj, cim, 'ConnectivityNodeContainer', resolved_container)
 
         terminal = cim.Terminal(name=f'{obj.name}_T{i}', sequenceNumber=i)
-        graph_write.link(terminal, 'ConductingEquipment', obj)
-        obj.Terminals.append(terminal)
+        graph_write.set_assc(terminal, cim, 'ConductingEquipment', obj)
 
         if node_cls is cim.ConnectivityNode:
-            graph_write.link(terminal, 'ConnectivityNode', node_obj)
-            node_obj.Terminals.append(terminal)
+            graph_write.set_assc(terminal, cim, 'ConnectivityNode', node_obj)
         else:
-            graph_write.link(terminal, 'TopologicalNode', node_obj)
-            node_obj.Terminal.append(terminal)
+            graph_write.set_assc(terminal, cim, 'TopologicalNode', node_obj)
 
         graph_write.add_to_graph(network, terminal)
         terminals.append(terminal)
 
     if has_container:
-        graph_write.link(obj, 'EquipmentContainer', resolved_container)
+        graph_write.set_assc(obj, cim, 'EquipmentContainer', resolved_container)
 
     return terminals
 
@@ -104,7 +101,7 @@ def add_phase_children(network: GraphModel, obj: object, terminals: list[object]
         child = phase_cls(name=f'{obj.name}_{letter}', phase=cim.SinglePhaseKind(letter))
         if has_sequence_number:
             child.sequenceNumber = i
-        graph_write.link(child, parent_field, obj)
+        graph_write.set_assc(child, cim, parent_field, obj)
         graph_write.add_to_graph(network, child)
         children.append(child)
 

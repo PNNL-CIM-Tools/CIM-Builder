@@ -1,6 +1,6 @@
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING
 
 from cimgraph.models import GraphModel
@@ -38,7 +38,7 @@ class LineBuilder(ObjectBuilder):
         return line
         
         
-    def add_electrical(self,
+    def add_electrical(self, line:EQ.ACLineSegment,
         r: float,
         x: float,
         bch: float,
@@ -52,10 +52,10 @@ class LineBuilder(ObjectBuilder):
         if r_unit.lower() in ['pu', 'perunit', 'per_unit']:
             convert_to_ohm(r_unit)
         
-        line.r = cim.Resistance(r, r_unit or 'ohm')
+        line.r = cim.Resistance(r, r_unit or 'ohm') 
         line.x = cim.Resistance(x, x_unit or 'ohm')
         
-        
+        setattr(line, fields(EQ.ACLineSegment,r), )
         
     def add_short_circuit(self,
         r0,

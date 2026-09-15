@@ -79,6 +79,7 @@ Table ACLineSegment: name, node1, node2, phases, length (ft), PerLengthImpedance
     362670, MID,  670, ABCN, 667,  mtx601, base_4160
     670671, 670,  671, ABCN, 671,  mtx601, base_4160
     632645, 632,  645, BC,   500,  mtx603, base_4160
+    657894, 657,  894, ABCN, 600, 
 
 Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponse, EquipmentContainer=ieee_13_debug
     load_671, 671, 1155, 660, D, base_4160, zip_constantPQ

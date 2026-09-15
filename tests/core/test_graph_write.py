@@ -1,8 +1,11 @@
-"""Phase 3 graph-write core tests (design: CIMTBL_DESIGN.md §12.3).
+"""Phase 3/5 graph-write core tests (design: CIMTBL_DESIGN.md §12.3,
+cimbuilder/development/GRAPH_WRITE_CONTRACT.md).
 
 set_attr binds a Qty into the right CIMUnit subclass (verified via .to()) or
-passes a plain scalar straight through; add_to_graph writes to both
-network.graph and network.name_index at the same call site; resolve is a
+passes a plain scalar straight through, checking `attr` against a reference
+part module first; set_assc writes both the forward and reverse side of an
+association, resolved from the part's field metadata; add_to_graph writes to
+both network.graph and network.name_index at the same call site; resolve is a
 never-raising O(1) NameIndex lookup.
 """
 
@@ -33,39 +36,66 @@ def network():
 
 def test_set_attr_none_sets_none():
     bv = cim.BaseVoltage(name='bv')
-    graph_write.set_attr(bv, 'nominalVoltage', None)
+    graph_write.set_attr(bv, cim, 'nominalVoltage', None)
     assert bv.nominalVoltage is None
 
 
 def test_set_attr_plain_scalar_passes_through():
     line = cim.ACLineSegment(name='line')
-    graph_write.set_attr(line, 'circuitNumber', 1)
+    graph_write.set_attr(line, cim, 'circuitNumber', 1)
     assert line.circuitNumber == 1
 
 
 def test_set_attr_qty_with_unit_binds_cimunit():
     bv = cim.BaseVoltage(name='bv')
-    graph_write.set_attr(bv, 'nominalVoltage', Qty(115.0, 'kV'))
+    graph_write.set_attr(bv, cim, 'nominalVoltage', Qty(115.0, 'kV'))
     assert bv.nominalVoltage.to('V') == 115000.0
 
 
 def test_set_attr_qty_blank_unit_assumes_base_si():
     freq = cim.BaseFrequency(name='f')
-    graph_write.set_attr(freq, 'frequency', Qty(60.0, ''))
+    graph_write.set_attr(freq, cim, 'frequency', Qty(60.0, ''))
     assert freq.frequency.to('Hz') == 60.0
 
 
 def test_set_attr_qty_on_non_quantity_attr_raises():
     bv = cim.BaseVoltage(name='bv')
     with pytest.raises(ValueError, match='not a CIMUnit-typed attribute'):
-        graph_write.set_attr(bv, 'name', Qty(1.0, 'V'))
+        graph_write.set_attr(bv, cim, 'name', Qty(1.0, 'V'))
 
 
-def test_link_sets_association_attribute():
+def test_set_attr_unknown_field_raises():
+    bv = cim.BaseVoltage(name='bv')
+    with pytest.raises(ValueError, match='not a field'):
+        graph_write.set_attr(bv, cim, 'not_a_real_field', 1)
+
+
+def test_set_attr_association_field_raises():
+    line = cim.ACLineSegment(name='line')
+    with pytest.raises(ValueError, match='use set_assc'):
+        graph_write.set_attr(line, cim, 'BaseVoltage', cim.BaseVoltage(name='bv'))
+
+
+def test_set_assc_writes_forward_and_reverse():
     line = cim.ACLineSegment(name='line')
     bv = cim.BaseVoltage(name='bv')
-    graph_write.link(line, 'BaseVoltage', bv)
+    graph_write.set_assc(line, cim, 'BaseVoltage', bv)
     assert line.BaseVoltage is bv
+    assert line in bv.ConductingEquipment
+
+
+def test_set_assc_reverse_append_dedups_by_identity():
+    line = cim.ACLineSegment(name='line')
+    bv = cim.BaseVoltage(name='bv')
+    graph_write.set_assc(line, cim, 'BaseVoltage', bv)
+    graph_write.set_assc(line, cim, 'BaseVoltage', bv)
+    assert bv.ConductingEquipment.count(line) == 1
+
+
+def test_set_assc_scalar_field_raises():
+    bv = cim.BaseVoltage(name='bv')
+    with pytest.raises(ValueError, match='use set_attr'):
+        graph_write.set_assc(bv, cim, 'name', 'other')
 
 
 def test_add_to_graph_populates_graph_and_name_index(network):

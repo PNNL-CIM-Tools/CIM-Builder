@@ -30,7 +30,7 @@ def bind_row(network: GraphModel, row: object) -> object:
         value = getattr(row, f.name)
         if value is None:
             continue
-        graph_write.set_attr(obj, f.name, value)
+        graph_write.set_attr(obj, network.cim, f.name, value)
 
     graph_write.add_to_graph(network, obj)
     return obj

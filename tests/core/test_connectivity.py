@@ -74,7 +74,7 @@ def test_add_connectivity_propagates_container_to_nodes(network):
 def test_add_connectivity_does_not_overwrite_existing_node_container(network):
     other_container = cim.Feeder(name='other_feeder')
     node = cim.ConnectivityNode(name='671')
-    graph_write.link(node, 'ConnectivityNodeContainer', other_container)
+    graph_write.set_assc(node, cim, 'ConnectivityNodeContainer', other_container)
     graph_write.add_to_graph(network, node)
 
     line = cim.ACLineSegment(name='670671')
