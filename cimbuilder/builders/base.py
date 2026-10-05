@@ -17,6 +17,7 @@ class ObjectBuilder(ABC):
     def __init__(self, network: GraphModel, container: object = None):
         self.network = network
         self.container = container
+        self.cim = network.cim
 
     def create(self, *, name: str) -> object:
         cim_cls = getattr(self.network.cim, self.cim_class_name)

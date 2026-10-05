@@ -22,25 +22,38 @@ class EnergyConsumerBuilder(ObjectBuilder):
     cim_class_name = 'EnergyConsumer'
 
     def add_connectivity(self, load, *, node: str, container: object = None,
-                          phaseConnection=None) -> None:
+                          phaseConnection=None, grounded=None, customerCount=None,
+                          BaseVoltage=None) -> None:
+        # Build connectivity from 
         connectivity.add_connectivity(
             self.network, load, node_cols={'node': node},
-            container=container if container is not None else self.container,
-        )
+            container=container if container is not None else self.container)
+        graph_write.set_attr(load, CN, 'customerCount', customerCount)
+        graph_write.set_attr(load, CN, 'grounded', grounded)
         graph_write.set_attr(load, CN, 'phaseConnection', phaseConnection)
+        
 
-    def add_electrical(self, load, *, p=None, q=None) -> None:
+        if BaseVoltage is not None:
+                target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
+                graph_write.set_assc(load, CN, 'BaseVoltage', target)
+
+    def add_electrical(self, load, *, pFixed=None, qFixed=None, pFixedPct=None, qFixedPct=None,
+                       LoadResponse=None) -> None:
+        graph_write.set_attr(load, cimhub_2026, 'pFixed', pFixed)
+        graph_write.set_attr(load, cimhub_2026, 'qFixed', qFixed)
+        graph_write.set_attr(load, cimhub_2026, 'pFixedPct', pFixedPct)
+        graph_write.set_attr(load, cimhub_2026, 'qFixedPct', qFixedPct)
+        if LoadResponse is not None:
+            target = graph_write.resolve(self.network, self.cim.LoadResponseCharacteristic, LoadResponse)
+            graph_write.set_assc(load, EL, 'LoadResponse', target)
+            
+    def add_ssh(self, load, *, p=None, q=None) -> None:
         graph_write.set_attr(load, cimhub_2026, 'p', p)
         graph_write.set_attr(load, cimhub_2026, 'q', q)
-
-    def add_references(self, load, *, BaseVoltage=None, LoadResponse=None) -> None:
-        cim = self.network.cim
-        if BaseVoltage is not None:
-            target = graph_write.resolve(self.network, cim.BaseVoltage, BaseVoltage)
-            graph_write.set_assc(load, CN, 'BaseVoltage', target)
-        if LoadResponse is not None:
-            target = graph_write.resolve(self.network, cim.LoadResponseCharacteristic, LoadResponse)
-            graph_write.set_assc(load, EL, 'LoadResponse', target)
+        
+    def add_dynamics(self, load,) -> None:
+        pass
+        
 
     def from_table(self, row: object) -> object:
         cim = self.network.cim
