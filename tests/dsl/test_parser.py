@@ -264,7 +264,7 @@ def test_import_profile_inherited_when_absent_locally(tmp_path):
 
 def test_ieee13_parses_end_to_end():
     records, profile = parser.parse_file(SAMPLES_DIR / 'ieee13.cimtbl')
-    assert len(records) == 74
+    assert len(records) == 75
     assert profile is None
 
     line_1_2 = next(r for r in records if r.fields.get('name') == 'line_1_2')
@@ -288,15 +288,21 @@ def test_ieee14_parses_end_to_end():
 
 
 _KNOWN_SCHEMA_GAPS = {
-    # Not yet in rows.yaml pending the C57.12 transformer overhaul, or a
-    # pre-existing sample/schema mismatch unrelated to Phase 1 (see
-    # cimbuilder/dsl/schema/classes/rows.yaml's description).
-    'OverheadWireInfo', 'TransformerAssembly', 'TransformerWinding',
-    'ConductorDistanceSpacing',
-    # Container classes referenced by the sample's EquipmentContainer= header
-    # constants (see grammar.lark's header_cell default) - not yet given
-    # their own <Class>Row in rows.yaml.
-    'Line', 'Substation', 'Feeder',
+    # Not real classes in the cimhub_2026 CIM profile at all - proposed,
+    # not-yet-standardized CIM18 constructs (pending the C57.12 transformer
+    # overhaul). Reflection can't legalize a class that doesn't exist.
+    'TransformerAssembly', 'TransformerWinding',
+    # TransformerTank/TransformerTankEnd: a genuine drift between the real
+    # installed cimhub_2026 profile (reflected against here) and the stale
+    # cimhub_2026.linkml.yaml snapshot the old LinkML schema trusted instead -
+    # noLoadLoss/fullLoadLoss/percentMagnetizingCurrent/percentImpedance and
+    # TransformerTankEnd.sequenceNumber (really endNumber) don't exist on the
+    # live classes. Pending the same C57.12 overhaul.
+    'TransformerTank', 'TransformerTankEnd',
+    # Same drift: ShuntCompensator.nomQ (and ShuntCompensatorPhase.nomQ) are
+    # in the stale LinkML snapshot but not on the live cimhub_2026 classes -
+    # only nomU exists there now.
+    'LinearShuntCompensator', 'LinearShuntCompensatorPhase',
 }
 
 
@@ -310,7 +316,7 @@ def test_ieee13_validates_end_to_end_through_phase2():
             continue
         validate.validate(record)
         checked += 1
-    assert checked == 62
+    assert checked == 61
 
 
 def test_grammar_builds_lalr_without_ambiguity():

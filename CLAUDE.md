@@ -56,6 +56,7 @@ type is an `ObjectBuilder` subclass built **one CIM profile-part at a time**
 | Doc (`cimbuilder/development/`) | What it defines |
 |---|---|
 | `README.md` | Index + reading order + locked decisions |
+| `PROFILE_RESOLUTION.md` | The three profile mechanisms: Pylance typing vs runtime `set_attr` checks vs `Profile=` → `CIMG_CIM_PROFILE` → `network.cim` |
 | `ARCHITECTURE.md` | `ObjectBuilder` contract, `builder_base` mixin, profile-source rule, substation assembly layer |
 | `BUILDER_API.md` | The public `create() → add_<profile>() → build()` chain a user types |
 | `PROFILE_TYPING.md` | §5a per-method profile-scoped typing (`cim: EQ` / `cim: SC`) |

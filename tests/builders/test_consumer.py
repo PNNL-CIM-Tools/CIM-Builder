@@ -1,10 +1,12 @@
 """Phase 5 EnergyConsumerBuilder tests (design: CIMTBL_DESIGN.md §4, §8.1,
 cimbuilder/development/GRAPH_WRITE_CONTRACT.md).
 
-Covers the direct Builder API in isolation, then from_table end to end against
-real validated EnergyConsumerRows parsed out of ieee13.cimtbl - including the
-load_sub row, whose EquipmentContainer overrides its table's header-level
-default (see dsl/parser.py's table_stmt).
+Covers the direct Builder API in isolation (create/add_connectivity/
+add_electrical/add_ssh/add_references/add), then the generic
+ObjectBuilder.from_table (builders/base.py, backed by core/binder.bind_row)
+end to end against real validated EnergyConsumerRows parsed out of
+ieee13.cimtbl - including the load_sub row, whose EquipmentContainer
+overrides its table's header-level default (see dsl/parser.py's table_stmt).
 
 Builders are stateless: create() returns the object directly, every add_<part>
 method takes it as an explicit first parameter, and add() (not build()) adds
@@ -22,7 +24,7 @@ import cimgraph.data_profile.cimhub_2026 as cim
 from cimgraph.databases import XMLFile
 from cimgraph.models import BusBranchModel
 
-from cimbuilder.builders.consumer import EnergyConsumerBuilder
+from cimbuilder.builders.load.consumer import EnergyConsumerBuilder
 from cimbuilder.core import graph_write
 from cimbuilder.core.name_index import NameIndex
 from cimbuilder.core.units import Qty
@@ -42,11 +44,11 @@ def network():
 
 # --- direct API -------------------------------------------------------------
 
-def test_create_add_connectivity_add_electrical_add(network):
+def test_create_add_connectivity_add_ssh_add(network):
     builder = EnergyConsumerBuilder(network)
     load = builder.create(name='load_671')
     builder.add_connectivity(load, node='671')
-    builder.add_electrical(load, p=Qty(1155.0, 'kW'), q=Qty(660.0, 'kVAr'))
+    builder.add_ssh(load, p=Qty(1155.0, 'kW'), q=Qty(660.0, 'kVAr'))
     consumer = builder.add(load)
 
     assert consumer.name == 'load_671'
@@ -101,7 +103,7 @@ def test_add_references_unresolved_name_links_none(network):
     assert consumer.BaseVoltage is None
 
 
-# --- from_table, against the real sample ------------------------------------
+# --- from_table (generic, core.binder.bind_row), against the real sample ---
 
 @pytest.fixture
 def ieee13_energy_consumer_rows():
@@ -115,7 +117,7 @@ def ieee13_energy_consumer_rows():
 @pytest.fixture
 def network_with_referents(network):
     """The BaseVoltage/LoadResponseCharacteristic/container objects the real
-    ieee13 EnergyConsumer rows reference by name, so add_references has
+    ieee13 EnergyConsumer rows reference by name, so from_table has
     something real to resolve against."""
     for name in ('base_4160', 'base_480', 'base_115'):
         graph_write.add_to_graph(network, cim.BaseVoltage(name=name))
@@ -130,8 +132,7 @@ def _build_all(network, rows):
     built = {}
     for row in rows:
         builder = EnergyConsumerBuilder(network)
-        load = builder.from_table(row)
-        consumer = builder.add(load)
+        consumer = builder.from_table(row)
         built[consumer.name] = consumer
     return built
 
@@ -155,6 +156,7 @@ def test_from_table_resolves_base_voltage_and_load_response(network_with_referen
     assert load_671.LoadResponse is graph_write.resolve(
         network_with_referents, cim.LoadResponseCharacteristic, 'zip_constantPQ'
     )
+    assert load_671 in graph_write.resolve(network_with_referents, cim.BaseVoltage, 'base_4160').ConductingEquipment
 
 
 def test_from_table_equipment_container_default_and_row_override(network_with_referents, ieee13_energy_consumer_rows):
@@ -181,8 +183,9 @@ def test_from_table_auto_vivifies_connectivity_node(network_with_referents, ieee
 def test_from_table_missing_equipment_container_raises(network, ieee13_energy_consumer_rows):
     # network fixture has no Feeder/Substation built at all - every row's
     # EquipmentContainer name is unresolvable, which must fail fast rather
-    # than silently fall back to network.container (§12.3: resolve() never
-    # raises, but a Builder deciding a named FK is missing is free to).
+    # than silently fall back to network.container (bind_row raises directly,
+    # same posture as resolve() never raising but a caller deciding a named
+    # FK's absence is an error - CIMTBL_DESIGN.md §12.3).
     load_671 = next(r for r in ieee13_energy_consumer_rows if r.name == 'load_671')
     with pytest.raises(ValueError, match='EquipmentContainer'):
         EnergyConsumerBuilder(network).from_table(load_671)

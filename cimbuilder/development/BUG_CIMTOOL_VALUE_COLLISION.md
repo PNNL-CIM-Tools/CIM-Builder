@@ -1,5 +1,9 @@
 # Bug: CIMTool export flattens ~34 unrelated `.value` attributes onto an unrelated class
 
+> **Status:** CIM-Builder no longer consumes the LinkML export, so this repo is not
+> affected (validation reflects on the installed profile - `PROFILE_RESOLUTION.md`).
+> Kept as the record of the upstream CIMTool bug.
+
 **Where:** upstream CIMTool XSLT (OWL → LinkML export pipeline that produces
 `cimbuilder/dsl/schema/cimhub_2026.linkml.yaml`). Not fixable in the generated
 YAML itself — every regeneration reproduces it.

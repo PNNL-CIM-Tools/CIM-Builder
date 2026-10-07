@@ -1,4 +1,4 @@
-"""Phase 2 LinkML validation gate tests (design: CIMTBL_DESIGN.md §8 exit criterion).
+"""Phase 2 reflection validation gate tests (design: CIMTBL_DESIGN.md §8 exit criterion).
 
 validate.validate() turns a RawRecord (§12.1) into a validated <Class>Row
 (§12.2). Covers: unknown class, unknown column with closest-match
@@ -112,6 +112,27 @@ def test_two_header_shapes_of_same_class_both_validate():
 
 
 def test_row_dataclass_is_cached_per_class():
-    cls_a = validate._row_dataclass('BaseFrequencyRow')
-    cls_b = validate._row_dataclass('BaseFrequencyRow')
+    cls_a = validate._row_dataclass('BaseFrequencyRow', 'cimhub_2026')
+    cls_b = validate._row_dataclass('BaseFrequencyRow', 'cimhub_2026')
     assert cls_a is cls_b
+
+
+def test_comma_spec_merged_profile_validates(monkeypatch):
+    # cim-graph's CIMG_CIM_PROFILE may be a comma-separated list of sub-profiles
+    # merged at runtime; validation must resolve it through get_cim_profile()
+    # (the same call that yields network.cim), not importlib on the raw string.
+    from cimgraph.core.env_vars import get_cim_profile
+    monkeypatch.setenv(
+        'CIMG_CIM_PROFILE',
+        'cimgraph.data_profile.cim18gmdm.connectivity,cimgraph.data_profile.cim18gmdm.electrical',
+    )
+    try:
+        row = validate.validate(
+            _record('BaseVoltage', {'name': 'bv', 'nominalVoltage': '115'}, units={'nominalVoltage': 'kV'}, form='Object')
+        )
+        assert row.nominalVoltage == Qty(115.0, 'kV')
+        # regression guard: a field named like its type (BaseVoltage) must still
+        # resolve to the class, not to its own None default.
+        assert 'BaseVoltage' in validate.reference_slots('EnergyConsumerRow')
+    finally:
+        get_cim_profile.cache_clear()

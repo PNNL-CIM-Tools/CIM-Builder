@@ -22,26 +22,31 @@ against.
    phases. Read it first; the docs below are the detailed specs each phase
    implements against.
 
-2. **`ARCHITECTURE.md`** — the target architecture: the `ObjectBuilder` contract,
+2. **`PROFILE_RESOLUTION.md`** — the map of the three "profile" mechanisms that are
+   easy to conflate: edit-time Pylance typing, runtime `set_attr`/`set_assc` checking,
+   and user-selected profile (`Profile=` → `CIMG_CIM_PROFILE` → `network.cim`).
+   Read before touching any of them.
+
+3. **`ARCHITECTURE.md`** — the target architecture: the `ObjectBuilder` contract,
    the `builder_base` shared mixin, the profile-part build flow, the
    `network.cim` profile-source rule (cim-graph 0.5 §2/§5), and the separate
    substation assembly layer. `LineBuilder` is the reference implementation.
 
-3. **`BUILDER_API.md`** — the public, user-facing API contract: the
+4. **`BUILDER_API.md`** — the public, user-facing API contract: the
    `create() → add_<profile>() → build()` chain, method naming, node-argument
    conventions, `from_catalog`, and convenience facades. What a user actually
    types.
 
-4. **`PROFILE_TYPING.md`** — the §5a edit-time typing model: per-method
+5. **`PROFILE_TYPING.md`** — the §5a edit-time typing model: per-method
    single-sub-profile annotations (`cim: CN`, `cim: EQ`, `cim: SC`) via
    `TYPE_CHECKING` imports, narrowing writes to one profile while the runtime
    value stays the full `network.cim` module. Includes the today-vs-0.5 gap.
 
-5. **`UNITS.md`** — how `add_electrical_bal` sets physical quantities via
+6. **`UNITS.md`** — how `add_electrical_bal` sets physical quantities via
    `CIMUnit` (no manual scaling), CIMUnit on first pass, and the per-unit
    (`z_base`) engine deferred to Phase 11.
 
-6. **`BUILDER_TEST_CREATION.md`** — the test strategy: atom factories, the
+7. **`BUILDER_TEST_CREATION.md`** — the test strategy: atom factories, the
    chained-build "act", per-profile assertions, the `network.cim` identity
    guardrail, and the three test tiers (atom / composition / integration).
    Includes the `ConnectionParameters` → direct-kwarg migration that the broken
@@ -60,12 +65,13 @@ against.
 | Profile dependency | Targets cim-graph 0.5.0a1 — `network.cim` is live and the `cgmes_3_0_0` merged profile ships real sub-profile parts (`core_equipment`, `short_circuit`, `topology`, …). Gap closed at source; only the dependency pin bump remains (Phase 1) |
 | Electrical split | `add_electrical_bal` (balanced, implemented) vs. `add_electrical_unbal` (per-phase, stubbed until CIM18 unbalanced parts ship) |
 | Typing | §5a per-method single-sub-profile via `TYPE_CHECKING`; no `.pyi` for builders |
+| Profile selection | `.cimtbl` `Profile=` sets `CIMG_CIM_PROFILE`; resolved once to `network.cim`; `.cimtbl` validation reflects on that profile (no LinkML) — `PROFILE_RESOLUTION.md` |
 
 ---
 
 ## Reading order by task
 
-- **Writing a new builder** → `ARCHITECTURE.md` → `BUILDER_API.md` →
+- **Writing a new builder** → `PROFILE_RESOLUTION.md` → `ARCHITECTURE.md` → `BUILDER_API.md` →
   `PROFILE_TYPING.md` → `UNITS.md`, then `BUILDER_TEST_CREATION.md` for the test.
 - **Migrating an existing `new_*` function** → `ARCHITECTURE.md`
   ("`builder_base` mixin" + "Profile-source rule"), then `BUILDER_API.md`

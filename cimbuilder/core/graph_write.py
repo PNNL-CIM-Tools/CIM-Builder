@@ -13,7 +13,7 @@ cimgraph.data_profile.cim18gmdm.connectivity) checked purely by name against
 type(obj).__name__ - never by isinstance/inheritance. `obj` need not (and
 usually won't) be an instance of any class in `part`; `part` is a shape
 reference, not `obj`'s actual runtime profile. See GRAPH_WRITE_CONTRACT.md §2
-for why this is the right decoupling. Passing the merged `network.cim` module
+and PROFILE_RESOLUTION.md for why this is the right decoupling. Passing the merged `network.cim` module
 itself as `part` is a documented no-op check (every field passes, since a
 merged profile has no restricted attribute set) - the right choice at a call
 site with no genuine part-scoped reference available yet (Phase 3/4 code).

@@ -9,6 +9,11 @@ type-checker side that sits on top of it.
 The `line_builder.py` sketch was the first probe at this model. This doc
 formalizes what it was reaching for.
 
+> **Scope.** This is layer 1 of 3 (edit-time only). It protects hand-written builder
+> code in the editor and does nothing at runtime or for `.cimtbl` data. The runtime
+> check is `GRAPH_WRITE_CONTRACT.md` §2; how the profile is selected is
+> `PROFILE_RESOLUTION.md`.
+
 ---
 
 ## The problem

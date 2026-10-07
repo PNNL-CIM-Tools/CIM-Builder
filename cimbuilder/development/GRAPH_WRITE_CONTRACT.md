@@ -8,7 +8,9 @@ thing to re-read cold in a future session — it does not assume you remember
 this conversation.
 
 Related docs: `CIMTBL_DESIGN.md` (§4.1 `ObjectBuilder`, §12.3 graph-write core),
-root `CLAUDE.md` (`ARCHITECTURE.md` table, target builder API, units rules).
+root `CLAUDE.md` (`ARCHITECTURE.md` table, target builder API, units rules),
+`PROFILE_RESOLUTION.md` (how this runtime check relates to Pylance typing and
+to profile selection).
 This doc supersedes those where they conflict on the specific questions below —
 those docs describe the pre-existing plan; this doc records what was actually
 decided once real profile source got read.
@@ -32,6 +34,13 @@ part module (`CN`, `EL`, ...) passed into `set_attr`/`set_assc`, checked by
 name against `type(load).__name__`'s field set in that module. There is no
 separate static/Pylance mechanism anymore — see §2 for why the original
 Pylance-parameter-typing idea was superseded, and why that's fine.
+
+> **Strength depends on `part`.** A genuinely part-scoped module enforces slice
+> membership. The reflective `.cimtbl` call sites (`core/binder.py`,
+> `core/connectivity.py`) pass the merged `network.cim`, for which the slice check is a
+> documented no-op (the scalar-vs-association check still applies); there, "is this a
+> real field of this class" is answered earlier by `dsl/validate.py`. See
+> `PROFILE_RESOLUTION.md`.
 
 ---
 
@@ -65,12 +74,12 @@ The key property, and the reason this works at all: **the check is entirely
 name-keyed, never identity- or type-based.** `test_load` is a real
 `cimhub_2026.EnergyConsumer` instance — it has no subclass/inheritance
 relationship to `CN.EnergyConsumer` whatsoever, and never will, regardless of
-which profile `CIMG_DATA_PROFILE` resolves to at runtime. The check only ever
+which profile `CIMG_CIM_PROFILE` resolves to at runtime. The check only ever
 asks: "does the class in `CN` *named* `type(load).__name__` declare a field
 *named* `'customerCount'`?" — two string lookups, nothing else. That's what
 decouples the reference part module (`CN`, imported at the top of the builder
 file, chosen for being genuinely part-scoped and proven-correct) from the
-live runtime profile (`cimhub_2026`, resolved by `CIMG_DATA_PROFILE`, possibly
+live runtime profile (`cimhub_2026`, resolved by `CIMG_CIM_PROFILE`, possibly
 merged, possibly a completely different class hierarchy). One is a shape
 reference; the other is what's actually being built. They never need to be
 the same class, or even related classes, for the check to be meaningful.

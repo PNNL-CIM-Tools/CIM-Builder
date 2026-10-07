@@ -7,6 +7,15 @@ builder-refactor phase plan where the two conflict — see §9 "What this replac
 
 ---
 
+> **Revision note (validation layer).** This doc was written when Phase 2 was
+> a LinkML schema + `gen-python`. That was replaced by **pure-Python reflection
+> on the live CIM profile** (`dsl/validate.py`): no parallel schema, no per-version
+> curation, any class in the selected profile is automatically legal, and the
+> DSL-only columns (`node*`/`bus*`/`phases`/`Template`) live in `dsl/synthetic.py`.
+> Where the text below still says "LinkML", read "the reflection validator." How the
+> profile is selected (`Profile=` → `CIMG_CIM_PROFILE` → `network.cim`) and how it
+> relates to Pylance typing and runtime `set_attr` checks: `PROFILE_RESOLUTION.md`.
+
 ## 0. One-paragraph summary
 
 CIM-Builder gets **one** user-facing surface built on **one** canonical core.
@@ -14,7 +23,7 @@ The surface is offered in two equivalent shapes over the same code:
 
 1. **`.cimtbl`** — a human- and LLM-authorable, CIM-native table syntax
    (`Object` / `Table` / `Import`), parsed by a small **fixed** Lark grammar,
-   validated against the active CIM profile by a **LinkML** schema, and executed
+   validated by reflecting on the active CIM profile's own classes (`network.cim`), and executed
    by **per-class Builder** objects.
 2. **The fluent Builder API** — the same per-class Builders driven directly in
    Python (`ACLineSegmentBuilder().create(...).add_connectivity(...).add_electrical(...)`)
@@ -67,7 +76,7 @@ Python API underneath it as a clean, shared, per-class core.
                               │         ╚══════════╤═══════════╝
                               │                    ▼
                               │    ┌──────────────────────────────────┐
-                              │    │ LinkML validation gate            │  ← is this a
+                              │    │ Reflection validation gate        │  ← is this a
                               │    │ (RDFS-for-XML role; profile-aware) │    legal file?
                               │    └──────────────────────────────────┘
                               │                    │ validated records
@@ -101,9 +110,9 @@ Python API underneath it as a clean, shared, per-class core.
 |---|---|---|
 | **Grammar scope** | Fixed, profile-agnostic, ~40 lines. Knows only `Object`/`Table`/`Import`, header tokens, `(unit)` suffixes, cells, comments, blank = unset. Knows **no** CIM class name. | Immortal across profile changes (`cimhub_2023` → `cgmes_3_0_0` → `cimhub_2026`). |
 | **Runtime synthesis** | **Python, in the per-class Builder.** The Builder turns `node1` into terminal + phasing. | User's call: "parser-based for actual run-time (most robust)." Debuggable, auditable — you read code, not a YAML interpreter. |
-| **LinkML's role** | **Validation + documentation, not execution.** Answers "is this a legal `.cimtbl` for this profile?" before the graph is touched. Never read inside the synthesis hot path. | User's call: "LinkML provides us file validation like RDFS does for the XML files." Keeps the two jobs separate. |
-| **Parse target** | Two-phase: parse → LinkML-validated **dataclass** (`<Class>Row`, via **gen-python**) → Builder consumes it → dataclass discarded. | Fails at **parse time, not construction time** (line-numbered rejection before any graph mutation); and separates reader from converter exactly like `cimhub_opendss` (`dss.Line` → `convert_line`). Runtime cost is <1% of parse-to-graph (dataclass alloc ≪ CIMUnit/`pint` + `add_to_graph`); the only real cost is regen discipline on profile change. |
-| **Cell delivery** | Builder `from_table` receives a **typed `<Class>Row` dataclass** (str→float/int/enum already coerced + LinkML-validated), not raw strings. | Clean, typed builder internals; no parsing inside builders; structurally mirrors `convert_line(dss_line: dss.Line)` — the Phase 8 thesis. |
+| **Validation's role** | **Validation + documentation, not execution.** Answers "is this a legal `.cimtbl` for this profile?" before the graph is touched. Never read inside the synthesis hot path. | Originally specified as a LinkML schema ("file validation like RDFS does for the XML files"); implemented as reflection on the live profile - same role, no second schema to drift. Keeps the two jobs separate. |
+| **Parse target** | Two-phase: parse → validated **dataclass** (`<Class>Row`, built on demand by reflecting on the profile in `dsl/validate.py`) → Builder consumes it → dataclass discarded. | Fails at **parse time, not construction time** (line-numbered rejection before any graph mutation); and separates reader from converter exactly like `cimhub_opendss` (`dss.Line` → `convert_line`). Runtime cost is <1% of parse-to-graph (dataclass alloc ≪ CIMUnit/`pint` + `add_to_graph`); there is no regen step - the row class is built from the live profile. |
+| **Cell delivery** | Builder `from_table` receives a **typed `<Class>Row` dataclass** (str→float/int/enum already coerced + validated), not raw strings. | Clean, typed builder internals; no parsing inside builders; structurally mirrors `convert_line(dss_line: dss.Line)` — the Phase 8 thesis. |
 | **Value+unit** | A **`Qty(value, unit, base=?)`** carrier (see §4.3). Every impedance/admittance field takes its own `Qty` — no shared `unit=` param. | User caught the ambiguity: one `unit=` can't cover `r`(ohm)/`x`(ohm)/`bch`(S). `Qty` binds value+unit indivisibly, mirroring the `.cimtbl` header `r (ohm)`. |
 | **Reflection** | Plain scalar attrs, plain FKs, and units are resolved reflectively against `network.cim`. Only *synthesis* (terminals, node-vs-bus, per-phase children, templates) is hand-coded per class. | Generic across profiles for the 90% case; explicit code only where CIM structure can't be inferred. |
 | **Unit context** | `%Z` / `pu` → ohm normalization lives **once, in the Builder**; `Qty` is a dumb carrier and defers relative-unit conversion to the builder, which supplies `z_base`. Base kind (system vs winding) is **declared PSSE-`CZ`-style**, not inferred. | User's top motivation ("tired of %Z→ohm by hand") + user's refinement (base must be explicit like RAW `CZ`, never guessed from whether a row has `ratedU`/`ratedS`). |
@@ -171,7 +180,7 @@ A small fixed vocabulary of column names means "make a Terminal and wire it":
 | `bus`, `bus1`, `bus2` | Terminal → **TopologicalNode** (bus-branch / transmission) |
 
 Terminal count = number of connectivity columns present. `sequenceNumber`
-follows column order. This vocabulary is documented in the LinkML schema and
+follows column order. This vocabulary is defined in `dsl/synthetic.py` and
 enforced by the connectivity backend; it is the single naming convention the
 system relies on.
 
@@ -256,7 +265,7 @@ Profile = cimhub_2026
   default to `cimhub_2026`.
 
 This makes a `.cimtbl` **self-describing**: the file itself declares which CIM
-profile its column names project, so the reader, the LinkML validator, and the VS
+profile its column names project, so the reader, the validator, and the VS
 Code linter all agree on the class/attribute universe without out-of-band config.
 
 ---
@@ -276,7 +285,7 @@ class ObjectBuilder(ABC):
     def create(self, *, name: str) -> Self: ...          # power-user start
     def from_table(self, row: "<Class>Row") -> Self:  # DSL / bulk start
         """Skinny adapter: unpack a validated, typed row dataclass (§12.1 —
-        NOT a dict; produced by Phase 2's LinkML gen-python) into the
+        NOT a dict; produced by Phase 2's validator) into the
         create()/add_*() calls below. This is where a Table row lands."""
 
     # --- profile-part population, each returns self ---
@@ -292,7 +301,7 @@ class ObjectBuilder(ABC):
 
 The DSL parser does **not** know how to build an `ACLineSegment`. It parses a
 `Table ACLineSegment` block into **typed `ACLineSegmentRow` dataclasses**
-(LinkML `gen-python`, str→float/int/enum coerced and validated *at parse time*,
+(built by reflecting on the profile; str→float/int/enum coerced and validated *at parse time*,
 exact shape pinned in §12.1) and hands each to
 `ACLineSegmentBuilder().from_table(row).build()`. All CIM knowledge lives in the
 Builder. This is the "cascading parse" the user described, and it mirrors
@@ -613,12 +622,12 @@ violations. Hover and completion read the **same** dictionary.
 ### 6.5.2 The key adaptation: our dictionary is generated from the profile
 
 PNNL-dss hand-generates its dictionary from OpenDSS's schema. **We already have
-the schema** — it's `network.cim` plus the LinkML synthesis annotations from
+the schema** — it's `network.cim` plus the fixed synthetic-column vocabulary (`dsl/synthetic.py`) from
 Phase 2. So the `.cimtbl` extension's dictionary is a *build artifact*, not a
 hand-maintained file:
 
 ```
-network.cim (profile)  +  LinkML schema (§8.1 dsl/schema/)
+network.cim (profile)  +  dsl/synthetic.py (§8.1)
                     │
         cimbuilder export-editor-schema        ← new CLI (Phase V)
                     ▼
@@ -632,7 +641,7 @@ network.cim (profile)  +  LinkML schema (§8.1 dsl/schema/)
    cimtbl.tmLanguage.json  (Object|Table|Import keywords, class names, (unit) suffix, comments)
 ```
 
-**This is the payoff of the LinkML-as-validator decision (§2.1):** the *same*
+**This is the payoff of the single-source-of-truth validator decision (§2.1):** the *same*
 schema that gates the file server-side (Phase 2 Python) drives the editor linter
 (Phase V TypeScript). The two validators agree **by construction** — an
 `.cimtbl` that lints clean in the editor validates clean in the loader, because
@@ -674,7 +683,7 @@ Standalone repo `cimtbl-vscode` (like PNNL-dss is its own repo), **not** vendore
 into CIM-Builder — a TS/npm project has a different toolchain and release cadence
 (`vsce package` → VSIX → marketplace). CIM-Builder owns the `export-editor-schema`
 CLI that *produces* the dictionary; the extension *consumes* a committed copy of
-it (regenerated when the profile or LinkML schema changes). One-way dependency,
+it (regenerated when the profile changes). One-way dependency,
 same direction as everything else.
 
 ---
@@ -712,7 +721,7 @@ Why this is the right target rather than JSON/Parquet:
   reads directly; a reviewer can compare it to the PDF line by line. JSON/Parquet
   are neither hand-readable nor `git diff`-friendly.
 - **One schema, no adapter** — the extracted `.cimtbl` is validated by the *same*
-  Phase 2 LinkML gate and linted by the *same* Phase V editor extension as any
+  Phase 2 validation gate and linted by the *same* Phase V editor extension as any
   hand-authored file. Extraction correctness is checked by the loader we already
   build; there is no separate JSON→CIM mapping layer to maintain.
 - **Direct consumption** — the output `Import`s straight into a feeder with no
@@ -762,7 +771,7 @@ against §12, not just this table.**
 |---|---|---|---|
 | **0** | Design lock + repo scaffold | — | This doc reviewed; new package tree (§8.1) created; `uv sync` clean; empty modules import. |
 | **1** | Lark grammar → records | 0 | `ieee13.cimtbl` **and** `ieee14.cimtbl` parse to the intermediate record list; every `Object`/`Table`/`Import`/comment/blank-cell/`(unit)` case covered by a grammar test; ambiguity check passes. No CIM yet. |
-| **2** | LinkML validation gate + dataclass | 1 | LinkML schema for the `ieee13` class set; every record validates or fails with a profile-anchored message; a deliberately-broken column name fails fast naming the closest valid attribute. Records → validated dataclasses. |
+| **2** | Reflection validation gate + dataclass | 1 | Reflection on the profile covers the `ieee13` class set; every record validates or fails with a profile-anchored message; a deliberately-broken column name fails fast naming the closest valid attribute. Records → validated dataclasses. |
 | **3** | Graph-write core + reflective binder + `NameIndex` | 2 | Simplest real classes end-to-end into a live `cimgraph` model: `BaseVoltage`, `BaseFrequency`, `BasePower`, `EnergySource`. `network.cim` read once; plain scalar attrs + units land correctly (verified via `.to()`); `NameIndex` (§5.5) populated at the same `add_to_graph` call site, O(1) name lookup proven, duplicate-name-same-class raises. |
 | **4** | Connectivity backend | 3 | `ACLineSegment` with `node1`/`node2`/`phases` → terminals + N `ACLineSegmentPhase`; undeclared nodes auto-vivified; `bus*` → `TopologicalNode` disambiguation proven on the `line_1_2` sequence row. **This is the make-or-break phase.** |
 | **5** | Per-class Builders — PDE/PCE breadth | 4 | Builders for the `ieee13` population: `ACLineSegment`, `EnergyConsumer`(+Phase), `LinearShuntCompensator`(+Phase), `PowerTransformer`/`PowerTransformerEnd`, `Switch`/`Fuse`/`Sectionaliser`(+`SwitchPhase`), `PowerElectronicsConnection`(+PV/Battery). Each has `from_table`. |
@@ -770,11 +779,11 @@ against §12, not just this table.**
 | **6** | Catalog + matrix + templates | 5 | `PerLengthPhaseImpedance` + literal `PhaseImpedanceData` rows; `Import wire_infos.cimtbl`; `Template`/`TransformerAssembly` instantiation (clone-or-ref flag). `ieee13.cimtbl` builds a **complete** feeder graph. |
 | **7** | `cimbuilder/__init__.py` public surface + `from_dsl` | 5b, 6 | `from cimbuilder import load_cimtbl, ACLineSegmentBuilder, …` works; `FeederBuilder`/`SubstationBuilder` reworked as DSL parsers; old `new_*`/`from_catalog` surface removed (breaking, per user). `ieee13.cimtbl` loads via the public API in one call. |
 | **R** | `cimgraph → .cimtbl` writer | 6 | `ieee13.cimtbl → graph → .cimtbl` **byte-identical**; `graph → .cimtbl → graph` isomorphic; deterministic across two runs. |
-| **V** | VS Code extension (`cimtbl-vscode`) + `export-editor-schema` CLI | 2 (schema), 7 (CLI) | `cimbuilder export-editor-schema` emits `cimtbl-elements.json` from the profile+LinkML; extension (ported from PNNL-dss) highlights `ieee13.cimtbl`, flags an injected unknown-column / bad-unit / arity error, offers class + column completion; editor diagnostics **agree with** the Phase 2 loader on the same file. |
+| **V** | VS Code extension (`cimtbl-vscode`) + `export-editor-schema` CLI | 2 (schema), 7 (CLI) | `cimbuilder export-editor-schema` emits `cimtbl-elements.json` from the profile+synthetic columns; extension (ported from PNNL-dss) highlights `ieee13.cimtbl`, flags an injected unknown-column / bad-unit / arity error, offers class + column completion; editor diagnostics **agree with** the Phase 2 loader on the same file. |
 | **8** | CIMHub proof-of-value (spike) | 7 | A branch of `cimhub_opendss` `line.py` rewritten to call `ACLineSegmentBuilder`; DSS-specific code shrinks measurably (target: ~530 → <150 lines) with importer tests still green. Validates the "converters use the builder" thesis. |
 
 Phases 0–7 + R are the CIM-Builder deliverable for the week. **Phase V** (the VS
-Code linter) is parallelizable once Phase 2's LinkML schema exists — the extension
+Code linter) is parallelizable once Phase 2's validator exists — the extension
 is a separate TS repo, so it doesn't block the Python phases and can be built by a
 different track. Phase 8 is the spike that proves the CIMHub Phase 2 in §7.1 is
 real; the full CIMHub migration is separate, later work.
@@ -788,12 +797,9 @@ cimbuilder/
     grammar.lark              # Phase 1: FIXED grammar
     parser.py                 # Phase 1: Lark → records
     records.py                # Phase 1: intermediate record dataclasses
-    validate.py               # Phase 2: LinkML gate
+    validate.py               # Phase 2: reflection validation gate
+    synthetic.py              # Phase 2: DSL-only columns (node*/bus*/phases/Template)
     writer.py                 # Phase R: cimgraph → .cimtbl
-    schema/                   # Phase 2: LinkML schemas (validation + docs)
-      main.yaml
-      classes/                #   one YAML per CIM class family
-      types/                  #   shared units + enums
   core/
     graph_write.py            # Phase 3: set_attr / link / add_to_graph / resolve
     name_index.py             # Phase 3: NameIndex (§5.5) — name->object, per class
@@ -845,9 +851,10 @@ tests/
 
 ## 10. Open questions (decide before or during the phase they gate)
 
-1. **LinkML generation — RESOLVED.** `gen-python` the validation dataclasses from
-   the schema (CIMHub pattern) — one generated dataclass per CIM class, shape
-   pinned in §12.2. Not hand-written; regenerated on profile/schema change.
+1. **Validation source — RESOLVED (revised).** Originally `gen-python` from a LinkML
+   schema. Replaced by reflection on the live profile: one `<Class>Row` dataclass per
+   (profile, CIM class), built on demand, shape pinned in §12.2. Nothing to
+   regenerate or curate; see `PROFILE_RESOLUTION.md`.
 2. **Writer table-grouping — RESOLVED.** Not a raggedness heuristic: `Object` for
    a class with exactly one instance, `Table` for a class with more than one
    (§3.1, §6). Deterministic by construction; nothing left to decide.
@@ -879,7 +886,7 @@ tests/
 - `PROFILE_TYPING.md` — per-method profile-scoped typing.
 - `UNITS.md` — CIMUnit in `add_electrical`; per-unit context.
 - `ASSET_ENRICHMENT_CONCEPT.md` — the AssetInfo/enrichment layer (adjacent, not this).
-- `~/CIMHub_2_0/cimhub_core/.../LINKML_TEMPLATE.md` — LinkML annotation vocabulary.
+- `~/CIMHub_2_0/cimhub_core/.../LINKML_TEMPLATE.md` — LinkML annotation vocabulary (historical; CIM-Builder no longer uses LinkML).
 - `~/CIMHub_2_0/cimhub_opendss/.../importer/lines/line.py` — the ~530 lines Phase 8 abstracts.
 - `~/CIM-Repair/.development/ROADMAP.md` — §7.2 strategic-option target (line 266 tension).
 - [`CIM-Graph#81`](https://github.com/PNNL-CIM-Tools/CIM-Graph/issues/81) — the
@@ -938,12 +945,12 @@ even earlier, before any `RawRecord` is built, since it must be known to resolve
 ### 12.2 Phase 2 → Phase 3/5 : the validated row
 
 ```python
-# generated per CIM class by LinkML gen-python, e.g. dsl/schema/generated/ac_line_segment.py
+# built per (profile, CIM class) on demand by dsl/validate.py::_row_dataclass
 
 @dataclass
 class ACLineSegmentRow:
     """One validated ACLineSegment record. Every field is already the correct
-    Python type (str/float/int/enum) and passed the LinkML schema — Phase 2's
+    Python type (str/float/int/enum) and passed validation — Phase 2's
     output, Phase 5's Builder input. Units are pre-bound into Qty for any
     field the schema marks as a physical quantity (§4.3); plain scalars and
     FK-name strings pass through untyped-for-CIM (resolution is Phase 4/5's job,
@@ -951,7 +958,7 @@ class ACLineSegmentRow:
     name: str
     # --- header-shape-dependent fields (§3.4): only the columns present in
     # THIS record's header are non-None; absent columns are None, not missing
-    # attributes -- one generated dataclass per CIM class, shared across all
+    # attributes -- one dataclass per (profile, CIM class), shared across all
     # header shapes of that class.
     node1: str | None = None
     node2: str | None = None
