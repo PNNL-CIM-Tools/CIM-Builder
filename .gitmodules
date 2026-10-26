@@ -1,0 +1,4 @@
+[submodule "models"]
+	path = models
+	url = https://github.com/PNNL-CIM-Tools/CIMTBL-Models.git
+	branch = feature/1

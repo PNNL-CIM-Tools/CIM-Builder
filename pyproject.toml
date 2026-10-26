@@ -1,6 +1,6 @@
 [project]
 name = "cim-builder"
-version = "0.0.1a0"
+version = "0.1.0a0"
 description = "Simplified Dictionaries of CIM data"
 authors = [
     {name = "A. Anderson", email = "19935503+AAndersn@users.noreply.github.com"}
@@ -8,7 +8,8 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "cim-graph>=0.5.0a2,<0.6.0",
+    "cim-graph>=0.6.0a0",
+    "cimprofiles>=0.1.0a3",
     "lark>=1.1.9",
 ]
 
@@ -24,10 +25,12 @@ dev = [
 # cim-graph 0.5 and its deps (gridappsd-python) are pre-release builds
 prerelease = "allow"
 
-# Develop against the local cim-graph 0.5 checkout — it carries cgmes_3_0_0
+# Develop against the local cim-graph 0.6 checkout — it carries cgmes_3_0_0
 # profile fixes not yet in the published 0.5.0a2 wheel. Drop once published.
 [tool.uv.sources]
 cim-graph = { path = "/home/ande188/CIM-Graph", editable = true }
+cimprofiles = { path = "/home/ande188/CIM-Profiles", editable = true }
+
 
 [build-system]
 requires = ["hatchling"]
