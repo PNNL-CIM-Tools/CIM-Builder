@@ -6,6 +6,12 @@ CIM profile." They answer different questions, run at different times, and are
 deliberately not merged. The other docs each cover one layer in depth; this one
 is the map.
 
+> **Note (package split).** The `dsl`/`core` code this doc describes has moved
+> into its own package, `cimtables`, in a sibling repo at
+> `/home/ande188/CIM-Tables` - see `CIMTBL_DESIGN.md` §8.1. References below to
+> a `cimtables` file (e.g. `validate.py`, `binder.py`) mean that repo's flat
+> `cimtables/<file>.py`, not a `cimbuilder` subpath.
+
 | # | Layer | Question it answers | Runs when | Mechanism | Deep-dive |
 |---|---|---|---|---|---|
 | 1 | **Edit-time typing** | "Am I touching a field outside this method's profile slice?" | In the editor only (Pylance). Never at runtime. | `TYPE_CHECKING` imports of sub-profile modules; `cim: EQ = self.network.cim` | `PROFILE_TYPING.md` |
@@ -26,7 +32,7 @@ Everything else hangs off this, so it comes first.
 .cimtbl:   Profile = cimhub_2026          (or: caller sets the env var directly)
               │
               ▼
-dsl/parser.py::parse_file
+cimtables' parser.py::parse_file
    os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2026'     ← the ONLY writer in this repo
               │
               ▼
@@ -39,7 +45,7 @@ GraphModel / ConnectionInterface __init__             ← resolves the profile O
               │
       ┌───────┴────────────────────────────┐
       ▼                                    ▼
-builders / binder / connectivity        dsl/validate.py
+builders / binder / connectivity        cimtables' validate.py
    cim = self.network.cim                  reflects on the same profile's classes
    (the live classes objects are           to decide which columns a row may carry
     constructed from)
@@ -59,7 +65,7 @@ Rules that follow from this chain:
   be set before the first call (before the model/connection is created).
   Changing it afterwards does nothing until the cache is cleared. This is why
   `parse_file` must run before the `GraphModel` is constructed.
-- **`dsl/validate.py` follows the same selection.** It reflects directly on the
+- **`cimtables`'s `validate.py` follows the same selection.** It reflects directly on the
   selected profile's dataclasses (no parallel schema). `validate(record,
   profile=...)` may name a module explicitly (`cim17v40`, `cimhub_2026`, ...);
   omitted, it uses `CIMG_CIM_PROFILE`. Its row-class cache is keyed by
@@ -72,7 +78,7 @@ Rules that follow from this chain:
 - **Any class in the selected profile is automatically a legal `.cimtbl` class.**
   There is no curated allowlist or per-version schema file. The only columns a
   profile can never explain are the DSL's own shorthand, fixed in
-  `dsl/synthetic.py`: `node`, `node1`, `node2`, `bus1`, `bus2`, `phases`,
+  `cimtables`'s `synthetic.py`: `node`, `node1`, `node2`, `bus1`, `bus2`, `phases`,
   `Template`.
 
 ### Known limitations (as of this writing)
@@ -81,7 +87,7 @@ Rules that follow from this chain:
   a sample `.cimtbl` uses (e.g. `TransformerTank.noLoadLoss`,
   `LinearShuntCompensator.nomQ` are not on the installed `cimhub_2026`),
   validation rejects it with a closest-match message. See
-  `_KNOWN_SCHEMA_GAPS` in `tests/dsl/test_parser.py`.
+  `_KNOWN_SCHEMA_GAPS` in `cimtables`'s `tests/test_parser.py`.
 
 ---
 
@@ -98,7 +104,7 @@ hand-written builder code.
   value is unchanged.
 - It is erased at runtime. It does **nothing** for data that arrives at runtime
   — in particular `.cimtbl` rows, which are bound reflectively
-  (`core/binder.py`) with no statically typed call site for Pylance to inspect.
+  (`cimtables`'s `binder.py`) with no statically typed call site for Pylance to inspect.
 
 So: layer 1 protects *code you write*; it cannot protect *data you load*.
 Full model and checklist: `PROFILE_TYPING.md`.
@@ -125,7 +131,7 @@ sides of an association.
 | Call site | `part` passed | Effect of the "is this attr in this slice?" check |
 |---|---|---|
 | A builder's `add_<part>` method (target design) | a genuinely part-scoped reference module (`CN`, `EL`, ...) | Real: rejects out-of-slice attributes |
-| `core/binder.py` / `core/connectivity.py` (reflective, class unknown until runtime) | `network.cim` | No-op for slice membership — a merged module has every field. The scalar-vs-association (`inverse`) check still applies. |
+| `cimtables`'s `binder.py` / `connectivity.py` (reflective, class unknown until runtime) | `network.cim` | No-op for slice membership — a merged module has every field. The scalar-vs-association (`inverse`) check still applies. |
 
 For the `.cimtbl` path the slice question is answered **earlier**, by layer 3's
 validation (Phase 2), which rejects any column that is not a field of the class

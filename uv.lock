@@ -240,7 +240,7 @@ source = { editable = "." }
 dependencies = [
     { name = "cim-graph" },
     { name = "cimprofiles" },
-    { name = "lark" },
+    { name = "cimtables" },
 ]
 
 [package.optional-dependencies]
@@ -255,9 +255,9 @@ dev = [
 requires-dist = [
     { name = "cim-graph", editable = "/home/ande188/CIM-Graph" },
     { name = "cimprofiles", editable = "/home/ande188/CIM-Profiles" },
+    { name = "cimtables", editable = "/home/ande188/CIM-Tables" },
     { name = "graphviz", marker = "extra == 'dev'", specifier = ">=0.19.1" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.27.1" },
-    { name = "lark", specifier = ">=1.1.9" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=2.17.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
 ]
@@ -296,7 +296,7 @@ provides-extras = ["sparql", "neo4j", "mysql", "gridappsd", "rdflib", "all", "de
 
 [[package]]
 name = "cimprofiles"
-version = "0.1.0a3"
+version = "0.1.0"
 source = { editable = "/home/ande188/CIM-Profiles" }
 dependencies = [
     { name = "pint", version = "0.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -311,6 +311,26 @@ dev = [
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pyyaml", specifier = ">=6.0" },
 ]
+
+[[package]]
+name = "cimtables"
+version = "0.1.0a0"
+source = { editable = "/home/ande188/CIM-Tables" }
+dependencies = [
+    { name = "cim-graph" },
+    { name = "cimprofiles" },
+    { name = "lark" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cim-graph", editable = "../CIM-Graph" },
+    { name = "cimprofiles", editable = "../CIM-Profiles" },
+    { name = "lark", specifier = ">=1.1.9" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=2.17.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "colorama"

@@ -3,9 +3,10 @@
 **Status:** design contract, agreed 2026-09-15 (revised same day once a
 runtime part-check replaced the original Pylance-only mechanism — see §2).
 Read this before adding any new `add_<part>` method to any `ObjectBuilder`
-subclass, or before touching `cimbuilder/core/graph_write.py`. This doc is the
-thing to re-read cold in a future session — it does not assume you remember
-this conversation.
+subclass, or before touching `graph_write.py` in the `cimtables` package
+(split out of this repo - see `CIMTBL_DESIGN.md` §8.1 - at
+`/home/ande188/CIM-Tables`). This doc is the thing to re-read cold in a
+future session — it does not assume you remember this conversation.
 
 Related docs: `CIMTBL_DESIGN.md` (§4.1 `ObjectBuilder`, §12.3 graph-write core),
 root `CLAUDE.md` (`ARCHITECTURE.md` table, target builder API, units rules),
@@ -92,7 +93,7 @@ pointed to, only on it being a genuinely part-scoped reference.
 
 ### The collapsed API contract
 
-Two entry points, both in `cimbuilder/core/graph_write.py`, both taking the
+Two entry points, both in `cimtables`'s `graph_write.py`, both taking the
 part module as an explicit argument:
 
 ```python

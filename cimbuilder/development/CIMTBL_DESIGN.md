@@ -9,12 +9,23 @@ builder-refactor phase plan where the two conflict — see §9 "What this replac
 
 > **Revision note (validation layer).** This doc was written when Phase 2 was
 > a LinkML schema + `gen-python`. That was replaced by **pure-Python reflection
-> on the live CIM profile** (`dsl/validate.py`): no parallel schema, no per-version
+> on the live CIM profile** (`validate.py`): no parallel schema, no per-version
 > curation, any class in the selected profile is automatically legal, and the
-> DSL-only columns (`node*`/`bus*`/`phases`/`Template`) live in `dsl/synthetic.py`.
+> DSL-only columns (`node*`/`bus*`/`phases`/`Template`) live in `synthetic.py`.
 > Where the text below still says "LinkML", read "the reflection validator." How the
 > profile is selected (`Profile=` → `CIMG_CIM_PROFILE` → `network.cim`) and how it
 > relates to Pylance typing and runtime `set_attr` checks: `PROFILE_RESOLUTION.md`.
+>
+> **Revision note (package split).** §8.1's repo structure below describes the
+> pre-split layout, where `dsl/` and `core/` were sub-packages of `cimbuilder`.
+> They have since moved to their own repo and package, `cimtables`
+> (`/home/ande188/CIM-Tables`), flattened (no `dsl`/`core` nesting - the two
+> were mutually coupled at the file level, so nesting them would have
+> misrepresented the dependency graph). Wherever the text below says
+> `dsl/<file>.py` or `core/<file>.py`, read `cimtables/<file>.py` in the other
+> repo. `cimbuilder` depends on `cimtables` as an ordinary package
+> (`pyproject.toml`); only `builders/`, `object_builder/`,
+> `substation_builder/`, `feeder_builder/`, and `utils/` remain here.
 
 ## 0. One-paragraph summary
 
@@ -788,50 +799,63 @@ is a separate TS repo, so it doesn't block the Python phases and can be built by
 different track. Phase 8 is the spike that proves the CIMHub Phase 2 in §7.1 is
 real; the full CIMHub migration is separate, later work.
 
-### 8.1 Proposed repo structure
+### 8.1 Repo structure (as split: `cimtables` + `cimbuilder`)
+
+Originally proposed as one repo with `dsl/`+`core/` as sub-packages of
+`cimbuilder` (see the revision note at the top of this doc). Actually
+implemented as two repos, flattened within the new one:
 
 ```
+# /home/ande188/CIM-Tables  (package: cimtables)
+cimtables/
+  __init__.py                 # load() - ObjectBuilder-free .cimtbl -> live objects
+  grammar.lark                 # Phase 1: FIXED grammar
+  parser.py                    # Phase 1: Lark -> records
+  records.py                   # Phase 1: intermediate record dataclasses
+  validate.py                  # Phase 2: reflection validation gate
+  synthetic.py                 # Phase 2: DSL-only columns (node*/bus*/phases/Template)
+  writer.py                    # Phase R: cimgraph -> .cimtbl (stub)
+  graph_write.py                # Phase 3: set_attr / set_assc / add_to_graph / resolve
+  name_index.py                  # Phase 3: NameIndex (Sec5.5) - name->object, per class
+  binder.py                      # Phase 3: reflective column -> attr/assoc/synthesis
+  connectivity.py                 # Phase 4: THE backend (node/bus/terminal/phase)
+  units.py                        # Phase 5b: Qty + %Z / pu / ohm normalization helpers
+tests/
+  test_parser.py  test_validate.py  test_binder.py  test_connectivity.py
+  test_graph_write.py  test_name_index.py
+  fixtures/  ieee13.cimtbl  ieee14.cimtbl  wire_infos.cimtbl
+
+# /home/ande188/CIM-Builder  (package: cim-builder, depends on cimtables)
 cimbuilder/
   __init__.py                 # Phase 7: public surface (load_cimtbl, *Builder, writer)
-  dsl/
-    grammar.lark              # Phase 1: FIXED grammar
-    parser.py                 # Phase 1: Lark → records
-    records.py                # Phase 1: intermediate record dataclasses
-    validate.py               # Phase 2: reflection validation gate
-    synthetic.py              # Phase 2: DSL-only columns (node*/bus*/phases/Template)
-    writer.py                 # Phase R: cimgraph → .cimtbl
-  core/
-    graph_write.py            # Phase 3: set_attr / link / add_to_graph / resolve
-    name_index.py             # Phase 3: NameIndex (§5.5) — name->object, per class
-    binder.py                 # Phase 3: reflective column → attr/assoc/synthesis
-    connectivity.py           # Phase 4: THE backend (node/bus/terminal/phase)
-    units.py                  # Phase 5b: %Z / pu / ohm normalization helpers
   builders/                   # Phase 5: one module OR package per CIM class family
     base.py                   #   ObjectBuilder ABC + builder_base mixin
-    line/                      #   ACLineSegmentBuilder — package (§4.4): >1 header
-      __init__.py              #     shape (matrix/sequence/geometry) → one file
+    line/                      #   ACLineSegmentBuilder - package (Sec4.4): >1 header
+      __init__.py              #     shape (matrix/sequence/geometry) -> one file
       base.py                  #     per construction style, not one 500-line file
       by_matrix.py
       by_sequence.py
     consumer.py               #   EnergyConsumerBuilder
     shunt.py                  #   LinearShuntCompensatorBuilder
-    transformer/               #   PowerTransformer/End — package (§4.4): ohm vs
+    transformer/               #   PowerTransformer/End - package (Sec4.4): ohm vs
       __init__.py               #     percent vs Template differ in construction
       base.py
       by_end_data.py
       by_template.py
     switch.py                 #   Switch / Fuse / Sectionaliser
     inverter.py               #   PowerElectronicsConnection family
-    source.py                 #   EnergySource / base objects
+    source.py                  #   EnergySource / base objects
   assembly/                   # substation / feeder orchestration (was substation_builder/)
     feeder.py                 # Phase 7: FeederBuilder as DSL parser
     substation.py             # Phase 7: SubstationBuilder as DSL parser
   utils/                      # kept: terminal_to_node, get_base_voltage, get_source_bus
   development/                # these docs
 tests/
-  dsl/  core/  builders/  roundtrip/
-  fixtures/  ieee13.cimtbl  ieee14.cimtbl  wire_infos.cimtbl
+  builders/  roundtrip/
+  fixtures/
 ```
+
+---
 
 ---
 

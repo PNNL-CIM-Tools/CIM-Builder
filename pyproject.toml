@@ -9,8 +9,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "cim-graph>=0.6.0a0",
-    "cimprofiles>=0.1.0a3",
-    "lark>=1.1.9",
+    "cimprofiles>=0.1.0a4",
+    "cimtables>=0.1.0a0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +30,7 @@ prerelease = "allow"
 [tool.uv.sources]
 cim-graph = { path = "/home/ande188/CIM-Graph", editable = true }
 cimprofiles = { path = "/home/ande188/CIM-Profiles", editable = true }
+cimtables = { path = "/home/ande188/CIM-Tables", editable = true }
 
 
 [build-system]

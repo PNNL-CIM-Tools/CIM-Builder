@@ -9,15 +9,12 @@ object itself, not through `self`. See GRAPH_WRITE_CONTRACT.md §6 for the
 worked walkthrough this file follows.
 """
 
-import cimgraph.data_profile.cim18gmdm.connectivity as CN
-import cimgraph.data_profile.cim18gmdm.electrical as EL
-import cimgraph.data_profile.cimhub_2026 as cimhub_2026  # p/q/pFixed/pFixedPct: no SSH
-                                                          # part in cim18gmdm yet (checked
-                                                          # 2026-09-15) - no-op part,
-                                                          # see GRAPH_WRITE_CONTRACT.md §6
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL
+import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 
 from cimbuilder.builders.base import ObjectBuilder
-from cimbuilder.core import connectivity, graph_write
+from cimtables import connectivity, graph_write
 
 
 class EnergyConsumerBuilder(ObjectBuilder):
@@ -35,17 +32,21 @@ class EnergyConsumerBuilder(ObjectBuilder):
                     target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
                     graph_write.set_assc(load, CN, 'BaseVoltage', target)
 
-    def add_electrical(self, load, *, pFixed=None, qFixed=None, pFixedPct=None, qFixedPct=None, LoadResponse=None) -> None:
-        graph_write.set_attr(load, cimhub_2026, 'pFixed', pFixed)
-        graph_write.set_attr(load, cimhub_2026, 'qFixed', qFixed)
-        graph_write.set_attr(load, cimhub_2026, 'pFixedPct', pFixedPct)
-        graph_write.set_attr(load, cimhub_2026, 'qFixedPct', qFixedPct)
+    def add_electrical(self, load, *, pfixed=None, qfixed=None, pfixedPct=None, qfixedPct=None, LoadResponse=None) -> None:
+        # cim18v17.electrical_unbalanced.EnergyConsumer spells these lowercase
+        # (pfixed/qfixed/...), unlike the old merged cimhub_2026 profile's
+        # pfixed/qfixed - keyword args keep the public camelCase name, only the
+        # set_attr target changes.
+        graph_write.set_attr(load, EL, 'pfixed', pfixed)
+        graph_write.set_attr(load, EL, 'qfixed', qfixed)
+        graph_write.set_attr(load, EL, 'pfixedPct', pfixedPct)
+        graph_write.set_attr(load, EL, 'qfixedPct', qfixedPct)
         
         if LoadResponse is not None:
                     target = graph_write.resolve(self.network, self.cim.LoadResponseCharacteristic, LoadResponse)
                     graph_write.set_assc(load, EL, 'LoadResponse', target)
 
     def add_ssh(self, load, *, p=None, q=None) -> None:
-        graph_write.set_attr(load, cimhub_2026, 'p', p)
-        graph_write.set_attr(load, cimhub_2026, 'q', q)
+        graph_write.set_attr(load, SSH, 'p', p)
+        graph_write.set_attr(load, SSH, 'q', q)
 

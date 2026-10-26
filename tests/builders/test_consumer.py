@@ -2,15 +2,19 @@
 cimbuilder/development/GRAPH_WRITE_CONTRACT.md).
 
 Covers the direct Builder API in isolation (create/add_connectivity/
-add_electrical/add_ssh/add_references/add), then the generic
-ObjectBuilder.from_table (builders/base.py, backed by core/binder.bind_row)
-end to end against real validated EnergyConsumerRows parsed out of
-ieee13.cimtbl - including the load_sub row, whose EquipmentContainer
-overrides its table's header-level default (see dsl/parser.py's table_stmt).
+add_electrical/add_ssh/add), then the generic ObjectBuilder.from_table
+(builders/base.py, backed by the cimtables package's binder.bind_row) end to
+end against real validated EnergyConsumerRows parsed out of ieee13.cimtbl -
+including the load_sub row, whose EquipmentContainer overrides its table's
+header-level default (see cimtables/parser.py's table_stmt).
 
 Builders are stateless: create() returns the object directly, every add_<part>
 method takes it as an explicit first parameter, and add() (not build()) adds
-it to the graph.
+it to the graph. There is no separate add_references/add_assc step - an
+association belongs to whichever profile part declares it (GRAPH_WRITE_CONTRACT.md
+§3), so BaseVoltage is resolved inside add_connectivity (it's a connectivity
+field) and LoadResponse inside add_electrical (it's an electrical field), each
+via graph_write.resolve + set_assc, same as every other field that method owns.
 """
 
 import os
@@ -20,15 +24,15 @@ import pytest
 
 os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2026'
 
-import cimgraph.data_profile.cimhub_2026 as cim
+import cimprofiles.cim18.cimhub_2026 as cim
 from cimgraph.databases import XMLFile
 from cimgraph.models import BusBranchModel
 
 from cimbuilder.builders.load.consumer import EnergyConsumerBuilder
-from cimbuilder.core import graph_write
-from cimbuilder.core.name_index import NameIndex
-from cimbuilder.core.units import Qty
-from cimbuilder.dsl import parser, validate
+from cimtables import graph_write
+from cimtables.name_index import NameIndex
+from cimtables.units import Qty
+from cimtables import parser, validate
 
 SAMPLES_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'cimbuilder', 'development')
 
@@ -77,30 +81,38 @@ def test_add_connectivity_explicit_container_overrides_default(network):
     assert consumer.EquipmentContainer is other
 
 
-def test_add_references_resolves_existing_targets(network):
+def test_add_connectivity_resolves_base_voltage_by_name(network):
     base_voltage = cim.BaseVoltage(name='base_4160')
     graph_write.add_to_graph(network, base_voltage)
+
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='load_671')
+    builder.add_connectivity(load, node='671', BaseVoltage='base_4160')
+    consumer = builder.add(load)
+
+    assert consumer.BaseVoltage is base_voltage
+    assert consumer in base_voltage.ConductingEquipment
+
+
+def test_add_connectivity_unresolved_base_voltage_name_links_none(network):
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='load_671')
+    builder.add_connectivity(load, node='671', BaseVoltage='does_not_exist')
+    consumer = builder.add(load)
+    assert consumer.BaseVoltage is None
+
+
+def test_add_electrical_resolves_load_response_by_name(network):
     load_response = cim.LoadResponseCharacteristic(name='zip_constantPQ')
     graph_write.add_to_graph(network, load_response)
 
     builder = EnergyConsumerBuilder(network)
     load = builder.create(name='load_671')
     builder.add_connectivity(load, node='671')
-    builder.add_references(load, BaseVoltage='base_4160', LoadResponse='zip_constantPQ')
+    builder.add_electrical(load, LoadResponse='zip_constantPQ')
     consumer = builder.add(load)
 
-    assert consumer.BaseVoltage is base_voltage
     assert consumer.LoadResponse is load_response
-    assert consumer in base_voltage.ConductingEquipment
-
-
-def test_add_references_unresolved_name_links_none(network):
-    builder = EnergyConsumerBuilder(network)
-    load = builder.create(name='load_671')
-    builder.add_connectivity(load, node='671')
-    builder.add_references(load, BaseVoltage='does_not_exist')
-    consumer = builder.add(load)
-    assert consumer.BaseVoltage is None
 
 
 # --- from_table (generic, core.binder.bind_row), against the real sample ---

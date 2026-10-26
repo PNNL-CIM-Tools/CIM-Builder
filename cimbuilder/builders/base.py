@@ -4,8 +4,8 @@ from abc import ABC
 
 from cimgraph.models import GraphModel
 
-from cimbuilder.core import graph_write
-from cimbuilder.core.binder import bind_row
+from cimtables import graph_write
+from cimtables.binder import bind_row
 
 
 class ObjectBuilder(ABC):
@@ -26,9 +26,11 @@ class ObjectBuilder(ABC):
 
     def from_table(self, row: object) -> object:
         """DSL/bulk entry point (§4.2): bind a validated <Class>Row onto a
-        freshly create()'d object via the generic, reflective bind_row
-        (core/binder.py) - no per-class field dispatch to maintain. Every
-        class gets this for free; a subclass only needs cim_class_name.
+        freshly create()'d object via the generic, reflective bind_row (the
+        cimtables package - split out of this repo, see
+        development/CIMTBL_DESIGN.md §8.1) - no per-class field dispatch to
+        maintain. Every class gets this for free; a subclass only needs
+        cim_class_name.
 
         Returns the object already added to the graph (bind_row's own
         contract, matching bind_row's direct callers) - unlike the direct
