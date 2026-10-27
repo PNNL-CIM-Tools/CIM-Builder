@@ -1,13 +1,28 @@
 # Phase 0 — Baseline & Prerequisite Audit
 
-The Phase 0 deliverable from the refactor roadmap
-(`/home/ande188/.claude/plans/take-a-look-at-buzzing-crane.md`): a snapshot of
-exactly what is broken today, an inventory of the leaf builders to port, the
-inconsistencies to fix in-flight, and confirmation that the cim-graph 0.5.0a1
-prerequisites are met. **No code was edited in this phase.**
+**Status:** historical snapshot — kept as an audit record, not a forward
+design doc. See the revision note for what's since changed.
+
+> **Revision note.** §1–4 and §6 are an accurate historical record of the
+> repo's state at `362ba33` and are unchanged. §5b's forward-looking
+> assumption (`cgmes_3_0_0` as the target merged profile, with EQ/SC-part-named
+> builder methods) did not happen — the real shipped profile family is
+> `cimprofiles.cim18.cim18v17.*` (see `PROFILE_RESOLUTION.md`,
+> `ARCHITECTURE.md`), and the real reference builder
+> (`cimbuilder/builders/load/consumer.py`) has no `builder_base` mixin and no
+> `add_electrical_bal`/`add_short_circuit` methods — see `ARCHITECTURE.md`.
+> §3's leaf-builder inventory is still the right **list of work**, but its
+> "Phase" column no longer maps to any current plan; `OBJECT_BUILDER_MIGRATION.md`
+> is the current phased plan porting this same inventory onto the real,
+> shipped `ObjectBuilder` shape.
+
+The Phase 0 deliverable from the original refactor roadmap: a snapshot of
+exactly what was broken at the time, an inventory of the leaf builders to
+port, the inconsistencies to fix in-flight, and confirmation that the
+cim-graph 0.5.0a1 prerequisites were met. **No code was edited in this phase.**
 
 Audited on branch `feature/23` (HEAD `362ba33`) against the local cim-graph
-checkout at `/home/ande188/CIM-Graph` (v0.5.0a1).
+checkout at `/home/ande188/CIM-Graph` (v0.5.0a1 at the time).
 
 ---
 
@@ -87,31 +102,36 @@ Files carrying the hard `cimhub_2023` import:
 
 ---
 
-## 3. Leaf-builder inventory (Phases 3–6 work list)
+## 3. Leaf-builder inventory (work list — see `OBJECT_BUILDER_MIGRATION.md` for phasing)
 
 All under `cimbuilder/object_builder/`. `__init__.py` and `__pycache__` omitted.
+Note: `load/new_energy_consumer.py` has since been ported for real —
+`EnergyConsumerBuilder` (`cimbuilder/builders/load/consumer.py`) is the shipped
+reference implementation; the rest of this table is still an accurate list of
+what hasn't been ported yet.
 
-| File | Target builder | Phase |
-|---|---|---|
-| `line/line_builder.py` (sketch) | `LineBuilder` (reference impl) | 3 |
-| `topology/new_bus_bar_section.py` | `BusBarSectionBuilder` | 4 |
-| `shunt/new_breaker.py` | `BreakerBuilder` | 4 |
-| `switch/new_disconnector.py` | `DisconnectorBuilder` | 4 |
-| `generic/new_one_terminal_obj.py` | `GenericOneTerminalBuilder` | 5 |
-| `generic/new_two_terminal_obj.py` | `GenericTwoTerminalBuilder` | 5 |
-| `transformer/new_power_transformer.py` | `PowerTransformerBuilder` | 6 |
-| `transformer/new_tap_changer.py` | (tap changer, folded into xfmr) | 6 |
-| `shunt/new_capacitor.py` | `CapacitorBuilder` | 6 |
-| `load/new_energy_consumer.py` | `EnergyConsumerBuilder` | 6 |
-| `generator/new_synchronous_generator.py` | `SynchronousGeneratorBuilder` | 6 |
-| `inverter/new_power_electronics_connection.py` + `new_EVSE*` (5 files) | PEC / inverter family | 6 |
-| `measurement/new_analog.py`, `measurement/new_discrete.py` | measurement builders | 6 |
-| `protection/new_under_frequency_protection_function_block.py` | protection block | 6 |
-| `base/new_base_voltage.py` | reused as-is (not a builder; lookup/create) | — |
-| `deprecated/create_houses.py` | delete in Phase 10 | 10 |
+| File | Target builder |
+|---|---|
+| `line/line_builder.py` (broken sketch — not usable source, see §5b note) | `LineBuilder` |
+| `topology/new_bus_bar_section.py` | `BusbarSectionBuilder` |
+| `shunt/new_breaker.py` | `BreakerBuilder` |
+| `switch/new_disconnector.py` | `DisconnectorBuilder` |
+| `generic/new_one_terminal_obj.py` | `GenericOneTerminalBuilder` |
+| `generic/new_two_terminal_obj.py` | `GenericTwoTerminalBuilder` |
+| `transformer/new_power_transformer.py` | `PowerTransformerBuilder` |
+| `transformer/new_tap_changer.py` | (tap changer, folded into xfmr) |
+| `shunt/new_capacitor.py` | `CapacitorBuilder` |
+| `load/new_energy_consumer.py` | **done** — `EnergyConsumerBuilder` |
+| `generator/new_synchronous_generator.py` | `SynchronousMachineBuilder` |
+| `inverter/new_power_electronics_connection.py` + `new_EVSE*` (5 files) | PEC / inverter family |
+| `measurement/new_analog.py`, `measurement/new_discrete.py` | measurement builders (no real caller found in CIMHub_2_0 today — low priority) |
+| `protection/new_under_frequency_protection_function_block.py` | protection block |
+| `base/new_base_voltage.py` | reused as-is (not a builder; lookup/create) |
+| `deprecated/create_houses.py` | delete whenever the migration touches `load/` (not otherwise referenced) |
 
 Already-present stub files (committed, were the eureka probe): `object_builder.py`
-(the `ObjectBuilder` ABC), `line/line_builder.py`, `topology/terminal_builder.py`.
+(the old `ObjectBuilder` ABC — superseded by `builders/base.py`),
+`line/line_builder.py`, `topology/terminal_builder.py` (empty file).
 
 ---
 

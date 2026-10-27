@@ -2,55 +2,63 @@
 
 Planning and contributor documentation for the **uniform builder-API refactor** —
 the effort to replace CIM-Builder's fragmented mix of standalone object-builder
-functions, class-based substation builders, and a documented-but-absent
-`*_functions.py` API with a single, uniform builder-class API where every
-equipment type is built **one CIM profile-part at a time** (EQ → electrical →
-short-circuit → dynamics → measurement → asset).
+functions (`cimbuilder/object_builder/`), class-based substation builders, and
+a documented-but-absent `*_functions.py` API with a single, uniform
+builder-class API where every equipment type is built **one CIM profile-part
+at a time** (connectivity → electrical → SSH → short-circuit → asset), and
+each `add_<profile>` method is stateless, taking the object as an explicit
+first parameter.
 
-This directory is the CIM-Builder counterpart to CIMHub's
-`cimhub_core/.../development/` doc set. It is the spec the phased work executes
-against.
+`cimbuilder/builders/load/consumer.py` (`EnergyConsumerBuilder`) is the real,
+shipped reference implementation this whole doc set is reconciled against —
+not a forward sketch. This directory is the CIM-Builder counterpart to
+CIMHub's `cimhub_core/.../development/` doc set.
 
 ---
 
 ## Start here
 
-1. **The phase roadmap** — the day-by-day execution plan (phases 0–11, one per
-   working day) lives in
-   `/home/ande188/.claude/plans/take-a-look-at-buzzing-crane.md`. It holds the
-   context (why this refactor exists), the locked decisions, and the ordered
-   phases. Read it first; the docs below are the detailed specs each phase
-   implements against.
-
-2. **`PROFILE_RESOLUTION.md`** — the map of the three "profile" mechanisms that are
+1. **`PROFILE_RESOLUTION.md`** — the map of the three "profile" mechanisms that are
    easy to conflate: edit-time Pylance typing, runtime `set_attr`/`set_assc` checking,
    and user-selected profile (`Profile=` → `CIMG_CIM_PROFILE` → `network.cim`).
    Read before touching any of them.
 
-3. **`ARCHITECTURE.md`** — the target architecture: the `ObjectBuilder` contract,
-   the `builder_base` shared mixin, the profile-part build flow, the
-   `network.cim` profile-source rule (cim-graph 0.5 §2/§5), and the separate
-   substation assembly layer. `LineBuilder` is the reference implementation.
+2. **`ARCHITECTURE.md`** — the real architecture: the `ObjectBuilder` contract
+   (`builders/base.py`), where the mechanics actually live (`cimtables`, not a
+   `cimbuilder`-local mixin), the profile-source rule (`self.cim`), and the
+   separate substation assembly layer. `EnergyConsumerBuilder` is the
+   reference implementation.
 
-4. **`BUILDER_API.md`** — the public, user-facing API contract: the
-   `create() → add_<profile>() → build()` chain, method naming, node-argument
-   conventions, `from_catalog`, and convenience facades. What a user actually
+3. **`BUILDER_API.md`** — the public, user-facing API contract: construct the
+   builder, `create()`, then each `add_<profile>(obj, ...)` the equipment type
+   actually has — stateless, no chaining, no `build()`. What a user actually
    types.
 
-5. **`PROFILE_TYPING.md`** — the §5a edit-time typing model: per-method
-   single-sub-profile annotations (`cim: CN`, `cim: EQ`, `cim: SC`) via
-   `TYPE_CHECKING` imports, narrowing writes to one profile while the runtime
-   value stays the full `network.cim` module. Includes the today-vs-0.5 gap.
+4. **`PROFILE_TYPING.md`** — the edit-time typing model: real, always-imported
+   part modules (`cimprofiles.cim18.cim18v17.<part>`) aliased per part (`CN`,
+   `EL`, `SSH`, …), the same module object `graph_write`'s runtime check uses.
 
-6. **`UNITS.md`** — how `add_electrical_bal` sets physical quantities via
-   `CIMUnit` (no manual scaling), CIMUnit on first pass, and the per-unit
-   (`z_base`) engine deferred to Phase 11.
+5. **`UNITS.md`** — how an `add_<profile>` method sets physical quantities via
+   `graph_write.set_attr` (no manual `CIMUnit` construction, no manual
+   scaling), and the relative (`pu`/`%`) impedance → ohm conversion (already
+   shipped, in `cimtables.binder.bind_row` / `graph_write.set_attr`'s
+   `z_base` parameter).
 
-7. **`BUILDER_TEST_CREATION.md`** — the test strategy: atom factories, the
-   chained-build "act", per-profile assertions, the `network.cim` identity
-   guardrail, and the three test tiers (atom / composition / integration).
-   Includes the `ConnectionParameters` → direct-kwarg migration that the broken
-   `docs/03_substation_builder/deliverable.ipynb` tests need.
+6. **`BUILDER_TEST_CREATION.md`** — the test strategy: the `network` fixture
+   (a real file-less `XMLFile` connection + `NameIndex`, not a bare
+   `GraphModel()`), per-profile assertions, the profile-identity guardrail,
+   and the test tiers (atom / composition / integration).
+
+7. **`OBJECT_BUILDER_MIGRATION.md`** — the phased plan porting the rest of
+   `cimbuilder/object_builder/`'s old `new_*` functions onto this API,
+   prioritized by real duplicated construction logic found in CIMHub_2_0's
+   importer scripts (Transformer → Load → Line → Switch → Capacitor →
+   Generator/Inverter; Measurement deprioritized — no real caller found).
+
+8. **`GRAPH_WRITE_CONTRACT.md`** / **`CIMTBL_DESIGN.md`** — the `cimtables`
+   package's own contract (`set_attr`/`set_assc`, `bind_row`, the `.cimtbl`
+   DSL) that every builder method is built on. `cimtables` is a separate
+   package now (`/home/ande188/CIM-Tables`) — see `CIMTBL_DESIGN.md` §8.1.
 
 ---
 
@@ -58,35 +66,40 @@ against.
 
 | Decision | Choice |
 |---|---|
-| API shape | Builder classes; `add_<profile>` methods built in sequence, chainable |
-| Profile source | `cim = self.network.cim` (never `get_cim_profile()` in a builder) |
+| API shape | Builder classes; stateless `add_<profile>(obj, ...)` methods, no chaining |
+| Profile source | `self.cim` (`= network.cim`, set once in `__init__`); never `get_cim_profile()` in a builder method |
 | Substations | Separate assembly layer that orchestrates object builders |
-| Units | CIMUnit now; full per-unit (`z_base`) deferred to Phase 11 |
-| Profile dependency | Targets cim-graph 0.5.0a1 — `network.cim` is live and the `cgmes_3_0_0` merged profile ships real sub-profile parts (`core_equipment`, `short_circuit`, `topology`, …). Gap closed at source; only the dependency pin bump remains (Phase 1) |
-| Electrical split | `add_electrical_bal` (balanced, implemented) vs. `add_electrical_unbal` (per-phase, stubbed until CIM18 unbalanced parts ship) |
-| Typing | §5a per-method single-sub-profile via `TYPE_CHECKING`; no `.pyi` for builders |
+| Units | `graph_write.set_attr`/`set_assc` construct and convert `CIMUnit`s; relative (`pu`/`%`) impedance → ohm conversion already shipped |
+| Profile dependency | `cimprofiles.cim18.cim18v17.*` for part-scoped modules; `network.cim` (merged) for construction/FK resolution |
+| Associations | Owned by whichever `add_<profile>` method owns that field (e.g. `BaseVoltage` in `add_connectivity`, `LoadResponse` in `add_electrical`) — no separate `add_references`/`add_assc` method |
+| Typing | A method imports its own real part module and passes it to `graph_write`'s `part` argument; no `TYPE_CHECKING` gating needed |
 | Profile selection | `.cimtbl` `Profile=` sets `CIMG_CIM_PROFILE`; resolved once to `network.cim`; `.cimtbl` validation reflects on that profile (no LinkML) — `PROFILE_RESOLUTION.md` |
+| DSL/core layering | The `.cimtbl` parser/validator/binder/graph_write live in the separate `cimtables` package, not in `cimbuilder` |
 
 ---
 
 ## Reading order by task
 
-- **Writing a new builder** → `PROFILE_RESOLUTION.md` → `ARCHITECTURE.md` → `BUILDER_API.md` →
-  `PROFILE_TYPING.md` → `UNITS.md`, then `BUILDER_TEST_CREATION.md` for the test.
-- **Migrating an existing `new_*` function** → `ARCHITECTURE.md`
-  ("`builder_base` mixin" + "Profile-source rule"), then `BUILDER_API.md`
-  ("convenience facades") to keep the old call working.
+- **Writing a new builder** → `PROFILE_RESOLUTION.md` → `ARCHITECTURE.md` →
+  `BUILDER_API.md` → `PROFILE_TYPING.md` → `UNITS.md`, then
+  `BUILDER_TEST_CREATION.md` for the test. `OBJECT_BUILDER_MIGRATION.md` has a
+  worked example per equipment category.
+- **Porting an existing `new_*` function from `object_builder/`** →
+  `OBJECT_BUILDER_MIGRATION.md` directly — it has the phase-by-phase plan and
+  per-category notes.
 - **Working on substations** → `ARCHITECTURE.md` ("Substation assembly layer").
-- **Touching units / impedance** → `UNITS.md`.
+- **Touching units / impedance** → `UNITS.md`, `GRAPH_WRITE_CONTRACT.md`.
 - **Adding tests** → `BUILDER_TEST_CREATION.md`.
+- **Touching the `.cimtbl` DSL itself** (parser/validator/binder) → that code
+  now lives in `/home/ande188/CIM-Tables`; see `CIMTBL_DESIGN.md` §8.1.
 
 ---
 
 ## External references
 
-- cim-graph 0.5 profile-identity contract (the basis for `network.cim` and the
-  §5a/§5c typing split):
-  `/home/ande188/CIM-Graph/docs/development/PROFILE_IDENTITY_0_5_PLAN.md`.
 - CIMHub converter-side docs (the structural model these mirror):
   `/home/ande188/CIMHub_2_0/cimhub_core/src/cimhub_core/development/`.
+- CIMHub_2_0's importer scripts (`cimhub_<format>/importer/`) are the real
+  downstream consumer `OBJECT_BUILDER_MIGRATION.md`'s priority order is based
+  on — not `substation_builder/`.
 - Global coding-style and CIMUnit guidance: `~/.claude/CLAUDE.md`.

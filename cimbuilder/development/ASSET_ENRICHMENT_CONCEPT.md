@@ -128,8 +128,10 @@ different cable families.
 
 ## CIM-Builder's Role
 
-CIM-Builder (repo: `/home/ande188/CIM-Builder/`) already has the `from_catalog`
-stub on `ObjectBuilder`. This concept gives it a concrete implementation:
+CIM-Builder's `ObjectBuilder` (`builders/base.py`) has no `from_catalog` method
+today (it has `__init__`, `create`, `from_table`, `add`) — this concept would
+be a new, separate capability, not a stub being filled in. This concept
+sketches a concrete implementation:
 
 ### AssetEnricher (new class in `cimbuilder/enrichment/`)
 
@@ -162,10 +164,12 @@ class AssetEnricher:
 ```
 
 `AssetEnricher` calls `cim_asset_manager.match_*()` for each unresolved asset
-object, then uses the existing `ObjectBuilder` mechanics (`_add`, CIMUnit
-constructors) to write the matched fields back into the live graph. It does **not**
-create new CIM objects — it only fills `None` fields on existing ones (or all
-fields if `overwrite=True`).
+object, then writes the matched fields back into the live graph via
+`cimtables.graph_write.set_attr` (which constructs the `CIMUnit` and checks the
+write against the asset profile part), the same call every `ObjectBuilder`
+subclass's `add_<profile>` method makes — not a `cimbuilder`-local `_add`
+helper. It does **not** create new CIM objects — it only fills `None` fields on
+existing ones (or all fields if `overwrite=True`).
 
 The `overwrite=False` default means enrichment is safe to run on a graph that
 already has partial asset data (e.g. an SXST import that already carried
@@ -270,7 +274,7 @@ Phase 4:           Public PyPI release. CIMHub optional dep block in
 
 - `CIM-Asset-Manager/.development/ARCHITECTURE.md` — AssetInfo catalog pipeline
 - `CIM-Asset-Manager/.development/ASSEMBLY_CATALOG_SCOPE.md` — assembly vs. asset boundary
-- `CIM-Builder/cimbuilder/development/ARCHITECTURE.md` — ObjectBuilder + from_catalog stub
+- `CIM-Builder/cimbuilder/development/ARCHITECTURE.md` — the real `ObjectBuilder` contract this enrichment pass would write through
 - `CIMHub_2_0/CLAUDE.md` — converter anti-patterns
 - `CIMHub_2_0/cimhub_cyme/src/cimhub_cyme/exporter/lines/cable_info.py` — current hardcoded fields
 - `CIMHub_2_0/debug/Equipments.cymcfg` — 1,066-entry CYME cable catalog export (source data)

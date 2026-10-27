@@ -1,9 +1,29 @@
 # Creating Atom Tests for CIM-Builder Builders
 
+**Status:** revised. Every code snippet below originally showed the pre-
+implementation fluent/chainable API (`cgmes_3_0_0`, `add_electrical_bal`,
+`.create().add_connectivity(...)` chaining); the shipped `EnergyConsumerBuilder`
+is stateless and the calling convention differs throughout. See the revision
+note. The methodology (atom factories, test tiers, checklist shape) is
+unchanged and still the right approach.
+
+> **Revision note.** `tests/builders/test_consumer.py` is the real, working
+> test suite for the shipped `EnergyConsumerBuilder` and is the ground truth
+> this doc is rewritten against. Key differences from the original sketch:
+> builder methods take the object as an explicit first parameter and return
+> `None` (no chaining); the real profile is `cimprofiles.cim18.cimhub_2026` (or
+> `cim18v17` for the part-scoped modules), not `cgmes_3_0_0`; a `BusBranchModel`
+> built with a real `XMLFile` connection (even with no file on disk) is used
+> instead of a bare `GraphModel()` with a hand-set `.graph = {}`, because
+> `network.name_index` (used by `graph_write.resolve`) needs a real model to
+> exist on; and there is no `add_electrical_bal`/`add_short_circuit` method —
+> the method set is whatever profile parts the equipment type actually has
+> (`add_connectivity`/`add_electrical`/`add_ssh` for `EnergyConsumer`).
+
 Step-by-step instructions for building a unit test for any **builder** —
-`ObjectBuilder` subclass (`LineBuilder`, `BreakerBuilder`, …) or a substation
-assembly class (`SingleBusSubstation`, …). Designed for both human developers and
-AI coding agents.
+`ObjectBuilder` subclass (`EnergyConsumerBuilder`, …) or a substation assembly
+class (`SingleBusSubstation`, …). Designed for both human developers and AI
+coding agents.
 
 This is the builder-side counterpart to CIMHub's
 [`ATOM_TEST_CREATION.md`](../../../CIMHub_2_0/cimhub_core/src/cimhub_core/development/ATOM_TEST_CREATION.md).
@@ -12,7 +32,7 @@ The structure is the same; the **direction is inverted**:
 | | Converter (CIMHub) | Builder (CIM-Builder) |
 |---|---|---|
 | Input | a CIM subgraph (exporter) or a format object (importer) | a minimal **container atom** (network + container + nodes) |
-| Act | run the converter | call `create()` → `add_connectivity()` → `add_electrical_bal()` … |
+| Act | run the builder: `create()`, then each `add_<profile>(obj, ...)` | the read crossed profiles correctly |
 | Output asserted | a format string / a few new CIM objects | the CIM object(s) the builder added to the graph |
 | What you check | the read crossed profiles correctly | each `add_<profile>` method wrote *its* profile's fields |
 
@@ -34,8 +54,9 @@ Builder atom tests are:
 - **Fast** — pure Python, no DB, no file I/O, no Blazegraph.
 - **Isolated** — one builder (or one profile method) per test; a failure
   pinpoints which profile part is wrong.
-- **Profile-scoped** — they mirror the §5a contract: a test for
-  `add_electrical_bal` asserts the balanced electrical fields and *only* those.
+- **Profile-scoped** — they mirror the method-per-part contract: a test for
+  `add_electrical` asserts only the electrical fields it touches, never a
+  field another `add_<profile>` method owns.
 - **Self-documenting** — the atom factory shows exactly what container the
   builder expects.
 
@@ -43,69 +64,71 @@ Builder atom tests are:
 
 ## ⚠️ Connection API: do NOT use `ConnectionParameters`
 
-The original integration tests came from
-[`docs/03_substation_builder/deliverable.ipynb`](../../docs/03_substation_builder/deliverable.ipynb),
-which built connections the **pre-0.3 way**:
+`ConnectionParameters` doesn't exist in any currently-supported cim-graph
+version (`ImportError`). Build the connection with **direct kwargs**; the
+profile comes from the `CIMG_CIM_PROFILE` env var, set *before* importing any
+`cimgraph.data_profile`/`cimprofiles` module (profile resolution happens at
+import time):
 
 ```python
-# BROKEN since cim-graph 0.3 — ConnectionParameters was removed
-from cimgraph.databases import ConnectionParameters, RDFlibConnection
-params = ConnectionParameters(filename=None, cim_profile=cim_profile, iec61970_301=8)
-connection = RDFlibConnection(params)
-```
-
-`ConnectionParameters` no longer exists (`ImportError`), which broke every test
-and demo derived from that notebook. The current API takes **direct kwargs** and
-gets the profile from the `CIMG_CIM_PROFILE` env var via `get_cim_profile()`:
-
-```python
-# CORRECT — cim-graph 0.3+
 import os
-os.environ['CIMG_CIM_PROFILE'] = 'cgmes_3_0_0'   # the 0.5.0a1 merged profile
+os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2026'   # set before importing a profile module
+
+import cimprofiles.cim18.cimhub_2026 as cim
 from cimgraph.databases import XMLFile
-connection = XMLFile(filename=str(output_xml))     # filename=None for build-from-scratch
+from cimgraph.models import BusBranchModel
+import tempfile
+
+connection = XMLFile(filename=tempfile.mktemp(suffix='.xml'))   # no file needs to exist on disk
+container = cim.Feeder(name='test_feeder')
+network = BusBranchModel(connection=connection, container=container, distributed=False)
+network.name_index = NameIndex()   # cimtables.name_index.NameIndex — see below
 ```
 
 `XMLFile.__init__(self, filename=None, namespaces=None, metadata=None)` — no
-`cim_profile`, no `iec61970_301`. **For unit atom tests you usually need no
-connection at all** — see Step 2; you construct a `GraphModel` directly.
+`cim_profile`, no `iec61970_301`. A real `BusBranchModel` (not a bare
+`GraphModel()`) is needed even for a pure unit test: `graph_write.resolve` (used
+by `add_connectivity`/`add_electrical`'s by-name FK resolution) reads
+`network.name_index`, which only a real model construction sets up correctly —
+set `network.name_index = NameIndex()` explicitly in the atom fixture, exactly
+as `tests/builders/test_consumer.py`'s `network` fixture does.
 
-> The live-database round-trip from `deliverable.ipynb` (Blazegraph + CIM-Loader
-> upload, re-query) is an **integration tier**, not a unit test. Keep it out of
-> the atom suite; gate it behind a marker (`@pytest.mark.integration`) and a
-> running database. Atom tests must run with `pytest` and nothing else.
+> A live-database round-trip (Blazegraph + CIM-Loader upload, re-query) is an
+> **integration tier**, not a unit test. Keep it out of the atom suite; gate it
+> behind a marker (`@pytest.mark.integration`) and a running database. Atom
+> tests must run with `pytest` and nothing else.
 
 ---
 
 ## The CIM Object Model (Quick Reference)
 
-> Snippets import `cgmes_3_0_0` — the cim-graph 0.5.0a1 merged profile this first
-> pass targets. Builders read `cim = self.network.cim`, and the per-method type
-> annotations narrow to the `cgmes_3_0_0` sub-profiles (`EQ` = `core_equipment`,
-> `SC` = `short_circuit`, …) per §5a of `PROFILE_IDENTITY_0_5_PLAN.md`. Tests
-> assert against `network.cim.X` so they stay correct under a merged profile.
-> (Under CIM17 the connectivity classes live in the EQ part; the CIM18 CN split
-> and the unbalanced `add_electrical_unbal` path are a later round.)
+> Snippets import `cimprofiles.cim18.cimhub_2026` — the merged profile
+> `tests/builders/test_consumer.py` actually uses. Builders read `self.cim`
+> (`= network.cim`, set once in `__init__`) for construction/FK resolution,
+> and import real part modules (`cimprofiles.cim18.cim18v17.electrical_unbalanced
+> as EL`, …) for the `graph_write.set_attr`/`set_assc` calls their
+> `add_<profile>` methods make. Tests assert against `cim.X` (the same merged
+> module) so they stay correct whether the profile is flat or merged.
 
 ```python
-import cimgraph.data_profile.cgmes_3_0_0 as cim
+import cimprofiles.cim18.cimhub_2026 as cim
+from cimtables import graph_write
 
-line = cim.ACLineSegment(name='test_line')   # UUID auto-seeded from class+name
-line.r = cim.Resistance(0.01, 'ohm')          # CIMUnit: quantity + unit
-line.EquipmentContainer = feeder              # association
-line.Terminals.append(terminal)               # list association
-network.add_to_graph(line)                    # keyed by (type, identifier)
+consumer = cim.EnergyConsumer(name='test_load')   # bare construction, no UUID seeding needed
+consumer.EquipmentContainer = feeder              # association (or via graph_write.set_assc)
+graph_write.add_to_graph(network, consumer)       # adds to network.graph AND network.name_index
 ```
 
-Key `GraphModel` / `NodeBreakerModel` methods used in assertions:
+Key `GraphModel` methods and `cimtables.graph_write` functions used in
+assertions:
 
-| Method | What it does |
-|--------|-------------|
-| `network.add_to_graph(obj)` | Add to `network.graph[type(obj)][obj.identifier]` |
+| Call | What it does |
+|------|-------------|
+| `graph_write.add_to_graph(network, obj)` | adds to `network.graph` and `network.name_index` together — always use this, not a bare `network.add_to_graph(obj)`, so the two never drift |
 | `network.graph[cim.X]` | dict of `{identifier: obj}` for type X — the identity-keyed store |
-| `network.list_by_class(cim.X)` | All objects of type X, sorted by URI |
-| `network.find_by_attribute(cim.X, 'name', value)` | Linear search by attribute |
-| `network.get_all_edges(cim.X)` | Hydrate associations (needed before deep traversal on a DB-backed model) |
+| `graph_write.resolve(network, cim.X, name)` | O(1) name → object lookup via `network.name_index`; `None` if not found |
+| `network.find_by_attribute(cim.X, 'name', value)` | linear search by attribute — use only where `name_index` isn't populated (rare in a builder test) |
+| `network.get_all_edges(cim.X)` | hydrate associations (needed before deep traversal on a DB-backed model) |
 
 ---
 
@@ -114,29 +137,40 @@ Key `GraphModel` / `NodeBreakerModel` methods used in assertions:
 Read the builder and list **what it attaches to** (the container side) and
 **what it produces** (the equipment side). Unlike a converter, a builder does
 not `find_by_attribute` for inputs — its prerequisites are its constructor /
-`create()` arguments.
+`add_<profile>` arguments.
 
-Example — the target `LineBuilder` (Phase 3):
+Example — the real `EnergyConsumerBuilder` (`builders/load/consumer.py`):
 
 ```python
-class LineBuilder(ObjectBuilder):
-    network: GraphModel
-    container: "EQ.EquipmentContainer"        # PREREQ: a container (Feeder/Line/VL)
+class EnergyConsumerBuilder(ObjectBuilder):
+    cim_class_name = 'EnergyConsumer'
+    # no create() override — base.py's bare cim_cls(name=name) is enough
 
-    def create(self, name): ...               # makes the ACLineSegment
-    def add_connectivity(self, node1, node2): # PREREQ: two ConnectivityNodes
-        cim = self.network.cim
-        ...                                   # builds 2 terminals, wires to nodes
-    def add_electrical_bal(self, r, x, bch, ...): # writes balanced EQ fields on self.line
-    def add_short_circuit(self, r0, x0, ...): # writes SC fields on self.line
+    def add_connectivity(self, load, *, node: str, container=None,
+                          phaseConnection=None, grounded=None,
+                          customerCount=None, BaseVoltage=None) -> None:
+        ...   # PREREQ: a node name (auto-vivified if absent); BaseVoltage, if given, must already be in the graph by that name
+
+    def add_electrical(self, load, *, pfixed=None, qfixed=None,
+                        pfixedPct=None, qfixedPct=None, LoadResponse=None) -> None:
+        ...   # PREREQ: LoadResponse, if given, must already be in the graph by that name
+
+    def add_ssh(self, load, *, p=None, q=None) -> None:
+        ...   # no prerequisites beyond the object itself
 ```
 
 Prerequisites for the atom:
-- a `GraphModel` (no connection needed for a pure unit test);
-- an `EquipmentContainer` to pass as `container`;
-- two `ConnectivityNode`s in the graph named `node1` / `node2`.
+- a `BusBranchModel` (built with a real `XMLFile` connection, no file needed on
+  disk) with `network.name_index` set;
+- a `container` (a `Feeder`) — either passed explicitly to the builder, or left
+  to fall back to `network.container`;
+- any by-name FK target (`BaseVoltage`, `LoadResponse`) the test wants to
+  resolve, already added via `graph_write.add_to_graph` *before* calling the
+  `add_<profile>` method that resolves it — `add_connectivity`/`add_electrical`
+  auto-vivify a `ConnectivityNode` by name but never auto-vivify a `BaseVoltage`
+  or `LoadResponseCharacteristic`.
 
-This maps to the `make_2node_atom()` factory below.
+This maps to the `make_network_atom()` factory below.
 
 For a **substation** assembly class (e.g. `SingleBusSubstation`), the
 prerequisites are inverted — it *creates* its own container and buses, and its
@@ -149,57 +183,68 @@ a `make_feeder_atom()` (a tiny feeder with a `sourcebus` `ConnectivityNode` +
 
 ## Step 2: Choose or Build the Atom Factory
 
-Put shared factories in `tests/atoms.py` and shared assertions in
-`tests/assertions.py` (mirroring CIMHub's `cimhub_core/tests/atoms.py` /
-`assertions.py`). Build the network **directly**, no connection:
+Put a shared `network` fixture in the test module (or a shared `conftest.py`),
+mirroring `tests/builders/test_consumer.py`'s own `network` fixture — build it
+with a real (file-less) `XMLFile` connection, not a bare `GraphModel()`:
 
 ```python
-# tests/atoms.py
-import cimgraph.data_profile.cgmes_3_0_0 as cim
-from cimgraph.models import GraphModel
+# conftest.py (or inline, as tests/builders/test_consumer.py does today)
+import os
+import tempfile
 
-def _empty_network() -> GraphModel:
-    # No connection, no DB. A GraphModel with an empty graph is enough to build into.
-    network = GraphModel()
-    network.graph = {}
-    return network
+import pytest
+
+os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2026'
+
+import cimprofiles.cim18.cimhub_2026 as cim
+from cimgraph.databases import XMLFile
+from cimgraph.models import BusBranchModel
+from cimtables.name_index import NameIndex
+
+
+@pytest.fixture
+def network():
+    conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
+    container = cim.Feeder(name='test_feeder')
+    net = BusBranchModel(connection=conn, container=container, distributed=False)
+    net.name_index = NameIndex()
+    return net
 ```
 
-### Container-only atom (most object builders)
+### Referent atoms (whatever the builder resolves by name)
+
+A builder's `add_<profile>` methods resolve by-name FKs with
+`graph_write.resolve` — add exactly the referents a given test needs, by name,
+*before* calling the method that resolves them:
 
 ```python
-def make_2node_atom(base_kv: float = 115000):
-    """Substation container + BaseVoltage + 2 ConnectivityNodes('node1','node2')."""
-    network = _empty_network()
-    bv = cim.BaseVoltage(name=f'BaseV_{base_kv}', nominalVoltage=base_kv)
-    sub = cim.Substation(name='test_sub')
-    n1 = cim.ConnectivityNode(name='node1', ConnectivityNodeContainer=sub)
-    n2 = cim.ConnectivityNode(name='node2', ConnectivityNodeContainer=sub)
-    for o in (bv, sub, n1, n2):
-        network.add_to_graph(o)
-    return network, sub, bv, n1, n2
+def test_add_connectivity_resolves_base_voltage_by_name(network):
+    base_voltage = cim.BaseVoltage(name='base_4160')
+    graph_write.add_to_graph(network, base_voltage)
+
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='load_671')
+    builder.add_connectivity(load, node='671', BaseVoltage='base_4160')
+    consumer = builder.add(load)
+
+    assert consumer.BaseVoltage is base_voltage
 ```
 
-### Single-node atom (one-terminal devices: loads, shunts, sources)
-
-```python
-def make_1node_atom(base_kv: float = 12470):
-    network = _empty_network()
-    bv = cim.BaseVoltage(name=f'BaseV_{base_kv}', nominalVoltage=base_kv)
-    sub = cim.Substation(name='test_sub')
-    n1 = cim.ConnectivityNode(name='node1', ConnectivityNodeContainer=sub)
-    for o in (bv, sub, n1):
-        network.add_to_graph(o)
-    return network, sub, bv, n1
-```
+A `ConnectivityNode` named by `node=` is auto-vivified by
+`connectivity.add_connectivity` if it doesn't already exist — unlike
+`BaseVoltage`/`LoadResponse`, it is never a prerequisite you need to add
+yourself unless the test specifically wants to connect to a node already used
+by other equipment.
 
 ### Feeder atom (substation `new_feeder` tests)
 
 ```python
 def make_feeder_atom(mrid='TEST-FEEDER-001'):
     """Minimal feeder GraphModel with a 'sourcebus' CN + EnergySource."""
-    network = _empty_network()
     feeder = cim.Feeder(mRID=mrid)
+    conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
+    network = BusBranchModel(connection=conn, container=feeder, distributed=False)
+    network.name_index = NameIndex()
     src_node = cim.ConnectivityNode(name='sourcebus', ConnectivityNodeContainer=feeder)
     source = cim.EnergySource(name='source', EquipmentContainer=feeder)
     t = cim.Terminal(name='source_t1', sequenceNumber=1,
@@ -207,7 +252,7 @@ def make_feeder_atom(mrid='TEST-FEEDER-001'):
     source.Terminals.append(t)
     feeder.NormalHeadTerminal = t
     for o in (feeder, src_node, source, t):
-        network.add_to_graph(o)
+        graph_write.add_to_graph(network, o)
     return network, feeder, src_node
 ```
 
@@ -220,18 +265,23 @@ needs source-bus discovery, reuse `cimbuilder.utils.get_source_bus`.
 
 ## Step 3: Run the Builder Through Its Profile Methods
 
-A builder test's "act" is the chained build. Each method is a separate testable
-unit, so you can stop after the method under test:
+A builder test's "act" is: construct the builder, call `create()`, then call
+each `add_<profile>` the test cares about, always passing the object back in.
+Each method is a separate testable unit, so you can stop after the method
+under test and skip calling `add()` (adding to the graph) entirely if the
+assertion doesn't need it:
 
 ```python
-builder = LineBuilder(network=network, container=feeder)
-builder.create('test_line')                       # EQ object exists
-builder.add_connectivity(node1='node1', node2='node2')   # terminals wired
-builder.add_electrical_bal(r=0.01, x=0.1, bch=0.0, r_unit='ohm', x_unit='ohm', bch_unit='S')
+builder = EnergyConsumerBuilder(network, container=feeder)
+load = builder.create(name='test_load')                  # bare object, not yet in the graph
+builder.add_connectivity(load, node='671')                # terminals + node wiring
+builder.add_electrical(load, pfixed=10_000, qfixed=3_000)  # electrical fields on load
+consumer = builder.add(load)                               # add_to_graph, returns the object
 ```
 
-To unit-test just `add_electrical_bal`, do the minimal setup (`create` +
-`add_connectivity`) then call only `add_electrical_bal` and assert only its
+To unit-test just `add_electrical`, do the minimal setup (`create` +
+`add_connectivity`, since `add_electrical` assumes the object already has
+terminals/container) then call only `add_electrical` and assert only its
 fields.
 
 ---
@@ -239,120 +289,121 @@ fields.
 ## Step 4: Write the Test
 
 ```python
-# tests/object_builder/line/test_line_builder.py
-import cimgraph.data_profile.cgmes_3_0_0 as cim
-from cimbuilder.object_builder.line.line_builder import LineBuilder
-from tests.atoms import make_2node_atom
-from tests.assertions import (
-    assert_added_to_graph,
-    assert_terminal_connected,
-    assert_in_container,
-)
+# tests/builders/test_consumer.py (the real, shipped example)
+import os
+import tempfile
+
+import pytest
+
+os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2026'
+
+import cimprofiles.cim18.cimhub_2026 as cim
+from cimgraph.databases import XMLFile
+from cimgraph.models import BusBranchModel
+
+from cimbuilder.builders.load.consumer import EnergyConsumerBuilder
+from cimtables import graph_write
+from cimtables.name_index import NameIndex
+from cimtables.units import Qty
 
 
-class TestLineBuilder:
+@pytest.fixture
+def network():
+    conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
+    container = cim.Feeder(name='test_feeder')
+    net = BusBranchModel(connection=conn, container=container, distributed=False)
+    net.name_index = NameIndex()
+    return net
 
-    def test_create_adds_segment(self):
-        network, sub, bv, n1, n2 = make_2node_atom()
-        LineBuilder(network=network, container=sub).create('test_line')
 
-        assert_added_to_graph(network, cim.ACLineSegment, expected_count=1)
-        line = network.find_by_attribute(cim.ACLineSegment, 'name', 'test_line')[0]
-        assert_in_container(line, cim.Substation)
+def test_create_add_connectivity_add_ssh_add(network):
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='load_671')
+    builder.add_connectivity(load, node='671')
+    builder.add_ssh(load, p=Qty(1155.0, 'kW'), q=Qty(660.0, 'kVAr'))
+    consumer = builder.add(load)
 
-    def test_add_connectivity_wires_two_terminals(self):
-        network, sub, bv, n1, n2 = make_2node_atom()
-        b = LineBuilder(network=network, container=sub)
-        b.create('test_line').add_connectivity(node1='node1', node2='node2')
+    assert consumer.name == 'load_671'
+    assert consumer.p.to('kW') == pytest.approx(1155.0)
+    assert consumer.q.to('kVAr') == pytest.approx(660.0)
+    assert len(consumer.Terminals) == 1
+    node = graph_write.resolve(network, cim.ConnectivityNode, '671')
+    assert node is not None
+    assert consumer.Terminals[0].ConnectivityNode is node
 
-        line = network.find_by_attribute(cim.ACLineSegment, 'name', 'test_line')[0]
-        assert_added_to_graph(network, cim.Terminal, expected_count=2)
-        assert len(line.Terminals) == 2
-        assert_terminal_connected(line.Terminals[0], 'node1', 'test_line')
-        assert_terminal_connected(line.Terminals[1], 'node2', 'test_line')
 
-    def test_add_electrical_bal_sets_impedance(self):
-        network, sub, bv, n1, n2 = make_2node_atom()
-        b = LineBuilder(network=network, container=sub)
-        b.create('test_line').add_connectivity('node1', 'node2')
-        b.add_electrical_bal(r=0.01, x=0.1, bch=0.0,
-                             r_unit='ohm', x_unit='ohm', bch_unit='S')
+def test_add_connectivity_resolves_base_voltage_by_name(network):
+    base_voltage = cim.BaseVoltage(name='base_4160')
+    graph_write.add_to_graph(network, base_voltage)
 
-        line = network.find_by_attribute(cim.ACLineSegment, 'name', 'test_line')[0]
-        assert abs(float(line.r) - 0.01) < 1e-9       # CIMUnit stores SI ohms
-        assert abs(float(line.x) - 0.1) < 1e-9
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='load_671')
+    builder.add_connectivity(load, node='671', BaseVoltage='base_4160')
+    consumer = builder.add(load)
+
+    assert consumer.BaseVoltage is base_voltage
+    assert consumer in base_voltage.ConductingEquipment
 ```
 
-Shared assertions (`tests/assertions.py`), builder-flavored:
-
-```python
-def assert_added_to_graph(network, cim_class, expected_count=None):
-    """The class is a graph key and (optionally) has the expected count."""
-    assert cim_class in network.graph, f'{cim_class.__name__} not in graph'
-    objs = network.graph[cim_class]
-    if expected_count is not None:
-        assert len(objs) == expected_count, \
-            f'expected {expected_count} {cim_class.__name__}, got {len(objs)}'
-
-def assert_terminal_connected(terminal, node_name, equipment_name):
-    assert terminal.ConnectivityNode is not None
-    assert terminal.ConnectivityNode.name == node_name
-    assert terminal.ConductingEquipment.name == equipment_name
-    assert terminal in terminal.ConnectivityNode.Terminals
-
-def assert_in_container(obj, container_class):
-    c = obj.EquipmentContainer
-    assert c is not None and isinstance(c, container_class)
-```
+Each assertion reads straight off the live object (`consumer.p`,
+`consumer.BaseVoltage`, `len(consumer.Terminals)`) or through
+`graph_write.resolve` — there is no separate `assert_added_to_graph`/
+`assert_terminal_connected` helper module in the real test suite; the fixture
+and the objects' own attributes are enough, since every write already went
+through `graph_write.set_attr`/`set_assc`/`add_to_graph`.
 
 ---
 
-## Step 5: Profile-Identity Assertion (the 0.5 guardrail)
+## Step 5: Profile-Identity Assertion
 
-Because builders read `cim = self.network.cim`, every object lands under the
-graph's own class identity. Add one assertion that would catch a stray
-`get_cim_profile()` re-derivation (0.5 Failure 1):
+Because `create()`/builder methods read `self.cim` (`= network.cim`, set once
+in `__init__`), every object lands under the graph's own class identity. Add
+one assertion that would catch a stray `get_cim_profile()` re-derivation:
 
 ```python
-def test_objects_use_network_profile_identity(self):
-    network, sub, bv, n1, n2 = make_2node_atom()
-    LineBuilder(network=network, container=sub).create('test_line').add_connectivity('node1', 'node2')
+def test_objects_use_network_profile_identity(network):
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='test_load')
+    builder.add_connectivity(load, node='671')
+    consumer = builder.add(load)
 
-    # The graph key and isinstance must agree on ONE ACLineSegment class object.
-    assert network.cim.ACLineSegment in network.graph
-    line = network.graph[network.cim.ACLineSegment].popitem()[1]
-    assert isinstance(line, network.cim.ACLineSegment)
+    # The graph key and isinstance must agree on ONE EnergyConsumer class object.
+    assert network.cim.EnergyConsumer in network.graph
+    assert isinstance(consumer, network.cim.EnergyConsumer)
 ```
 
-If a builder used `get_cim_profile()` instead of `network.cim` under a merged
-profile, this key lookup would miss and the test would fail loudly — which is the
-point.
+If a builder used `get_cim_profile()` instead of `self.cim` under a merged
+profile, this key lookup would miss and the test would fail loudly — which is
+the point.
 
 ---
 
 ## Step 6: Run It
 
 ```bash
-uv run pytest tests/object_builder/line/test_line_builder.py -v
+uv run pytest tests/builders/load/test_<equipment>.py -v
 ```
 
-Mirror the source tree under `tests/` (the `__pycache__` remnants show the
-intended layout): `tests/object_builder/<category>/test_<eq>_builder.py`,
-`tests/topology_builder/test_<topology>.py`, `tests/composite_builder/…`.
+Mirror the source tree under `tests/`: `tests/builders/<category>/test_<name>.py`,
+matching `cimbuilder/builders/<category>/<name>.py` — see
+`tests/builders/test_consumer.py` for `builders/load/consumer.py`'s layout.
 
 ---
 
 ## Saving an Atom as XML (Optional)
 
 For a debugging reference or an integration fixture, serialize any atom — using
-the **current** API (no `ConnectionParameters`):
+the real connection API (no `ConnectionParameters`):
 
 ```python
 from cimgraph.utils import write_xml
-network, sub, bv, n1, n2 = make_2node_atom()
-LineBuilder(network=network, container=sub).create('test_line').add_connectivity('node1', 'node2')
 
-write_xml(network, 'tests/test_models/line_atom.xml')
+builder = EnergyConsumerBuilder(network)
+load = builder.create(name='test_load')
+builder.add_connectivity(load, node='671')
+consumer = builder.add(load)
+
+write_xml(network, 'tests/test_models/load_atom.xml')
 ```
 
 This produces valid CIM XML with correct UUID cross-references because cimgraph
@@ -365,31 +416,37 @@ rely on external exporters for fixtures — mismatched UUIDs break round-trips.
 
 | Tier | Scope | Deps | Where |
 |---|---|---|---|
-| **Atom (unit)** | one builder / one `add_<profile>` method | pytest only | `tests/object_builder/**`, `tests/topology_builder/**` |
-| **Composition** | a builder chain + substation assembly (e.g. single-bus + feeder) | pytest, in-memory graph | `tests/composite_builder/**`, `tests/test_single_bus_integration.py` |
-| **Integration** | XML round-trip / Blazegraph upload + re-query (the old `deliverable.ipynb` flow) | running DB + CIM-Loader | `@pytest.mark.integration`, opt-in |
+| **Atom (unit)** | one builder / one `add_<profile>` method | pytest only | `tests/builders/**` |
+| **Composition** | a builder sequence + substation assembly (e.g. single-bus + feeder) | pytest, in-memory graph | `tests/composite_builder/**` (currently missing `.py` source — see `OBJECT_BUILDER_MIGRATION.md`), `tests/test_single_bus_integration.py` |
+| **Integration** | XML round-trip / Blazegraph upload + re-query | running DB + CIM-Loader | `@pytest.mark.integration`, opt-in |
 
 The atom and composition tiers must be green on every commit. The integration
-tier is opt-in (it needs a database) and is the modern, `XMLFile`/`get_cim_profile`
-replacement for the `ConnectionParameters` round-trip that broke in 0.3.
+tier is opt-in (it needs a database).
 
 ---
 
 ## Checklist for a Complete Builder Atom Test
 
-- [ ] Read the builder — list its constructor/`create` prerequisites
-      (container) and what each `add_<profile>` method writes
-- [ ] Choose the atom factory (1-node, 2-node, 2-voltage-level, feeder)
-- [ ] Build the network **directly** — no `ConnectionParameters`, no DB, no file
-- [ ] Run only up to the method under test (`create` → `add_connectivity` → …)
-- [ ] Assert creation: correct count of each CIM class in `network.graph`
+- [ ] Read the builder — list what each `add_<profile>` method writes and
+      which by-name FKs it resolves
+- [ ] Build the `network` fixture with a real (file-less) `XMLFile`
+      connection + `NameIndex`, not a bare `GraphModel()`
+- [ ] Add any by-name FK referent (`BaseVoltage`, `LoadResponse`, …) via
+      `graph_write.add_to_graph` before the method that resolves it
+- [ ] Run only up to the method under test (`create` → `add_connectivity` → …,
+      calling `add()` only if the assertion needs the object in the graph)
+- [ ] Assert creation: the object's own attributes, or `graph_write.resolve`
+      for by-name lookups
 - [ ] Assert wiring: terminals connected to the right nodes and equipment
-- [ ] Assert per-profile values: `add_electrical_bal` checks balanced EQ fields
-      only, `add_short_circuit` checks SC fields only (mirrors the §5a write-scoping)
-- [ ] Assert containment: equipment assigned to the right container
-- [ ] Assert profile identity: objects live under `network.cim.X` (0.5 guardrail)
-- [ ] (Per-unit, Phase 11) assert pu→SI conversion once the units engine exists;
-      until then assert the pu path raises `NotImplementedError` / warns
+- [ ] Assert per-profile values: `add_electrical` checks only electrical
+      fields, `add_ssh` checks only SSH fields — a field from a part the
+      method under test never touched should still be `None`
+- [ ] Assert containment: equipment assigned to the right container (explicit
+      override, or `network.container` fallback)
+- [ ] Assert profile identity: objects live under `network.cim.X`
+- [ ] A relative (`pu`/`%`) impedance value: assert the converted ohm value
+      (`float(obj.r) == pytest.approx(r_pct / 100 * z_base)`), not a
+      `NotImplementedError` — the conversion already exists (see `UNITS.md`)
 
 ---
 
@@ -398,34 +455,35 @@ replacement for the `ConnectionParameters` round-trip that broke in 0.3.
 ### Testing a profile method in isolation
 
 ```python
-def test_short_circuit_only_touches_zero_sequence(self):
-    network, sub, bv, n1, n2 = make_2node_atom()
-    b = LineBuilder(network=network, container=sub)
-    b.create('test_line').add_connectivity('node1', 'node2')
-    b.add_short_circuit(r0=0.03, x0=0.3, b0ch=0.0)
+def test_add_electrical_only_touches_electrical_fields(network):
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='test_load')
+    builder.add_connectivity(load, node='671')
+    builder.add_electrical(load, pfixed=10_000, qfixed=3_000)
 
-    line = network.find_by_attribute(cim.ACLineSegment, 'name', 'test_line')[0]
-    assert abs(float(line.r0) - 0.03) < 1e-9
-    assert abs(float(line.x0) - 0.3) < 1e-9
-    assert line.r is None   # add_electrical_bal was never called — EQ untouched
+    assert load.pfixed.to('W') == pytest.approx(10_000)
+    assert load.qfixed.to('VAr') == pytest.approx(3_000)
+    assert load.p is None   # add_ssh was never called — SSH fields untouched
 ```
 
-### Testing the deferred per-unit path (until Phase 11)
+### Testing a resolved-by-name FK that's missing
 
 ```python
-import pytest
-
-def test_per_unit_not_yet_supported(self):
-    network, sub, bv, n1, n2 = make_2node_atom()
-    b = LineBuilder(network=network, container=sub)
-    b.create('test_line').add_connectivity('node1', 'node2')
-    with pytest.raises(NotImplementedError):
-        b.add_electrical_bal(r=0.01, x=0.1, bch=0.0, r_unit='pu', x_unit='pu', bch_unit='pu')
+def test_add_connectivity_unresolved_base_voltage_name_links_none(network):
+    builder = EnergyConsumerBuilder(network)
+    load = builder.create(name='load_671')
+    builder.add_connectivity(load, node='671', BaseVoltage='does_not_exist')
+    consumer = builder.add(load)
+    assert consumer.BaseVoltage is None
 ```
 
-When Phase 11 lands the `z_base = base_kv**2 / base_mva` engine, replace this
-with the conversion assertion (compare `float(line.r)` to `r_pu * z_base`),
-exactly as CIMHub's `ATOM_TEST_CREATION.md` "per-unit to SI conversion" pattern.
+This is deliberate: an unresolved by-name FK leaves the field `None` rather
+than raising, for a field that's optional in the first place (`BaseVoltage=`
+defaults to `None`). Contrast `from_table`'s `EquipmentContainer` handling
+(`tests/builders/test_consumer.py::test_from_table_missing_equipment_container_raises`),
+which does raise — because a `.cimtbl` row's `EquipmentContainer` column, when
+present, is never optional; see `CIMTBL_DESIGN.md` §12.3 for why the two cases
+differ.
 
 ### Testing substation assembly (feeder insertion)
 

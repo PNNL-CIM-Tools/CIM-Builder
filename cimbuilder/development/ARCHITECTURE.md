@@ -1,199 +1,241 @@
 # CIM-Builder Builder Architecture
 
-This document defines the standard architecture that all CIM-Builder builders
-must follow after the uniform-API refactor. **`LineBuilder`** is the reference
-implementation. It is the build-side counterpart to CIMHub's `ARCHITECTURE.md`
-(which defines the converter pipeline); CIM-Builder *grows* CIM graphs rather
-than converting between formats.
+**Status:** revised to match the shipped reference implementation. Everything
+below describing a fluent/chainable API, a `builder_base` mixin, or
+`cgmes_3_0_0`/`cimhub_2023` as the target profile was the pre-implementation
+sketch and is now wrong — see the revision note.
 
-See the phase roadmap in
-`/home/ande188/.claude/plans/take-a-look-at-buzzing-crane.md` for the day-by-day
-sequence that brings the repo to this target state.
+> **Revision note.** `cimbuilder/builders/load/consumer.py`
+> (`EnergyConsumerBuilder`) is the real, shipped reference implementation, not
+> `LineBuilder`'s old sketch (`object_builder/line/line_builder.py`, itself
+> unfinished and never completed). The actual `ObjectBuilder` (`builders/base.py`)
+> is **stateless**: `add_<profile>` methods take the object being built as an
+> explicit first parameter and return `None` — there is no method chaining, no
+> `builder_base` mixin, and no `self.line`/`self.obj` instance state. The real
+> profile module family is `cimprofiles.cim18.cim18v17.*` (e.g.
+> `connectivity_unbalanced`, `electrical_unbalanced`, `steady_state_hypothesis`),
+> not `cgmes_3_0_0`/`cim18gmdm`/`cimhub_2023`. This document is rewritten to
+> describe that shape; see `GRAPH_WRITE_CONTRACT.md` §7 for the contract this
+> was reconciled against, and `OBJECT_BUILDER_MIGRATION.md` for the phased plan
+> that ports `object_builder/`'s old `new_*` functions onto it.
+
+This document defines the standard architecture CIM-Builder's equipment
+builders follow. **`EnergyConsumerBuilder`** (`builders/load/consumer.py`) is
+the reference implementation. It is the build-side counterpart to CIMHub's own
+architecture docs (which define the converter pipeline); CIM-Builder *grows*
+CIM graphs rather than converting between formats.
 
 ---
 
 ## The core idea: build one profile-part at a time
 
 A CIM object is not one flat record — it is the union of fields contributed by
-several **profile parts**: connectivity (EQ topology), electrical (impedance /
-ratings), short-circuit (zero-sequence), dynamics, measurement, asset. The
-CIMTool-generated dataclasses already carry all of these fields on one class.
+several **profile parts**: connectivity, electrical (impedance / ratings),
+steady-state hypothesis, short-circuit (zero-sequence), dynamics, measurement,
+asset. A merged profile module (`network.cim`) carries all of these fields on
+one class; the real, part-scoped modules (`cimprofiles.cim18.cim18v17.*`) split
+them back out.
 
 The wrong move (tried and reverted — `git log` `5b47fd6`) was to re-describe each
 object with bespoke functions whose parameter lists fused every profile
 together. The **eureka** is to mirror the profile partition in the builder: one
-method per profile part, populating *only* that part's fields, called in
-sequence. This:
+method per profile part, populating *only* that part's fields, called
+separately by the caller — see `EnergyConsumerBuilder.add_connectivity` /
+`.add_electrical` / `.add_ssh` in `consumer.py`. This:
 
-- matches how CIM is actually split for serialization (EQ + SSH + TP + meas +
-  asset), so a builder maps 1:1 onto an export-part boundary;
-- maps 1:1 onto the planned UI wizard (one page per profile — Connectivity →
-  Electrical → Short-circuit → …);
-- lets the type system *scope writes to one profile per method* (see
-  `PROFILE_TYPING.md`), turning a category error (`line.r0` — short-circuit — set
-  inside `add_electrical_bal`) into an edit-time flag. (Under CIM17 the
-  connectivity classes still live in the EQ part, so the CN↔EQ guardrail arrives
-  with the CIM18 split; the SC↔EQ one works today.)
+- matches how CIM is actually split for serialization (connectivity + SSH + TP +
+  meas + asset), so a builder maps 1:1 onto an export-part boundary;
+- gives each method a real, part-scoped reference module to check writes
+  against (`graph_write.set_attr(load, EL, 'pfixed', ...)` — `EL` is
+  `cim18v17.electrical_unbalanced`, not the merged `network.cim`), turning a
+  category error (writing a short-circuit field inside `add_electrical`) into
+  a runtime `ValueError` from `graph_write.set_attr`/`set_assc` (see
+  `GRAPH_WRITE_CONTRACT.md` §2) rather than a silent no-op.
 
 ---
 
 ## Layered flow
 
 ```
-User / UI wizard / substation assembly
-        │  instantiates a builder, calls add_<profile> in sequence
+User / UI wizard / substation assembly / cimtables.load()
+        │  constructs a builder, calls builder.create(),
+        │  then builder.add_<profile>(obj, ...) per part, passing obj explicitly
         ▼
-ObjectBuilder subclass            (LineBuilder, BreakerBuilder, …)
-   create() → add_connectivity() → add_electrical_bal() → add_short_circuit() → …
-        │  each method reads cim = self.network.cim  (NOT get_cim_profile())
+ObjectBuilder subclass            (EnergyConsumerBuilder, …)
+   create(*, name) -> obj                              (base.py, concrete)
+   add_connectivity(obj, ...) -> None                   (per-subclass, stateless)
+   add_electrical(obj, ...) -> None
+   add_ssh(obj, ...) -> None
+        │  each method imports its own part module at top level (CN, EL, SSH, ...)
+        │  and calls graph_write.set_attr/set_assc(obj, <part module>, attr, value)
         ▼
-builder_base mixin                 (shared mechanics: terminals, node wiring, graph add)
-        │  _cim / _new_terminal / _connect_node / _add
+cimtables.graph_write / cimtables.connectivity   (the only code that mutates obj or network)
+        │  set_attr/set_assc check attr against <part module>'s same-named class
         ▼
 GraphModel  (network.graph, keyed by the network's own class identity)
-        │  network.cim — the single source of profile identity (cim-graph 0.5 §2)
+        │  network.cim — the single source of profile identity
         ▼
-cimgraph profile module            (cimhub_2023 today; cgmes_3_0_0 merge under 0.5)
+cimgraph profile module            (the merged network.cim; part modules come
+                                     from cimprofiles.cim18.cim18v17.*)
 ```
 
 Three contracts hold at every layer:
 
 1. **Profile identity flows down, never re-derived.** The `GraphModel` carries
-   `network.cim`; every builder reads it. No builder calls `get_cim_profile()`.
-   This is cim-graph 0.5 §5; it makes graph keys and `isinstance` agree under a
-   merged profile (0.5 §1 Failure 1).
-2. **Mechanics live in one place.** Terminal creation, `ConnectivityNode`
-   wiring, deterministic UUID seeding, and `add_to_graph` are in
-   `builder_base`, not copy-pasted into every builder (the current fragmentation).
+   `network.cim`; `create()` reads it once in `__init__` (`self.cim =
+   network.cim`). No builder method calls `get_cim_profile()`. This keeps graph
+   keys and `isinstance` consistent under a merged profile — `get_cim_profile()`
+   and `network.cim` are not guaranteed to be the same object otherwise. See
+   `PROFILE_RESOLUTION.md`.
+2. **Mechanics live in `cimtables`, not in a builder mixin.** Terminal/node
+   wiring (`cimtables.connectivity.add_connectivity`), attribute/association
+   writes (`cimtables.graph_write.set_attr`/`set_assc`), and `add_to_graph` are
+   all in the `cimtables` package (split out of this repo — see
+   `CIMTBL_DESIGN.md` §8.1), not a `cimbuilder`-local mixin. A builder method's
+   own body is just: resolve any by-name FKs, call `graph_write.set_attr`/
+   `set_assc`/`connectivity.add_connectivity` with its own part module.
 3. **Substations are a separate assembly layer.** They orchestrate object
    builders to lay out a topology; they are *not* themselves `ObjectBuilder`s. A
-   substation is not one EQ+SSH+TP object, so it has no `add_<profile>` methods.
+   substation is not one profile-built object, so it has no `add_<profile>`
+   methods.
 
 ---
 
-## Module map (target)
+## Module map (current + target)
 
 ```
 cimbuilder/
-  object_builder/
-    object_builder.py        # ObjectBuilder(ABC): the create + add_<profile> contract
-    builder_base.py          # shared mixin: _cim, _new_terminal, _connect_node, _add, uuid seeding
-    line/line_builder.py     # LineBuilder(ObjectBuilder) — reference implementation
-    topology/                # BusBarSectionBuilder
-    shunt/                   # BreakerBuilder, CapacitorBuilder
-    switch/                  # DisconnectorBuilder
-    transformer/             # PowerTransformerBuilder (+ tap changer)
-    load/ generator/ inverter/ measurement/ protection/   # remaining equipment
-    generic/                 # GenericOneTerminalBuilder / GenericTwoTerminalBuilder
-    base/                    # new_base_voltage (BaseVoltage lookup/create)
-    __init__.py              # exports builder classes
-  substation_builder/        # assembly layer: SingleBusSubstation, MainAndTransferSubstation, …
-  utils/                     # terminal_to_node, get_base_voltage, get_source_bus, catalog_parser
-  units/                     # Phase 11: per-unit (z_base) conversion engine
-  development/               # this doc set + the test-creation strategy
-  __init__.py                # THE single user-facing import surface
+  builders/
+    base.py                  # ObjectBuilder: __init__, create, from_table, add — concrete, no ABC
+    load/consumer.py          # EnergyConsumerBuilder(ObjectBuilder) — reference implementation
+    <category>/<name>.py      # one module per equipment category, ported from object_builder/
+                               # (see OBJECT_BUILDER_MIGRATION.md for the phased port plan)
+  object_builder/             # pre-port: old new_<equipment>(network, container, name, ...)
+                               # factory functions, being replaced category by category
+  substation_builder/         # assembly layer: SingleBusSubstation, MainAndTransferSubstation, …
+  utils/                      # terminal_to_node, get_base_voltage, get_source_bus, catalog_parser
+  development/                # this doc set
+  __init__.py                 # THE single user-facing import surface
 ```
+
+`cimtables` (split out to `/home/ande188/CIM-Tables`, see `CIMTBL_DESIGN.md`
+§8.1) provides `graph_write`, `connectivity`, `binder.bind_row`, and the
+`.cimtbl` DSL itself — none of that lives in `cimbuilder` any more.
 
 ---
 
 ## The `ObjectBuilder` contract
 
-`object_builder/object_builder.py` defines the abstract contract. Every
-equipment builder subclasses it.
+`builders/base.py` defines the concrete base class. Every equipment builder
+subclasses it:
 
 ```python
-@dataclass
-class ObjectBuilder(ABC):
-    network: GraphModel
-    container: "EquipmentContainer"
+class ObjectBuilder:
+    def __init__(self, network: GraphModel, container: object = None):
+        self.network = network
+        self.container = container
+        self.cim = network.cim
 
-    @abstractmethod
-    def create(self, name: str): ...          # construct EQ object, set container, add to graph, return self
+    def create(self, *, name: str) -> object:
+        """Bare cim_cls(name=name) — no UUID seeding, no container, no
+        add_to_graph. Subclasses override only if construction needs more."""
+        return getattr(self.cim, self.cim_class_name)(name=name)
 
-    @abstractmethod
-    def add_connectivity(self, *nodes): ...    # terminals + ConnectivityNode wiring, return self
+    def from_table(self, row: object) -> object:
+        """Generic .cimtbl row -> live object, via cimtables.binder.bind_row.
+        No per-class dispatch table; see CIMTBL_DESIGN.md §4.2."""
+        return bind_row(self.network, row, obj=self.create(name=row.name), container=self.container)
 
-    # Optional profile parts — default to NotImplementedError, override where the
-    # object actually has that profile's fields:
-    def add_electrical_bal(self, *a, **k): raise NotImplementedError   # balanced (scalar r/x/bch)
-    def add_electrical_unbal(self, *a, **k): raise NotImplementedError  # per-phase (CIM18, deferred)
-    def add_short_circuit(self, *a, **k): raise NotImplementedError
-    def add_dynamics(self, *a, **k): raise NotImplementedError
-    def from_catalog(self, name_or_spec): raise NotImplementedError
+    def add(self, obj: object) -> object:
+        graph_write.add_to_graph(self.network, obj)
+        return obj
 ```
 
-**Why `create` + `add_connectivity` are abstract and the rest are not.** Every
-piece of conducting equipment exists in the graph (`create`) and connects to
-nodes (`add_connectivity`). Not every device has electrical impedance,
-zero-sequence data, or dynamics. A `Disconnector` implements only `create` +
-`add_connectivity`; a `ConcentricNeutralCableInfo`-bearing line implements
-electrical + short-circuit + asset. Calling an unimplemented part raises loudly
-(Fail Fast) rather than silently doing nothing.
+There are no abstract `add_<profile>` methods on the base class at all — a
+subclass simply defines whichever `add_<profile>(self, obj, *, ...)` methods
+its equipment type's profile actually has fields for (see
+`EnergyConsumerBuilder`'s `add_connectivity`/`add_electrical`/`add_ssh` below).
+Calling a method that doesn't exist on a given subclass is a plain
+`AttributeError` — there's no `NotImplementedError` stub layer to maintain.
 
-**Every method returns `self`** so a build reads as a chain that mirrors the
-profile sequence:
+**Every `add_<profile>` method is stateless and returns `None`.** The object
+being built is passed in explicitly as the first parameter; nothing is chained
+off a builder instance, and the builder itself holds only `network`,
+`container`, and `cim`:
 
 ```python
-LineBuilder(network=net, container=feeder) \
-    .create('Line1') \
-    .add_connectivity(node1='busA', node2='busB') \
-    .add_electrical_bal(r=0.01, x=0.1, bch=0.0, r_unit='ohm', x_unit='ohm', bch_unit='S')
+builder = EnergyConsumerBuilder(network, container=feeder)
+load = builder.create(name='load_671')
+builder.add_connectivity(load, node='671', BaseVoltage='base_4160')
+builder.add_electrical(load, pfixed=10_000, qfixed=3_000)
+builder.add_ssh(load, p=10_000, q=3_000)
+consumer = builder.add(load)
 ```
+
+This is deliberate, not a simplification of a chained design: an association
+(`BaseVoltage`, `LoadResponse`) belongs to whichever profile part actually
+owns that field, resolved and written inside that part's own `add_<profile>`
+method — there is no separate `add_references`/`add_assc`-style method, because
+associations are not a thing apart from the profile part that declares them.
 
 ---
 
-## The `builder_base` mixin
+## Where the mechanics actually live
 
-`object_builder/builder_base.py` holds the mechanics extracted from today's
-standalone functions, so no builder reimplements them:
+There is no `cimbuilder`-local mixin. Terminal/node wiring and attribute/
+association writes are `cimtables` functions, called directly from each
+`add_<profile>` method:
 
-| Helper | Replaces today's | Behavior |
-|--------|------------------|----------|
-| `self._cim` | `cim_profile, cim_module = get_cim_profile()` | returns `self.network.cim` — the one identity source |
-| `self._new_terminal(eq, seq, name)` | the hand-rolled `cim.Terminal(...)` blocks (inconsistent across builders) | builds a terminal, seeds its UUID deterministically, sets `sequenceNumber` + `ConductingEquipment`, appends to `eq.Terminals` |
-| `self._connect_node(terminal, node)` | direct `utils.terminal_to_node(...)` calls | wraps `cimbuilder.utils.terminal_to_node` (accepts a node object or a name string) |
-| `self._add(obj)` | `network.add_to_graph(obj)` | adds to the graph; one call site to audit |
+| Call | Replaces today's | Behavior |
+|------|------------------|----------|
+| `self.cim` | `cim_profile, cim_module = get_cim_profile()` | set once in `__init__` from `network.cim` — the one identity source |
+| `connectivity.add_connectivity(network, obj, node_cols=..., container=...)` | the hand-rolled `cim.Terminal(...)` + `utils.terminal_to_node(...)` blocks (inconsistent across the old `new_*` functions — see `OBJECT_BUILDER_MIGRATION.md`) | builds terminal(s), wires them to the named/object node(s), sets `EquipmentContainer` |
+| `graph_write.set_attr(obj, <part module>, attr, value)` | direct `setattr(obj, attr, value)` | checks `attr` is a real, non-association field of `<part module>`'s same-named class before writing; raises otherwise |
+| `graph_write.set_assc(obj, <part module>, assc, target)` | direct `setattr(obj, assc, target)` on both sides, by hand | writes both sides of the association from the part module's own `metadata['inverse']`, so the graph is never one-sided |
+| `graph_write.add_to_graph(network, obj)` | `network.add_to_graph(obj)` | adds to the graph and the network's `NameIndex` together |
 
-This consolidation also fixes the inconsistencies the current code carries — e.g.
-`switch/new_disconnector.py` seeds `t1.uuid(...)` twice and never seeds `t2`;
-`topology/new_bus_bar_section.py` hand-builds its terminal. Porting onto
-`builder_base` removes those by construction.
+Porting an old `new_*` function onto these fixes its inconsistencies by
+construction — e.g. `switch/new_disconnector.py` seeds `t1.uuid(...)` twice and
+never seeds `t2`; `topology/new_bus_bar_section.py` hand-builds its terminal.
+Going through `connectivity.add_connectivity` for every builder removes that
+drift instead of reproducing it per equipment type.
 
 ---
 
-## Profile-source rule (the 0.5 contract)
+## Profile-source rule
 
-Every builder method begins:
+`__init__` reads `self.cim = network.cim` once; builder methods use `self.cim`
+for resolving FK target classes and constructing objects
+(`getattr(self.cim, cls_name)(...)`), never `get_cim_profile()`. The model
+already carries the authoritative merged profile object — re-deriving from the
+env var is the source of a silent class-identity mismatch: under a merged
+profile, `get_cim_profile()` and `network.cim` can be different class objects,
+and `network.graph[get_cim_profile().X]` misses every time. Reading
+`network.cim` is correct on flat and merged profiles alike. See
+`PROFILE_RESOLUTION.md` for the full three-layer picture (this is Layer 3).
 
-```python
-cim = self.network.cim     # or: cim = self._cim
-```
-
-It does **not** call `get_cim_profile()`. The model already carries the
-authoritative profile object (cim-graph 0.5 §2: connection chooses it, model
-reads it from the connection, leaf reads it from the model). Re-deriving from the
-env var is the source of the silent class-identity mismatch the 0.5 plan
-eliminates — under a merged profile, `get_cim_profile()` and `network.cim` can be
-different class objects, and `network.graph[get_cim_profile().X]` misses every
-time. Reading `network.cim` is correct on flat and merged profiles alike.
-
-Genuinely model-less constructors (none expected among the builders) would keep
-`get_cim_profile()` — but a builder always receives a `GraphModel`, so the rule
-is unconditional here.
+A builder's `add_<profile>` methods additionally import their own **part**
+module at the top of the file (e.g. `cimprofiles.cim18.cim18v17.
+electrical_unbalanced as EL`) and pass it as the `part` argument to
+`graph_write.set_attr`/`set_assc` — that's a separate, stronger check (Layer 2)
+than `self.cim`, and is what actually catches a field written on the wrong
+profile part. See `GRAPH_WRITE_CONTRACT.md` §2.
 
 ---
 
 ## Substation assembly layer
 
 `substation_builder/*` stays class-based (`@dataclass`, today inheriting
-`SubstationBuilder(ABC)` with `new_branch` / `new_feeder`). After the refactor it
-*orchestrates* object builders instead of calling the old `new_*` functions:
+`SubstationBuilder(ABC)` with `new_branch` / `new_feeder`). As builder classes
+land for the equipment it calls (`BreakerBuilder`, `DisconnectorBuilder`,
+`BusbarSectionBuilder`, …), it *orchestrates* them instead of the old `new_*`
+functions:
 
 ```python
 # inside SingleBusSubstation.new_feeder(...)
-BreakerBuilder(self.network, self.substation) \
-    .create(f'{self.substation.name}_{breaker_number}') \
-    .add_connectivity(node1=junction1, node2=junction2)
+builder = BreakerBuilder(self.network, self.substation)
+breaker = builder.create(name=f'{self.substation.name}_{breaker_number}')
+builder.add_connectivity(breaker, node1=junction1, node2=junction2)
 ```
 
 It also reads `self.network.cim` (today it calls `get_cim_profile()` in
@@ -205,27 +247,30 @@ profile-built object. Keeping the two layers distinct is a locked decision.
 
 ## Why this is correct-by-construction
 
-- A new equipment type is a small subclass: implement `create` +
-  `add_connectivity`, plus whichever profile parts the object actually has.
-  Mechanics come free from `builder_base`; identity comes free from
-  `network.cim`; typing scope comes free from the §5a annotations.
-- The same `add_<profile>` boundary serves three consumers at once — the chained
-  API, the export-part split, and the UI wizard pages — so there is one structure
-  to keep right, not three.
-- Failures are loud: an unimplemented profile part raises; a wrong-identity graph
-  key would fail the identity assertion in the test suite
-  (`BUILDER_TEST_CREATION.md`).
+- A new equipment type is a small, stateless subclass: an `add_connectivity`
+  taking the object plus whichever by-name FKs it has, and one `add_<profile>`
+  per other part the object actually has fields for. Mechanics come free from
+  `cimtables.graph_write`/`connectivity`; identity comes free from `self.cim`.
+- The same `add_<profile>` boundary serves the direct/manual API, the generic
+  `.cimtbl` loader (`from_table`/`bind_row`, which needs zero per-class
+  dispatch — see `CIMTBL_DESIGN.md` §4.2), and the export-part split, so there
+  is one structure to keep right, not several.
+- Failures are loud: `graph_write.set_attr`/`set_assc` raise `ValueError` on a
+  field that isn't a real, correctly-kinded field of the part module passed in;
+  an unresolved by-name FK raises in the calling `add_<profile>` method itself.
 
 ---
 
 ## Related documents
 
-- `BUILDER_API.md` — the public method signatures and naming the contract above
-  must present to users.
-- `PROFILE_TYPING.md` — how `add_<profile>` methods are typed (§5a).
-- `UNITS.md` — how `add_electrical_bal` handles CIMUnit values and the deferred
-  per-unit engine.
-- `BUILDER_TEST_CREATION.md` — how to test a builder (atom factories + chained
-  asserts).
-- cim-graph 0.5 contract:
-  `/home/ande188/CIM-Graph/docs/development/PROFILE_IDENTITY_0_5_PLAN.md`.
+- `GRAPH_WRITE_CONTRACT.md` — the full `graph_write`/`set_attr`/`set_assc`
+  contract this architecture is built on, including §7's `ObjectBuilder` shape.
+- `PROFILE_RESOLUTION.md` — the three profile mechanisms (edit-time typing,
+  runtime `set_attr`/`set_assc` checking, `Profile=`/`network.cim` selection)
+  and how they compose.
+- `CIMTBL_DESIGN.md` — the `.cimtbl` DSL this builder shape underlies
+  (`bind_row`, now in the separate `cimtables` package).
+- `OBJECT_BUILDER_MIGRATION.md` — the phased plan porting `object_builder/`'s
+  old `new_*` functions onto this shape.
+- `UNITS.md` — CIMUnit construction/conversion rules for `add_<profile>`
+  methods that set physical quantities.

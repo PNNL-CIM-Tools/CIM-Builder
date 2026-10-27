@@ -829,7 +829,7 @@ tests/
 cimbuilder/
   __init__.py                 # Phase 7: public surface (load_cimtbl, *Builder, writer)
   builders/                   # Phase 5: one module OR package per CIM class family
-    base.py                   #   ObjectBuilder ABC + builder_base mixin
+    base.py                   #   ObjectBuilder: __init__/create/from_table/add (concrete, stateless, no mixin)
     line/                      #   ACLineSegmentBuilder - package (Sec4.4): >1 header
       __init__.py              #     shape (matrix/sequence/geometry) -> one file
       base.py                  #     per construction style, not one 500-line file

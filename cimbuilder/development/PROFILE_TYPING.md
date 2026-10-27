@@ -1,13 +1,32 @@
 # Profile-Scoped Typing for Builders
 
-This document defines the **edit-time typing model** for `ObjectBuilder`
-methods. It is CIM-Builder's adoption of cim-graph 0.5 §5a
-(`/home/ande188/CIM-Graph/docs/development/PROFILE_IDENTITY_0_5_PLAN.md`). The
-runtime side (`cim = self.network.cim`) is in `ARCHITECTURE.md`; this doc is the
-type-checker side that sits on top of it.
+**Status:** revised — the `TYPE_CHECKING`-gated sub-profile import model this
+doc originally specified was never adopted; the shipped reference
+implementation imports real, always-live part modules instead. See the
+revision note.
 
-The `line_builder.py` sketch was the first probe at this model. This doc
-formalizes what it was reaching for.
+> **Revision note.** `cimbuilder/builders/load/consumer.py`
+> (`EnergyConsumerBuilder`) imports its part modules
+> (`cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN`, `.
+> electrical_unbalanced as EL`, `.steady_state_hypothesis as SSH`) as plain,
+> always-executed top-level imports — never gated behind `if TYPE_CHECKING:`.
+> There was never a reason to defer them: unlike cim-graph 0.5's old
+> `cgmes_3_0_0`/`cim18gmdm` placeholders (which this doc was written against
+> and which no longer exist), `cimprofiles.cim18.cim18v17`'s part modules are
+> real, lightweight dataclass modules with no circular-import or heavy-runtime
+> concern — so there's nothing to gain from hiding the import from the
+> interpreter. This doc is rewritten to describe typing against those real
+> imports instead. The underlying idea (annotate a method-local name to the
+> narrow part module so Pylance flags a cross-part field) is unchanged and
+> still valid — only the "how you get the module" step changes.
+
+This document defines the **edit-time typing model** for `ObjectBuilder`
+methods: how to annotate a builder method so Pylance narrows completions and
+flags a field written through the wrong profile part. The runtime side
+(`self.cim = network.cim`, and the actual enforced check,
+`graph_write.set_attr`/`set_assc`) is in `ARCHITECTURE.md` and
+`GRAPH_WRITE_CONTRACT.md` §2; this doc is the type-checker side that sits on
+top of it — Layer 1 of the three-layer model in `PROFILE_RESOLUTION.md`.
 
 > **Scope.** This is layer 1 of 3 (edit-time only). It protects hand-written builder
 > code in the editor and does nothing at runtime or for `.cimtbl` data. The runtime
@@ -20,193 +39,139 @@ formalizes what it was reaching for.
 
 Runtime and edit-time pull in opposite directions:
 
-- **Runtime truth:** `self.network.cim` is *one* module whose `ACLineSegment`
-  carries **every** profile's fields (connectivity + electrical + short-circuit +
-  asset…). Under cim-graph 0.5 this module is a runtime *merge* — it has **no
-  file on disk**. Pylance can only see it as `ModuleType` / `Any`: no
+- **Runtime truth:** `self.cim` (= `network.cim`) is *one* module whose
+  `ACLineSegment` carries **every** profile's fields (connectivity + electrical
+  + short-circuit + asset…) — a runtime merge, with no single file on disk that
+  has only those fields. Pylance can only see it as `ModuleType` / `Any`: no
   completions, no field checking.
-- **What we want at edit time:** in `add_electrical_bal` you should get
-  completions for `r`, `x`, `bch` — and a *flag* if you accidentally set `r0`
-  (short-circuit). The method should be scoped to **one profile's fields**. (The
-  connectivity flag arrives with the CIM18 CN split; under CIM17 the CN classes
-  share the EQ part.)
+- **What we want at edit time:** in `add_electrical` you should get completions
+  for `pfixed`, `qfixed` — and a *flag* if you accidentally set a field that
+  belongs to a different part. The method should be scoped to **one part's
+  fields**.
 
-A single annotation can't be both the wide runtime truth and the narrow per-method
-scope. So we split them.
+A single annotation can't be both the wide runtime truth and the narrow
+per-method scope. So we annotate a *second*, part-scoped name.
 
 ---
 
 ## The model: runtime wide, edit-time narrow
 
-| | What `cim` is | Why |
+| | What the name is bound to | Why |
 |---|---|---|
-| **Runtime** | `self.network.cim` — the full (merged) module; one object carries every profile's fields | class-identity correctness — the 0.5 thesis |
-| **Edit time** | annotated as **one** sub-profile per method (`cim: CN`, `cim: EQ`, `cim: SC`) via `TYPE_CHECKING` imports | scopes each method's **write access** to one profile |
+| **Runtime (`self.cim`)** | `network.cim` — the full (merged) module; one object carries every profile's fields | class-identity correctness — object construction and FK resolution need the merged view |
+| **Edit time (a part-module import)** | a real, always-imported `cimprofiles.cim18.cim18v17.<part>` module, aliased per part (`CN`, `EL`, `SSH`, …) | scopes that method's **write access** to one profile part — this is the exact module passed as `graph_write.set_attr`/`set_assc`'s `part` argument, so the edit-time check and the runtime check agree |
 
-The per-method annotation is **deliberately narrower than the runtime truth**.
-That is the point: it tells Pylance "in this method you may only touch this
-profile's fields."
+This is how `consumer.py` is actually written — the part modules are plain,
+unconditional imports (nothing is gated behind `TYPE_CHECKING`), because they
+cost nothing to import and the same module object is what `graph_write` checks
+against at runtime:
 
 ```python
-from __future__ import annotations
-from typing import TYPE_CHECKING
-from dataclasses import dataclass
-from cimgraph.models import GraphModel
-from cimbuilder.object_builder.object_builder import ObjectBuilder
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL
+import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 
-if TYPE_CHECKING:
-    import cimgraph.data_profile.cgmes_3_0_0.core_equipment          as EQ
-    import cimgraph.data_profile.cgmes_3_0_0.short_circuit           as SC
-    import cimgraph.data_profile.cgmes_3_0_0.steady_state_hypothesis as SSH
-    # import cimgraph.data_profile.cgmes_3_0_0.dynamics              as DN
+from cimbuilder.builders.base import ObjectBuilder
+from cimtables import connectivity, graph_write
 
 
-@dataclass
-class LineBuilder(ObjectBuilder):
-    network: GraphModel
-    container: "EQ.EquipmentContainer"
+class EnergyConsumerBuilder(ObjectBuilder):
+    cim_class_name = 'EnergyConsumer'
 
-    def create(self, name: str) -> "LineBuilder":
-        cim: EQ = self.network.cim                 # runtime: the merged module
-        self.line: "EQ.ACLineSegment" = cim.ACLineSegment(name=name)
-        self.line.EquipmentContainer = self.container
-        self._add(self.line)
-        return self
+    def add_connectivity(self, load, *, node: str, container: object = None,
+                          phaseConnection=None, grounded=None, customerCount=None,
+                          BaseVoltage=None) -> None:
+        connectivity.add_connectivity(
+            self.network, load, node_cols={'node': node},
+            container=container if container is not None else self.container)
+        graph_write.set_attr(load, CN, 'customerCount', customerCount)
+        graph_write.set_attr(load, CN, 'grounded', grounded)
+        graph_write.set_attr(load, CN, 'phaseConnection', phaseConnection)
+        if BaseVoltage is not None:
+            target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
+            graph_write.set_assc(load, CN, 'BaseVoltage', target)
 
-    def add_connectivity(self, node1, node2) -> "LineBuilder":
-        cim: EQ = self.network.cim                 # CIM17: CN lives in EQ (see below)
-        t1 = self._new_terminal(self.line, 1, f'{self.line.name}_t1')
-        t2 = self._new_terminal(self.line, 2, f'{self.line.name}_t2')
-        self._connect_node(t1, node1)
-        self._connect_node(t2, node2)
-        return self
+    def add_electrical(self, load, *, pfixed=None, qfixed=None,
+                        pfixedPct=None, qfixedPct=None, LoadResponse=None) -> None:
+        graph_write.set_attr(load, EL, 'pfixed', pfixed)
+        graph_write.set_attr(load, EL, 'qfixed', qfixed)
+        graph_write.set_attr(load, EL, 'pfixedPct', pfixedPct)
+        graph_write.set_attr(load, EL, 'qfixedPct', qfixedPct)
+        if LoadResponse is not None:
+            target = graph_write.resolve(self.network, self.cim.LoadResponseCharacteristic, LoadResponse)
+            graph_write.set_assc(load, EL, 'LoadResponse', target)
 
-    def add_electrical_bal(self, r, x, bch,
-                           r_unit=None, x_unit=None, bch_unit=None) -> "LineBuilder":
-        cim: EQ = self.network.cim                 # balanced: scalar r/x/bch on EQ
-        self.line.r = cim.Resistance(r, r_unit or 'ohm')
-        self.line.x = cim.Reactance(x, x_unit or 'ohm')
-        self.line.bch = cim.Susceptance(bch, bch_unit or 'S')
-        return self
-
-    def add_electrical_unbal(self, *a, **k) -> "LineBuilder":
-        # per-phase impedance (ACLineSegmentPhase / PerLengthPhaseImpedance) —
-        # stubbed until the CIM18 unbalanced profile parts ship (next round)
-        raise NotImplementedError('unbalanced electrical lands with the CIM18 parts')
-
-    def add_short_circuit(self, r0, x0, b0ch) -> "LineBuilder":
-        cim: SC = self.network.cim                 # r0/x0/b0ch live in the SC part
-        self.line.r0 = cim.Resistance(r0, 'ohm')
-        self.line.x0 = cim.Reactance(x0, 'ohm')
-        self.line.b0ch = cim.Susceptance(b0ch, 'S')
-        return self
+    def add_ssh(self, load, *, p=None, q=None) -> None:
+        graph_write.set_attr(load, SSH, 'p', p)
+        graph_write.set_attr(load, SSH, 'q', q)
 ```
 
-`cim: SC = self.network.cim` — the annotation says SC, the runtime value is the
-full merged module. The assignment is fine at runtime (it's the same object);
-Pylance treats `cim` as the SC slice and offers only SC's classes. The local
-annotation **narrows**, it does not change the value.
+`CN`/`EL`/`SSH` are real module objects: Pylance resolves them against the
+actual files in `cimprofiles/cim18/cim18v17/`, so `graph_write.set_attr(load,
+EL, 'pfixed', ...)` gets real completions for `EL.EnergyConsumer`'s fields, and
+a typo'd or wrong-part attribute name is a `ValueError` at runtime (§2 of
+`GRAPH_WRITE_CONTRACT.md`) — not currently flagged at edit time, since
+`set_attr`'s `attr` parameter is a plain `str`, not a `Literal` over the part
+module's field names. Getting a edit-time flag for that would mean typing
+`attr` against `EL`'s own fields (e.g. an overload per part module) — not
+attempted yet; today's guardrail is runtime-only, same as any other `attr: str`
+call.
 
-> **CIM17 vs CIM18 — the connectivity slice.** In CGMES 3.0 (CIM17), the
-> `core_equipment` (EQ) part carries *both* the connectivity classes (`Terminal`,
-> `ConnectivityNode`) and the electrical fields (`r`, `x`, `bch`). So today
-> `add_connectivity` and `add_electrical_bal` both annotate `cim: EQ`. The
-> **method boundary still holds** — connectivity wiring and impedance values are
-> distinct methods (and distinct wizard pages) — only the *type slice* coincides.
-> CIM18 splits connectivity into its own part; when those official profile parts
-> ship, `add_connectivity` narrows to `cim: CN` with no change to the method
-> shape. The seam is already in place; only the annotation tightens.
+> **Why no `self.cim: EL` narrowing inside the method.** Earlier drafts of this
+> doc had each method open with `cim: <SLICE> = self.network.cim` — re-binding
+> the *merged* module under a narrow annotation. The shipped code doesn't do
+> this: it imports the real part module directly under its own name (`EL`), so
+> there's no runtime value being "re-typed," just a second, narrower import
+> used only for the parts of the method that need it (mainly as `graph_write`'s
+> `part` argument). `self.cim` (the merged module) is still what `create()` and
+> FK resolution (`self.cim.BaseVoltage`) use — the two names serve different
+> purposes and are never meant to be interchangeable.
 
 ---
 
 ## Why scope by profile
 
-- **Guardrail.** `self.line.r0` inside `add_electrical_bal` is a category error —
-  `r0` is short-circuit. With the method scoped to `cim: EQ`, Pylance rejects it
-  (`r0` is only on the SC slice). The profile partition is enforced at edit time,
-  not discovered at runtime. (Under CIM17 the EQ slice still holds connectivity,
-  so a connectivity/electrical mix-up is *not* yet flagged — that guardrail
-  arrives with the CIM18 CN split. The SC ↔ EQ guardrail works today.)
-- **No file on disk.** No `.pyi`, no `generate_type_stubs`, no canonical flat
-  import. The `TYPE_CHECKING` imports of the real `cgmes_3_0_0` sub-profile
-  modules are the only machinery, and they are erased at runtime (`if
-  TYPE_CHECKING` is always false at runtime; `from __future__ import annotations`
-  makes the string annotations lazy).
-- **It maps 1:1 onto the UI wizard.** "Add Line" → a wizard with one page per
-  profile (Connectivity → Electrical → Short-circuit). Each page is backed by one
-  `add_<profile>` method, and that method's profile slice is exactly the set of
-  fields the page renders. Type narrowing and UI step structure are the same
-  boundary.
+- **Guardrail.** Setting a short-circuit field inside `add_electrical` is a
+  category error. Passing `graph_write.set_attr(load, EL, 'r0', ...)` fails at
+  runtime (`r0` isn't a field of `EL.EnergyConsumer`); importing and passing
+  `cimprofiles.cim18.cim18v17.short_circuit as SC` instead, inside the right
+  method, is what gets it right. The profile partition is enforced per-method
+  by which part module that method imports and passes to `graph_write` — a
+  method only has access to the part modules it chose to import.
+- **No file on disk needed beyond the real profile package.** No `.pyi`, no
+  `generate_type_stubs`, no canonical flat import — just a plain import of the
+  real `cimprofiles.cim18.cim18v17.<part>` module.
+- **It maps 1:1 onto the CIM export-part split.** Connectivity, electrical,
+  SSH, short-circuit, asset are real serialization-part boundaries; one
+  `add_<profile>` method per part keeps the builder's method boundary aligned
+  with that split (and with any future UI wizard built around the same parts).
 
 ---
 
 ## The one wrinkle (don't mistake it for a bug)
 
-The method's profile slice is narrower than the runtime module. That is correct
-for **writes**. If a method legitimately needs to **read** a field that belongs
-to another profile on the same object, Pylance will flag it. That flag is the
-signal to **move the read into the method scoped to that profile**, not to widen
-the annotation. The constraint is healthy — document it, don't defeat it.
+A method's part-module import is narrower than `self.cim`. That is correct for
+**writes** scoped to that part. If a method legitimately needs to **resolve a
+reference** that belongs to another part on the same object (e.g.
+`add_connectivity` resolving `BaseVoltage`), it reads that reference's target
+class off `self.cim` (the merged module), not off the narrow part import — see
+`consumer.py`'s `self.cim.BaseVoltage` / `self.cim.LoadResponseCharacteristic`.
+The part import is for the `graph_write` call's `part` argument specifically,
+not a replacement for `self.cim` everywhere in the method.
 
 (Contrast: exporters/converters read *across* profiles by design and use the
-**wide** annotation — the whole merged profile, via a `.pyi`. That is CIMHub's
-§5c case, not ours. Builders write, so builders narrow.)
-
----
-
-## Today vs. the 0.5 target
-
-cim-graph **0.5.0a1** ships the deployable target: `network.cim` is live on
-`GraphModel`, and the `cgmes_3_0_0` merged profile exposes real sub-profile parts
-(`core_equipment`, `short_circuit`, `topology`, `steady_state_hypothesis`,
-`state_variables`, `operation`, `equipment_boundary`, `geographical_location`,
-`diagram`, `dynamics`). The §5a imports resolve against a real checkout.
-
-| | Today (`feature/23` pin) | Target (cim-graph 0.5.0a1) |
-|---|---|---|
-| Runtime profile | flat `cimhub_2023` | `cgmes_3_0_0` runtime merge |
-| Profile source in method | should become `self.network.cim` (Phase 3) | `self.network.cim` |
-| `TYPE_CHECKING` imports | not yet (pin predates 0.5) | `cgmes_3_0_0.core_equipment` / `.short_circuit` / … |
-| Connectivity slice | n/a | `cim: EQ` (CIM17); narrows to `cim: CN` when CIM18 parts ship |
-| Annotation | single flat slice until the pin is bumped | full §5a per-method narrowing |
-
-**Gap status (Phase 0 / Phase 1).** The gap the original plan flagged is now
-**closed at the source**: 0.5.0a1 deploys `cgmes_3_0_0` with the parts the §5a
-imports need. The remaining work is to bump CIM-Builder's own dependency pin
-(`cim-graph>=0.3.2,<0.4.0` → the 0.5 line) in Phase 1. Until then:
-
-1. Develop builders against the local 0.5.0a1 checkout
-   (`/home/ande188/CIM-Graph`), where `network.cim` and the `cgmes_3_0_0` parts
-   exist.
-2. The runtime code (`cim = self.network.cim`) is correct either way — only the
-   edit-time `TYPE_CHECKING` annotation depends on the installed package version.
-
-**Note — `cim18gmdm` (unbalanced).** 0.5.0a1 also ships a `cim18gmdm` merged
-profile, but its `electrical` part collapses connectivity + balanced electrical
-together and there is no separate `short_circuit` part. The unbalanced /
-per-phase model (`ACLineSegmentPhase`, `PerLengthPhaseImpedance`) is the
-`add_electrical_unbal` path, deferred to the next round (see `BUILDER_API.md`).
-The reference builders target `cgmes_3_0_0` first.
-
----
-
-## Checklist for typing a builder method
-
-- [ ] `from __future__ import annotations` at the top of the file
-- [ ] sub-profile imports under `if TYPE_CHECKING:` (erased at runtime)
-- [ ] each `add_<profile>` opens with `cim: <SLICE> = self.network.cim`
-- [ ] the stored object (`self.line`, …) is annotated with the profile slice it's
-      being written through in that method
-- [ ] no method reads or writes a field outside its profile slice — if Pylance
-      flags one, move it to the right method rather than widening
-- [ ] no `.pyi`, no flat canonical import for the builder (that's the converter
-      pattern, not this one)
+wide, merged module throughout. Builders mostly write, so builders bring in a
+narrow part module for the write call, while still reading `self.cim` for
+anything that needs the merged view.)
 
 ---
 
 ## Related documents
 
-- `ARCHITECTURE.md` — the runtime `network.cim` rule this typing sits on.
+- `ARCHITECTURE.md` — the runtime `self.cim` rule this typing sits on, and the
+  full `ObjectBuilder` shape.
 - `BUILDER_API.md` — the method signatures being typed.
-- cim-graph 0.5 §5a (builder/write typing) and §5c (converter/read typing):
-  `/home/ande188/CIM-Graph/docs/development/PROFILE_IDENTITY_0_5_PLAN.md`.
+- `GRAPH_WRITE_CONTRACT.md` §2 — the runtime check `graph_write.set_attr`/
+  `set_assc`'s `part` argument performs; this doc's edit-time narrowing and
+  that runtime check use the exact same module object.
+- `PROFILE_RESOLUTION.md` — all three profile mechanisms (this is Layer 1).
