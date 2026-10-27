@@ -229,6 +229,46 @@ it.
 
 ### Phase 3 — `ACLineSegmentBuilder`
 
+**Status: done.** Implemented as `cimbuilder/builders/line/base.py`
+(`ACLineSegmentBuilder`) + `cimbuilder/builders/line/by_template.py`
+(`PerLengthSequenceImpedanceBuilder`, `PerLengthPhaseImpedanceBuilder`),
+mirroring Phase 1's instance-tier/template-tier split. Tested end-to-end
+against the real `linecodes.cimtbl`/`lines.cimtbl` reference pair
+(`tests/builders/test_ac_line_segment.py`, 8 tests, all passing; 30/30 full
+suite). Confirmed against real Visio modeling reference diagrams
+(`LineModel01-05`) that there are **four** coexisting shapes, not the three
+originally scoped here — direct balanced PI, direct zero-sequence PI, and
+per-length reference split into *two* template classes
+(`PerLengthSequenceImpedance` balanced vs. `PerLengthPhaseImpedance`
+matrix), not one. Two real field-location corrections surfaced during
+implementation, both confirmed by reading the installed `cimprofiles`
+package directly rather than trusting this section's own sketch below:
+
+- **The per-length FK (`ACLineSegment.PerLengthImpedance`) is an
+  `electrical_unbalanced` field, not `electrical_balanced`** — the opposite
+  of what the sketch below says. `electrical_balanced.ACLineSegment` has
+  only the scalar `r`/`x`/`bch`/`gch` fields, no FK at all.
+- **`PerLengthImpedance`'s own base-class fields (`calculatedFrequency`,
+  `rg`, `xg`) must be written through whichever part module actually
+  defines a same-named class for the object's runtime type** —
+  `graph_write._part_field` matches by exact class name, not inheritance,
+  and `electrical_balanced` has no `PerLengthPhaseImpedance` class at all
+  (only `PerLengthSequenceImpedance`). So `PerLengthSequenceImpedanceBuilder`
+  uses `electrical_balanced` throughout, while `PerLengthPhaseImpedanceBuilder`
+  uses `electrical_unbalanced` throughout for the same three inherited
+  fields — two different part modules for fields that look identical on
+  the class diagram.
+- `PhaseImpedanceData`'s FK back to its matrix is the singular field
+  `PhaseImpedanceData.PhaseImpedance` (easy to miss — it's defined after the
+  four scalar fields, past where a quick read stops). `set_assc` must be
+  called from that singular side, once per row; calling it from the
+  `PerLengthPhaseImpedance.PhaseImpedanceData` list side with a list target
+  would silently append the whole list as one broken list element.
+
+The rest of this section (kept for history) was the resolved design going
+into implementation — accurate except for the `EL_BAL`/`EL_UNBAL` mix-up
+noted above.
+
 **Ports:** `object_builder/line/line_builder.py` (design intent only — the
 file itself is not working source, see §1b), `object_builder/generic/
 new_two_terminal_obj.py` (the terminal-wiring pattern it should use instead of
