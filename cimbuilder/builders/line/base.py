@@ -18,6 +18,14 @@ installed cimprofiles.cim18.cim18v17 package:
    both shapes share. The template itself is built by
    PerLengthImpedanceBuilder (by_template.py); this builder only
    references it.
+5. Wire geometry reference (LineModel04/05) - add_wire_configuration
+   resolves a WireConfiguration template by name and sets the FK. The
+   template itself (WireConfiguration -> WireSpacing, either
+   ConductorDistanceSpacing (LineModel04, distance-pair form) or XYSpacing
+   (LineModel05, x/y coordinate form)) is built by WireConfigurationBuilder
+   / ConductorDistanceSpacingBuilder / XYSpacingBuilder (by_template.py);
+   this builder only references the WireConfiguration by name, same
+   ordering rule as shapes 3/4's templates.
 
 Field locations confirmed directly against the installed cimprofiles
 package (do not assume - every part module below was grepped, not guessed):
@@ -46,9 +54,15 @@ package (do not assume - every part module below was grepped, not guessed):
   are "generic enough to live wherever" since they're on shared base
   classes; they are not - they're still a specific part module's fields,
   same rule as every other attribute in this file.
+- WireConfiguration/WireSpacing (shape 5's FKs) live on construction.ACLineSegment
+  as singular fields - a different part module again from length/BaseVoltage
+  (connectivity_unbalanced) and from the per-length-impedance FK
+  (electrical_unbalanced). Every shape here lives in its own part module;
+  none of them share one.
 """
 
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+import cimprofiles.cim18.cim18v17.construction as CONST
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL_UNBAL
 import cimprofiles.cim18.cim18v17.short_circuit as SC
@@ -114,4 +128,21 @@ class ACLineSegmentBuilder(ObjectBuilder):
                 f"(build the template before the instance that references it)"
             )
         graph_write.set_assc(line, EL_UNBAL, 'PerLengthImpedance', target)
+        return target
+
+    def add_wire_configuration(self, line, *, WireConfiguration: str) -> object:
+        """Shape 5 (wire geometry reference): resolves a WireConfiguration
+        template by name and sets construction.ACLineSegment.WireConfiguration.
+        The template's own WireSpacing (ConductorDistanceSpacing or XYSpacing)
+        is set when the template is built (WireConfigurationBuilder.add_rating
+        in by_template.py) - this method never touches WireSpacing directly,
+        same separation as add_per_length_impedance only ever referencing a
+        template, never building one."""
+        target = graph_write.resolve(self.network, self.cim.WireConfiguration, WireConfiguration)
+        if target is None:
+            raise ValueError(
+                f"{line.name!r}: WireConfiguration {WireConfiguration!r} not found in graph "
+                f"(build the template before the instance that references it)"
+            )
+        graph_write.set_assc(line, CONST, 'WireConfiguration', target)
         return target

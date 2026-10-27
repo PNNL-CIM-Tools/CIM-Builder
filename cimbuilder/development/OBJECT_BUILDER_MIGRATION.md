@@ -265,6 +265,35 @@ package directly rather than trusting this section's own sketch below:
   `PerLengthPhaseImpedance.PhaseImpedanceData` list side with a list target
   would silently append the whole list as one broken list element.
 
+**Extension — wire geometry reference (shape 5).** Added after the above:
+`ACLineSegmentBuilder.add_wire_configuration` references a `WireConfiguration`
+template by name (part module `construction`, a singular FK — a third,
+distinct part module from shapes 1-4's `electrical_balanced`/`short_circuit`/
+`electrical_unbalanced`). The template itself (`WireConfigurationBuilder`,
+`by_template.py`) points at one `WireSpacing` — either a
+`ConductorDistanceSpacingBuilder`-built `ConductorDistanceSpacing`
+(LineModel04, GridLAB-D `line_spacing` equivalent — one `ConductorDistance`
+row per described pair) or an `XYSpacingBuilder`-built `XYSpacing`
+(LineModel05, OpenDSS `LineSpacing`/`LineGeometry` equivalent — one
+`XYConductorPosition` row per conductor). Tested in
+`tests/builders/test_wire_spacing.py` (7 tests, 37/37 full suite). Two
+field-location surprises confirmed by reading `construction.py` directly:
+
+- `ConductorDistance` carries **two** pairs of sequence-number fields:
+  `sequenceNumber1`/`sequenceNumber2` (the real CIM101 fields, documented,
+  matching the diagram) and `fromSequenceNumber`/`toSequenceNumber` (an
+  undocumented gridappsd-extension duplicate with empty docstrings). The
+  builder uses the former; the latter looks like a plausible alternate name
+  and is a trap for a future reader skimming the class body top-to-bottom.
+- `WireSpacing`/`ConductorDistanceSpacing`/`XYSpacing` carry no impedance or
+  geometry data themselves — only list FKs back to their children
+  (`ACLineSegment`, `WireConfiguration`, `ConductorDistance`/
+  `XYConductorPosition`). Every one of those is set from the *child's*
+  singular FK side (`ConductorDistance.ConductorDistanceSpacing`,
+  `XYConductorPosition.XYSpacing`), same "singular side owns the call,
+  inverse auto-populates the list" pattern Phase 1/3's earlier corrections
+  already established — never set_assc'd from the list side directly.
+
 The rest of this section (kept for history) was the resolved design going
 into implementation — accurate except for the `EL_BAL`/`EL_UNBAL` mix-up
 noted above.
