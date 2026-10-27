@@ -168,11 +168,28 @@ file mirroring `tests/builders/test_consumer.py`'s pattern (see
 `BUILDER_TEST_CREATION.md`) and a verification that `uv run pytest` stays
 green.
 
-### Phase 1 — `PowerTransformerBuilder` (+ tap changer)
+### Phase 1 — `PowerTransformerBuilder` + `TransformerTankConfigurationBuilder`
 
-**Ports:** `object_builder/transformer/new_power_transformer.py`,
-`object_builder/transformer/new_tap_changer.py`.
-**New file:** `cimbuilder/builders/transformer/power_transformer.py`.
+**Status: superseded here, see the implementation plan.** The signature
+sketched below (one `add_electrical` writing `r`/`x` onto a merged
+`PowerTransformerEnd` with a single `z_base`) undercounts the real design —
+confirmed against real `.cimtbl` reference models
+(`/home/ande188/CIMTBL-Models/distribution/padmount_example.cimtbl`,
+`.../IEEE/IEEE13_CDPSM/xfmrcodes.cimtbl`) and real Visio modeling reference
+diagrams the user supplied: there are **three coexisting CIM impedance
+representations** (PI-direct-on-end for PSS/E, mesh-by-end, and
+mesh-by-winding/template for OpenDSS), all living in
+`cimprofiles.cim18.cim18v17.electrical_balanced` — not
+`electrical_unbalanced`, which has no scalar impedance fields on
+`PowerTransformerEnd` at all. The full, corrected, implementation-ready
+design (exact method set across two builder classes, confirmed part-module
+field locations, and the explicit decision to keep star↔mesh conversion out
+of `cimbuilder` entirely) lives in the approved implementation plan at
+`/home/ande188/.claude/plans/dreamy-purring-noodle.md` — read that, not the
+sketch below, before writing code.
+
+<details>
+<summary>Original (superseded) sketch — kept for history</summary>
 
 - `create(self, *, name)` — base.py's default is enough; no override needed.
 - `add_connectivity(self, xfmr, *, node1, node2, container=None)` — builds a
@@ -184,21 +201,18 @@ green.
   sets `PowerTransformerEnd.ratedU`/`.ratedS` (needed as the `z_base` for a
   relative impedance — see `_winding_z_base` in `cimtables/binder.py`) and the
   impedance itself via `graph_write.set_attr(end, EL, 'r', qty, z_base=...)`
-  when `r`/`x` arrive as a relative `Qty` (`%`/`pu`). This is the first real
-  caller of the relative-impedance path outside `.cimtbl`-driven `bind_row` —
-  confirm `z_base` resolution (ratedU/ratedS on the object's own
-  `PowerTransformerEnd`) matches `cimprofiles.cim18.cim18v17.electrical_unbalanced.PowerTransformerEnd`'s
-  real fields (confirmed present at the time of writing).
+  when `r`/`x` arrive as a relative `Qty` (`%`/`pu`).
 - `add_tap_changer(self, xfmr, *, end, highStep=0, lowStep=0, initialDelay=0, ...)` —
   ports `new_tap_changer`'s `RatioTapChanger` construction; folds the tap
   changer into the transformer builder rather than keeping it a separate
   top-level builder (matches `BASELINE.md`'s original call — "folded into
-  xfmr").
+  xfmr"). Still correct in the revised design.
 - Fixes `new_power_transformer`'s `catalog_file`-only path (today's function
   returns an undefined `xfmr` if `catalog_file is None` — a real bug, not
-  preserved) by making `add_electrical`'s direct-value path the primary one;
-  `utils.catalog_parser`-based construction can be a later, separate
-  `from_catalog`-style addition, not required for this phase.
+  preserved) by making the direct-value path primary; `utils.catalog_parser`-
+  based construction can be a later, separate `from_catalog`-style addition.
+
+</details>
 
 ### Phase 2 — Generalize `EnergyConsumerBuilder`'s already-shipped pattern
 
@@ -221,27 +235,90 @@ new_two_terminal_obj.py` (the terminal-wiring pattern it should use instead of
 reinventing one).
 **New file:** `cimbuilder/builders/line/segment.py`.
 
+**Impedance design — resolved.** A research pass read every real CIMHub_2_0
+line importer in full
+(`cimhub_opendss/importer/lines/line.py::_set_line_impedance`, all 4 cyme
+converter functions, `cimhub_raw/importer/lines/branch.py`) and cross-checked
+against what the shipped profile actually has. Two findings drove the final
+shape:
+
+1. **The four input shapes collapse to only two terminal CIM writes, never
+   four.** opendss's `_set_line_impedance` is a 5-way if/return cascade where
+   4 of 5 branches (linecode, rmatrix/xmatrix, geometry, spacing) end in
+   "resolve/build a `PerLengthImpedance`-family object and set
+   `line.PerLengthImpedance` by reference" — only the sequence-value branch
+   (`r1/x1/r0/x0/C1/C0`) sets scalars directly. All 4 cyme converter functions
+   go by-reference, never scalar. `raw/branch.py`'s PSS/E per-unit path
+   converts `pu`→ohms once (`z_base = kV²/MVA`) and then itself dispatches
+   into the *same* two terminal shapes depending on whether `length_km` is
+   known — PI-model per-unit is a CIMHub-side unit-conversion front end, not
+   a fifth CIM representation.
+2. **`electrical_unbalanced.ACLineSegment` (the part module every other
+   builder in this plan targets) has no scalar r/x/bch fields at all** —
+   confirmed by reading `cimprofiles/cim18/cim18v17/electrical_unbalanced/
+   electrical_unbalanced.py`: only `PerLengthImpedance`/`WireConfiguration`
+   associations. The balanced scalar fields (`r`, `x`, `bch`, `gch`) live in
+   `electrical_balanced.ACLineSegment` instead — a genuinely different part
+   module than this builder's other methods use. `PerLengthSequenceImpedance`
+   (r0/x0/b0ch/g0ch) lives in `short_circuit` and `electrical_balanced`, not
+   `electrical_unbalanced`.
+
+Three methods, one per CIM target shape — not one tagged-union method —
+matching the real importers' own structure (each picks a shape with an
+early-return/separate-function, never branches two shapes inside one call)
+and the `EnergyConsumerBuilder` precedent of one method per profile part:
+
+```python
+import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
+import cimprofiles.cim18.cim18v17.short_circuit as SC
+
+def add_electrical(self, line, *, r=None, x=None, bch=None, gch=None) -> None:
+    """Balanced scalar impedance. electrical_balanced.ACLineSegment.r/x/bch/gch
+    (NOT electrical_unbalanced — it has no scalar fields on ACLineSegment).
+    Mirrors opendss line.py's r1/x1/C1 branch and raw branch.py's
+    length_km<=0 branch."""
+    graph_write.set_attr(line, EL_BAL, 'r', r)
+    graph_write.set_attr(line, EL_BAL, 'x', x)
+    graph_write.set_attr(line, EL_BAL, 'bch', bch)
+    graph_write.set_attr(line, EL_BAL, 'gch', gch)
+
+def add_short_circuit(self, line, *, r0=None, x0=None, b0ch=None, g0ch=None) -> None:
+    """Zero-sequence. short_circuit.ACLineSegment.r0/x0/b0ch/g0ch.
+    Mirrors opendss line.py's r0/x0/C0 half of the same branch."""
+    graph_write.set_attr(line, SC, 'r0', r0)
+    graph_write.set_attr(line, SC, 'x0', x0)
+    graph_write.set_attr(line, SC, 'b0ch', b0ch)
+    graph_write.set_attr(line, SC, 'g0ch', g0ch)
+
+def add_per_length_impedance(self, line, *, PerLengthImpedance) -> None:
+    """By-reference impedance — the majority real-world path (4/5 opendss
+    branches, all 4 cyme converters, raw's length_km>0 branch). Resolves an
+    already-built PerLengthImpedance/PerLengthSequenceImpedance/
+    PerLengthPhaseImpedance by name and sets both sides of the association,
+    mirroring opendss's _link_per_length_impedance."""
+    target = graph_write.resolve_any_subclass(self.network, self.cim.PerLengthImpedance, PerLengthImpedance)
+    if target is None:
+        raise ValueError(f"{line.name!r}: PerLengthImpedance {PerLengthImpedance!r} not found in graph")
+    graph_write.set_assc(line, EL_BAL, 'PerLengthImpedance', target)
+```
+
 - `create`/`add_connectivity` — same two-terminal pattern as
   `new_two_terminal_object`, but through `connectivity.add_connectivity`
   rather than the old inline `utils.terminal_to_node` calls.
-- `add_electrical(self, line, *, r=None, x=None, bch=None, gch=None, ...)` —
-  balanced scalar impedance via `graph_write.set_attr`, part module
-  `cimprofiles.cim18.cim18v17.electrical_unbalanced` (`ACLineSegment` is
-  defined there).
-- `add_short_circuit(self, line, *, r0=None, x0=None, b0ch=None, g0ch=None)` —
-  zero-sequence, part module `cimprofiles.cim18.cim18v17.short_circuit`
-  (`ACLineSegment` is defined there too, confirmed at the time of writing).
-- **Impedance input shape.** CIMHub's four real input shapes (linecode-by-name,
-  sequence r1/x1/r0/x0, rmatrix/xmatrix, or PI-model per-unit) mean this
-  builder likely needs more than one `add_electrical`-style method, or one
-  method accepting a tagged-union-style set of keyword groups — resolve this
-  design question against a real CIMHub line importer (e.g.
-  `cimhub_opendss/importer/lines/line.py`) before committing to a signature,
-  rather than guessing. This is the one category in this plan that most needs
-  a design pass before the port, not just a mechanical translation.
-- Per-phase (`ACLineSegmentPhase`/`PerLengthPhaseImpedance`) matrix impedance
-  is a later addition once the scalar/sequence path is solid — do not block
-  Phase 3 on it.
+- A caller (or `from_table`'s field-presence dispatch, per `CIMTBL_DESIGN.md`
+  §12.2) picks whichever of the three impedance methods matches the input it
+  has — there is no silent precedence rule to resolve if more than one is
+  called, since each just writes its own fields/association independently;
+  the choice of *which one to call* is the caller's, exactly as it is in every
+  real importer today.
+- Geometry/spacing (opendss cases 4/5) produces no impedance call on
+  `ACLineSegmentBuilder` at all — it's `ACLineSegmentPhase` + `WireSpacingInfo`/
+  `WireInfo` construction, which belongs to connectivity/phase synthesis or a
+  separate `PerLengthPhaseImpedanceBuilder`, not this builder. Per-phase
+  matrix impedance (`PerLengthPhaseImpedance`/`PhaseImpedanceData`, already
+  locked in `CIMTBL_DESIGN.md` §3.8 as literal element-per-row) is likewise a
+  separate builder `ACLineSegmentBuilder.add_per_length_impedance` only ever
+  *references* by name — do not block Phase 3 on building it.
 
 ### Phase 4 — Switch family: `BreakerBuilder`, `DisconnectorBuilder`, (`FuseBuilder`, `RecloserBuilder` as straightforward siblings)
 
