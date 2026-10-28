@@ -1,23 +1,42 @@
-"""Switch builders: SwitchBuilder (base) and its subclass chain -
-ProtectedSwitchBuilder(SwitchBuilder), then BreakerBuilder/RecloserBuilder/
-LoadBreakSwitchBuilder(ProtectedSwitchBuilder), plus DisconnectorBuilder/
-FuseBuilder(SwitchBuilder) directly. See switch.py's module docstring for the
-full field-location evidence and why every leaf is a pure cim_class_name
-override with no new add_* methods needed (except BreakerBuilder's own
-inTransitTime)."""
+"""Switch builders: SwitchBuilder (base, switch.py) and its subclass chain -
+ProtectedSwitchBuilder(SwitchBuilder) in protected_switch.py, then
+BreakerBuilder/RecloserBuilder/LoadBreakSwitchBuilder(ProtectedSwitchBuilder);
+DisconnectorBuilder(SwitchBuilder) and its own GridAPPSD-extension siblings
+(ServiceDisconnectBuilder/ElbowBuilder/AirBreakSwitchBuilder/
+HookstickSwitchBuilder); FuseBuilder/SectionaliserBuilder(SwitchBuilder)
+directly. SwitchPhaseBuilder (switch_phase.py) is the separate per-phase
+override builder for a switch wired to a different phase per side."""
 
+from cimbuilder.builders.switch.protected_switch import (
+    BreakerBuilder,
+    LoadBreakSwitchBuilder,
+    ProtectedSwitchBuilder,
+    RecloserBuilder,
+)
 from cimbuilder.builders.switch.switch import (
+    AirBreakSwitchBuilder,
     DisconnectorBuilder,
+    ElbowBuilder,
     FuseBuilder,
+    HookstickSwitchBuilder,
+    SectionaliserBuilder,
+    ServiceDisconnectBuilder,
     SwitchBuilder,
 )
+from cimbuilder.builders.switch.switch_phase import SwitchPhaseBuilder
 
 __all__ = [
+    'AirBreakSwitchBuilder',
     'BreakerBuilder',
     'DisconnectorBuilder',
+    'ElbowBuilder',
     'FuseBuilder',
+    'HookstickSwitchBuilder',
     'LoadBreakSwitchBuilder',
     'ProtectedSwitchBuilder',
     'RecloserBuilder',
+    'SectionaliserBuilder',
+    'ServiceDisconnectBuilder',
     'SwitchBuilder',
+    'SwitchPhaseBuilder',
 ]
