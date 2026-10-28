@@ -29,14 +29,11 @@ class EnergyConsumerBuilder(ObjectBuilder):
         graph_write.set_attr(load, CN, 'grounded', grounded)
         graph_write.set_attr(load, CN, 'phaseConnection', phaseConnection)
         if BaseVoltage is not None:
-                    target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
-                    graph_write.set_assc(load, CN, 'BaseVoltage', target)
+            target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
+            graph_write.set_assc(load, CN, 'BaseVoltage', target)
 
     def add_electrical(self, load, *, pfixed=None, qfixed=None, pfixedPct=None, qfixedPct=None, LoadResponse=None) -> None:
-        # cim18v17.electrical_unbalanced.EnergyConsumer spells these lowercase
-        # (pfixed/qfixed/...), unlike the old merged cimhub_2026 profile's
-        # pfixed/qfixed - keyword args keep the public camelCase name, only the
-        # set_attr target changes.
+
         graph_write.set_attr(load, EL, 'pfixed', pfixed)
         graph_write.set_attr(load, EL, 'qfixed', qfixed)
         graph_write.set_attr(load, EL, 'pfixedPct', pfixedPct)

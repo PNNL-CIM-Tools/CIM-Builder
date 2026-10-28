@@ -391,23 +391,68 @@ def add_per_length_impedance(self, line, *, PerLengthImpedance) -> None:
 
 ### Phase 4 — Switch family: `BreakerBuilder`, `DisconnectorBuilder`, (`FuseBuilder`, `RecloserBuilder` as straightforward siblings)
 
-**Ports:** `object_builder/shunt/new_breaker.py`,
-`object_builder/switch/new_disconnector.py`.
-**New files:** `cimbuilder/builders/switch/breaker.py`,
-`cimbuilder/builders/switch/disconnector.py`.
+**Status: done.** `cimbuilder/builders/switch/switch.py`,
+`tests/builders/test_switch.py` (8 tests, 45/45 full suite). Ports
+`object_builder/shunt/new_breaker.py`, `object_builder/switch/new_disconnector.py`.
 
-- Fixes the double-UUID bug (§1c.1) by construction — going through
-  `connectivity.add_connectivity` for both terminals removes the hand-rolled
-  per-terminal seeding entirely.
-- `add_connectivity(self, sw, *, node1, node2, open=None, container=None)` —
-  `Disconnector`/`Fuse`/`Recloser`/`Breaker`'s open/closed state field lives on
-  the `connectivity_unbalanced`/`steady_state_hypothesis` part (confirmed: no
-  `electrical_unbalanced` definition of these classes exists), so this
-  category needs **no `add_electrical` at all** — simplest category in this
-  plan, good first port to validate the pattern before Transformer/Line.
-- `Fuse`/`Recloser`/`LoadBreakSwitch` are mechanical siblings of
-  `DisconnectorBuilder` once one is done — same shape, different class name;
-  worth doing as one short follow-up rather than a separate phase.
+Resolved against the Visio modeling reference diagram (Switch), which shows a
+real subclass chain — `Wires::Switch` → `Wires::ProtectedSwitch` →
+`Wires::Breaker`/`Wires::Recloser`/`Wires::LoadBreakSwitch`, plus
+`Wires::Disconnector` as a `Switch` sibling. Built as a matching Python
+subclass chain: `SwitchBuilder` (base) → `ProtectedSwitchBuilder(SwitchBuilder)`
+→ `BreakerBuilder`/`RecloserBuilder`/`LoadBreakSwitchBuilder(ProtectedSwitchBuilder)`,
+with `DisconnectorBuilder`/`FuseBuilder(SwitchBuilder)` as direct siblings.
+Every leaf except `BreakerBuilder` (which adds `add_breaker_rating` for its
+own `inTransitTime`) is a **pure `cim_class_name` override with zero new
+code** — every inherited `add_*` method works unchanged because each one
+only touches fields keyed off the object's own runtime type
+(`graph_write.set_attr`'s `_part_field` exact-class-name match), never off
+which builder subclass built it. This is the same reason `ObjectBuilder.create()`
+(`cimbuilder/builders/base.py`) needs no override per subclass either.
+
+Fixes the double-UUID bug (§1c.1) by construction — `add_connectivity` goes
+through the existing generic `cimtables.connectivity.add_connectivity` for
+both terminals, removing the hand-rolled per-terminal seeding
+(`new_disconnector.py` seeded `t1`'s UUID twice and never seeded `t2`'s)
+entirely. No `add_electrical` at all — correct, matching this plan's
+original call — but the real split confirmed by reading every switch class's
+body directly (not just grepping for a field name, which under-counted on an
+earlier, too-narrow `sed` line range) is less even than first assumed:
+
+- `open`/`normalOpen`/`retained`/`areaBoundary`/`topologicalUsage`/
+  `gangOperated`/`motorOperated`/`remotelyOperated` are available on **every**
+  leaf type (`Disconnector`/`Fuse`/`Breaker`/`LoadBreakSwitch`/`Recloser`),
+  because `connectivity_unbalanced` and `steady_state_hypothesis` are the two
+  part modules that define a same-named class for every one of them. `open`
+  specifically lives in `steady_state_hypothesis`, not alongside the rest in
+  `connectivity_unbalanced` — a different part module despite both classes
+  sharing a word-for-word identical docstring. `add_switching` covers this
+  shared set.
+- `ratedCurrent` is **not** available on every leaf — it exists only in
+  `electrical_balanced.Switch` and `electrical_unbalanced.Switch`, and
+  neither of those part modules defines a `Disconnector`, `Fuse`, or
+  `Recloser` class at all (only `Switch`/`ProtectedSwitch`/`Breaker`, plus
+  `LoadBreakSwitch` in `electrical_unbalanced`). So `ratedCurrent` is only
+  settable on `Switch`/`ProtectedSwitch`/`Breaker`/`LoadBreakSwitch`
+  instances — deliberately left out of `add_switching` rather than offered
+  and silently failing on half the leaves.
+- `breakingCapacity` (`ProtectedSwitch`'s own field, `electrical_unbalanced`)
+  has the identical gap one level up: `electrical_unbalanced` defines
+  `ProtectedSwitch`/`Breaker`/`LoadBreakSwitch` but not `Recloser`, so
+  `add_protection` (inherited by `RecloserBuilder`) raises on an actual
+  `Recloser` instance — confirmed and locked in as a test
+  (`test_recloser_builder_breaking_capacity_not_reachable`), not treated as a
+  bug to route around, since it accurately reflects what this profile build
+  supports today.
+- `locked`/`loadBreak` (shown on the diagram's `WiresEXT::Switch`
+  `ShadowExtension,GridAPPSD` box) don't exist anywhere in the installed
+  package (`locked` only exists on the unrelated DC-system `DCSwitch`) — not
+  set by this builder.
+- `SwitchPhase` (the diagram's phase-level box) has no `sequenceNumber`; the
+  existing generic `cimtables.connectivity.add_phase_children` already
+  special-cases this shape (`phaseSide1`/`phaseSide2`, both set to the same
+  `SinglePhaseKind`, in written-phase order) — reused unchanged via
+  `add_connectivity(phases=...)`, same as `ACLineSegmentBuilder`.
 
 ### Phase 5 — `LinearShuntCompensatorBuilder` (capacitor)
 

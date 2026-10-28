@@ -20,9 +20,9 @@ class ObjectBuilder(ABC):
         self.container = container
         self.cim = network.cim
 
-    def create(self, *, name: str) -> object:
+    def create(self, *, name: str, mRID=None, identifier=None) -> object:
         cim_cls = getattr(self.network.cim, self.cim_class_name)
-        return cim_cls(name=name)
+        return cim_cls(name=name, mRID=mRID, identifier=identifier)
 
     def from_table(self, row: object) -> object:
         """DSL/bulk entry point (§4.2): bind a validated <Class>Row onto a
