@@ -47,7 +47,7 @@ import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.regulating_control as REG
 
 from cimbuilder.builders.base import ObjectBuilder
-from cimtables import connectivity, graph_write
+from cimtables import connectivity, graph_write, impedance
 
 
 class PowerTransformerBuilder(ObjectBuilder):
@@ -101,22 +101,36 @@ class PowerTransformerBuilder(ObjectBuilder):
         already-computed values the caller has; this method performs no
         star<->mesh conversion (that stays in cimhub_core.transformations,
         or a future standalone conversion utility - never here).
-        * r: a Qty resolved to Resistance (ohm, SI base). No `z_base` is ever
-          passed to set_attr here, so a pu/percent r raises ValueError - the
-          caller must already have an absolute-ohm value.
-        * x: a Qty resolved to Reactance (ohm, SI base); same z_base caveat
-          as r.
-        * b: a Qty resolved to Susceptance (siemens, SI base).
-        * g: a Qty resolved to Conductance (siemens, SI base).
+        * r: a Qty resolved to Resistance (ohm, SI base) if absolute, or
+          converted to ohms against a z_base computed from `end`'s OWN
+          ratedU/ratedS (via cimtables.impedance.resolve_winding_z_base) if
+          relative (pu/percent) - e.g. Qty(2.08, 'percent'). Set ratedU/ratedS
+          (below) BEFORE passing a relative r/x, or the z_base resolves to
+          None and set_attr raises. Call add_electrical twice (ratings
+          first, then impedance) if ratedU/ratedS and r/x are both needed in
+          one method - this method itself applies no ordering between its
+          own parameters, so get the order right at the call site.
+        * x: a Qty resolved to Reactance (ohm, SI base); same relative-Qty
+          rule and z_base source as r.
+        * b: a Qty resolved to Susceptance (siemens, SI base) if absolute,
+          or converted to siemens against a y_base computed from the SAME
+          ratedU/ratedS as r/x's z_base (via
+          cimtables.impedance.resolve_winding_y_base, y_base = 1/z_base) if
+          relative (pu/percent) - the magnetizing-branch counterpart to r/x.
+          Same ratedU/ratedS-first ordering requirement as r.
+        * g: a Qty resolved to Conductance (siemens, SI base); same
+          relative-Qty rule and y_base source as b.
         * ratedS: a Qty resolved to ApparentPower (VA, SI base).
         * ratedU: a Qty resolved to Voltage (V, SI base).
         A bare number for any of these is stored unconverted via plain
         setattr.
         """
-        graph_write.set_attr(end, EL_BAL, 'r', r)
-        graph_write.set_attr(end, EL_BAL, 'x', x)
-        graph_write.set_attr(end, EL_BAL, 'b', b)
-        graph_write.set_attr(end, EL_BAL, 'g', g)
+        z_base = impedance.resolve_winding_z_base([end]) if (r is not None or x is not None) else None
+        y_base = impedance.resolve_winding_y_base([end]) if (b is not None or g is not None) else None
+        graph_write.set_attr(end, EL_BAL, 'r', r, z_base=z_base)
+        graph_write.set_attr(end, EL_BAL, 'x', x, z_base=z_base)
+        graph_write.set_attr(end, EL_BAL, 'b', b, y_base=y_base)
+        graph_write.set_attr(end, EL_BAL, 'g', g, y_base=y_base)
         graph_write.set_attr(end, EL_BAL, 'ratedS', ratedS)
         graph_write.set_attr(end, EL_BAL, 'ratedU', ratedU)
 
@@ -130,9 +144,16 @@ class PowerTransformerBuilder(ObjectBuilder):
           Resolved via graph_write.resolve (not set_assc_from_mrid); if
           either is not found, this raises ValueError itself rather than
           delegating to resolve/set_assc's own error.
-        * r: a Qty resolved to Resistance (ohm, SI base). No `z_base` is
-          passed to set_attr, so a pu/percent r raises ValueError.
-        * x: a Qty resolved to Reactance (ohm, SI base); same caveat as r.
+        * r: a Qty resolved to Resistance (ohm, SI base) if absolute, or
+          converted to ohms against a z_base computed from from_end's OWN
+          ratedU/ratedS (via cimtables.impedance.resolve_winding_z_base) if
+          relative (pu/percent) - mirrors CIM's "the 'from' end ...
+          determines the voltage reference" rule (same base-source choice
+          add_winding/add_mesh_impedance use in by_template.py's
+          mesh-by-winding tier). Raises ValueError if relative and from_end's
+          ratedU/ratedS aren't both already set.
+        * x: a Qty resolved to Reactance (ohm, SI base); same relative-Qty
+          rule and z_base source as r.
         A bare number for either is stored unconverted via plain setattr.
 
         Returns the built, graph-added TransformerMeshImpedance.
@@ -147,8 +168,9 @@ class PowerTransformerBuilder(ObjectBuilder):
         mesh = self.cim.TransformerMeshImpedance(mRID=f'{xfmr.mRID}_mesh_{FromTransformerEnd}_{ToTransformerEnd}')
         graph_write.set_assc(mesh, EL_BAL, 'FromTransformerEnd', from_end)
         graph_write.set_assc(mesh, EL_BAL, 'ToTransformerEnd', to_end)
-        graph_write.set_attr(mesh, EL_BAL, 'r', r)
-        graph_write.set_attr(mesh, EL_BAL, 'x', x)
+        z_base = impedance.resolve_winding_z_base([from_end]) if (r is not None or x is not None) else None
+        graph_write.set_attr(mesh, EL_BAL, 'r', r, z_base=z_base)
+        graph_write.set_attr(mesh, EL_BAL, 'x', x, z_base=z_base)
         graph_write.add_to_graph(self.network, mesh)
         return mesh
 

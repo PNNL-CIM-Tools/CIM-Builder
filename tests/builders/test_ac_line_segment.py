@@ -13,6 +13,7 @@ docstring.
 """
 
 import importlib
+import os
 import tempfile
 
 import pytest
@@ -25,7 +26,8 @@ from cimbuilder.builders.line import (
     PerLengthPhaseImpedanceBuilder,
     PerLengthSequenceImpedanceBuilder,
 )
-from cimtables import graph_write
+from cimtables import graph_write, impedance, parser, validate
+from cimtables.binder import bind_row
 from cimtables.units import Qty
 
 # Profile set per test via monkeypatch (+ cache_clear, since get_cim_profile
@@ -109,6 +111,133 @@ def test_add_short_circuit_writes_zero_sequence_pi_values(network):
     assert line.r0.to('ohm') == pytest.approx(3.0)
     assert line.x0.to('ohm') == pytest.approx(10.0)
     assert line.b0ch.to('S') == pytest.approx(1.2e-6)
+
+
+# --- system-base (pu) impedance ---------------------------------------------
+# ACLineSegment has no self-contained rating pair (no ratedS/ratedU anywhere
+# in this profile), so a relative r/x/r0/x0 needs CIMG_SYSTEM_MVA_BASE (the
+# PSS/E-RAW-SBASE equivalent) paired with the line's own BaseVoltage, not
+# cimtables.impedance.resolve_winding_z_base's candidate-rating-pair walk.
+# `pu`, not `percent`: percent/%Z is a nameplate-impedance convention for
+# transformer tanks (OpenDSS %R/%Xhl), not how line impedance is expressed
+# relative to a system base.
+
+@pytest.fixture
+def system_mva_base(monkeypatch):
+    monkeypatch.setenv('CIMG_SYSTEM_MVA_BASE', '100')
+    impedance.get_system_mva_base.cache_clear()
+    yield
+    impedance.get_system_mva_base.cache_clear()
+
+
+def test_add_electrical_converts_pu_impedance_using_system_base(network, system_mva_base):
+    bv = network.cim.BaseVoltage(mRID='bv_115kv', nominalVoltage=network.cim.Voltage(115, 'kV'))
+    graph_write.add_to_graph(network, bv)
+
+    builder = ACLineSegmentBuilder(network)
+    line = builder.create(mRID='line1')
+    builder.add_connectivity(line, node1='rg60', node2='632', BaseVoltage='bv_115kv')
+
+    builder.add_electrical(line, r=Qty(0.01, 'pu'), x=Qty(0.05, 'pu'))
+
+    z_base = (115e3 ** 2) / 100e6
+    assert line.r.to('ohm') == pytest.approx(0.01 * z_base)
+    assert line.x.to('ohm') == pytest.approx(0.05 * z_base)
+
+
+def test_add_short_circuit_converts_pu_impedance_using_system_base(network, system_mva_base):
+    bv = network.cim.BaseVoltage(mRID='bv_115kv', nominalVoltage=network.cim.Voltage(115, 'kV'))
+    graph_write.add_to_graph(network, bv)
+
+    builder = ACLineSegmentBuilder(network)
+    line = builder.create(mRID='line1')
+    builder.add_connectivity(line, node1='rg60', node2='632', BaseVoltage='bv_115kv')
+
+    builder.add_short_circuit(line, r0=Qty(0.02, 'pu'), x0=Qty(0.08, 'pu'))
+
+    z_base = (115e3 ** 2) / 100e6
+    assert line.r0.to('ohm') == pytest.approx(0.02 * z_base)
+    assert line.x0.to('ohm') == pytest.approx(0.08 * z_base)
+
+
+def test_add_electrical_pu_impedance_without_system_mva_base_raises(network):
+    impedance.get_system_mva_base.cache_clear()
+    bv = network.cim.BaseVoltage(mRID='bv_115kv', nominalVoltage=network.cim.Voltage(115, 'kV'))
+    graph_write.add_to_graph(network, bv)
+
+    builder = ACLineSegmentBuilder(network)
+    line = builder.create(mRID='line1')
+    builder.add_connectivity(line, node1='rg60', node2='632', BaseVoltage='bv_115kv')
+
+    with pytest.raises(ValueError, match='needs a z_base'):
+        builder.add_electrical(line, r=Qty(0.01, 'pu'))
+    impedance.get_system_mva_base.cache_clear()
+
+
+def test_add_electrical_pu_impedance_without_base_voltage_raises(network, system_mva_base):
+    builder = ACLineSegmentBuilder(network)
+    line = builder.create(mRID='line1')
+
+    with pytest.raises(ValueError, match='needs a z_base'):
+        builder.add_electrical(line, r=Qty(0.01, 'pu'))
+
+
+def test_add_electrical_converts_pu_admittance_using_system_base(network, system_mva_base):
+    bv = network.cim.BaseVoltage(mRID='bv_115kv', nominalVoltage=network.cim.Voltage(115, 'kV'))
+    graph_write.add_to_graph(network, bv)
+
+    builder = ACLineSegmentBuilder(network)
+    line = builder.create(mRID='line1')
+    builder.add_connectivity(line, node1='rg60', node2='632', BaseVoltage='bv_115kv')
+
+    builder.add_electrical(line, bch=Qty(0.0528, 'pu'))
+
+    y_base = 100e6 / (115e3 ** 2)
+    assert line.bch.to('S') == pytest.approx(0.0528 * y_base)
+
+
+def test_add_electrical_pu_admittance_without_system_mva_base_raises(network):
+    impedance.get_system_mva_base.cache_clear()
+    bv = network.cim.BaseVoltage(mRID='bv_115kv', nominalVoltage=network.cim.Voltage(115, 'kV'))
+    graph_write.add_to_graph(network, bv)
+
+    builder = ACLineSegmentBuilder(network)
+    line = builder.create(mRID='line1')
+    builder.add_connectivity(line, node1='rg60', node2='632', BaseVoltage='bv_115kv')
+
+    with pytest.raises(ValueError, match='needs a y_base'):
+        builder.add_electrical(line, bch=Qty(0.0528, 'pu'))
+    impedance.get_system_mva_base.cache_clear()
+
+
+def test_ieee13_line_1_2_bch_pu_row_binds_end_to_end(network, system_mva_base):
+    """Regression: cimbuilder/development/ieee13.cimtbl's line_1_2 row
+    (bch (pu)=0.05280, r (pu)=1.93800E-2, x (pu)=5.91700E-2, BaseVoltage=
+    base_115) previously raised pint.errors.DimensionalityError inside
+    bind_row - bch (pu) on a siemens-typed field went straight to plain
+    setattr with no gate at all, since set_attr's relative-conversion gate
+    was ohm-only before this fix. Binds the real fixture row through the
+    real pipeline (parser -> validate -> bind_row), not a hand-written Qty
+    call, so this is the actual data that motivated the fix, not just a
+    constructed example."""
+    bv = network.cim.BaseVoltage(mRID='base_115', nominalVoltage=network.cim.Voltage(115000, 'V'))
+    graph_write.add_to_graph(network, bv)
+    container = network.cim.Feeder(mRID='transmission_line')
+    graph_write.add_to_graph(network, container)
+
+    sample_path = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'cimbuilder', 'development', 'ieee13.cimtbl')
+    records, _ = parser.parse_file(sample_path)
+    rows = [validate.validate(r) for r in records if r.cim_class == 'ACLineSegment']
+    row = next(r for r in rows if r.mRID == 'line_1_2')
+
+    line = bind_row(network, row)
+
+    z_base = (115000 ** 2) / 100e6
+    y_base = 1.0 / z_base
+    assert line.r.to('ohm') == pytest.approx(0.01938 * z_base)
+    assert line.x.to('ohm') == pytest.approx(0.05917 * z_base)
+    assert line.bch.to('S') == pytest.approx(0.0528 * y_base)
 
 
 # --- shape 3: per-length balanced reference ---------------------------------

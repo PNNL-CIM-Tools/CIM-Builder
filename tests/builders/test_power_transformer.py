@@ -92,6 +92,46 @@ def test_add_electrical_writes_pi_model_values(network):
     assert end1.endNumber == 1
 
 
+def test_add_electrical_converts_percent_impedance_using_own_ratings(network):
+    builder = PowerTransformerBuilder(network)
+    xfmr = builder.create(mRID='xfmr1')
+    [end1] = builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
+    builder.add_electrical(end1, ratedU=Qty(12470, 'V'), ratedS=Qty(200, 'kVA'))
+    builder.add_electrical(end1, r=Qty(2.08, 'percent'), x=Qty(5.0, 'percent'))
+
+    z_base = 12470 ** 2 / 200e3
+    assert end1.r.to('ohm') == pytest.approx(0.0208 * z_base)
+    assert end1.x.to('ohm') == pytest.approx(0.05 * z_base)
+
+
+def test_add_electrical_percent_impedance_without_ratings_raises(network):
+    builder = PowerTransformerBuilder(network)
+    xfmr = builder.create(mRID='xfmr1')
+    [end1] = builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
+    with pytest.raises(ValueError, match='needs a z_base'):
+        builder.add_electrical(end1, r=Qty(2.08, 'percent'))
+
+
+def test_add_electrical_converts_percent_admittance_using_own_ratings(network):
+    builder = PowerTransformerBuilder(network)
+    xfmr = builder.create(mRID='xfmr1')
+    [end1] = builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
+    builder.add_electrical(end1, ratedU=Qty(12470, 'V'), ratedS=Qty(200, 'kVA'))
+    builder.add_electrical(end1, b=Qty(0.5, 'percent'), g=Qty(0.1, 'percent'))
+
+    y_base = 1.0 / (12470 ** 2 / 200e3)
+    assert end1.b.to('S') == pytest.approx(0.005 * y_base)
+    assert end1.g.to('S') == pytest.approx(0.001 * y_base)
+
+
+def test_add_electrical_percent_admittance_without_ratings_raises(network):
+    builder = PowerTransformerBuilder(network)
+    xfmr = builder.create(mRID='xfmr1')
+    [end1] = builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
+    with pytest.raises(ValueError, match='needs a y_base'):
+        builder.add_electrical(end1, b=Qty(0.5, 'percent'))
+
+
 # --- shape 2: mesh-by-end ---------------------------------------------------
 
 def test_add_mesh_impedance_between_two_ends(network):
@@ -111,6 +151,23 @@ def test_add_mesh_impedance_between_two_ends(network):
     assert mesh.x.to('ohm') == pytest.approx(456)
     assert mesh in end1.FromMeshImpedance
     assert mesh in end2.ToMeshImpedance
+
+
+def test_add_mesh_impedance_converts_percent_impedance_using_from_end_ratings(network):
+    builder = PowerTransformerBuilder(network)
+    xfmr = builder.create(mRID='xfmr1')
+    end1, end2 = builder.add_connectivity(xfmr, ends=[
+        {'node': 'busA', 'endNumber': 1},
+        {'node': 'busB', 'endNumber': 2},
+    ])
+    builder.add_electrical(end1, ratedU=Qty(4160, 'V'), ratedS=Qty(500, 'kVA'))
+    mesh = builder.add_mesh_impedance(
+        xfmr, FromTransformerEnd=end1.mRID, ToTransformerEnd=end2.mRID,
+        r=Qty(1.5, 'percent'), x=Qty(3.0, 'percent'))
+
+    z_base = 4160 ** 2 / 500e3
+    assert mesh.r.to('ohm') == pytest.approx(0.015 * z_base)
+    assert mesh.x.to('ohm') == pytest.approx(0.03 * z_base)
 
 
 def test_add_mesh_impedance_unresolved_end_raises(network):

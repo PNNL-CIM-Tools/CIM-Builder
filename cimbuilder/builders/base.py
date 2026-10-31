@@ -3,8 +3,8 @@
 from abc import ABC
 
 from cimgraph.models import GraphModel
-
-from cimtables import graph_write
+from cimgraph.core import get_system_mva_base
+from cimtables import graph_write, impedance
 from cimtables.binder import bind_row
 
 
@@ -19,6 +19,11 @@ class ObjectBuilder(ABC):
         self.network = network
         self.container = container
         self.cim = network.cim
+        # Resolved once here, same as self.cim above - never re-read inside a
+        # leaf add_<part> method (PROFILE_RESOLUTION.md's rule). None if
+        # CIMG_SYSTEM_MVA_BASE is unset; only equipment with no self-contained
+        # rating pair (ACLineSegment) needs this at all.
+        self.system_mva = get_system_mva_base()
 
     def create(self, *, mRID: str = None, name: str = None, identifier: str = None) -> object:
         """A new, NOT-yet-graph-added instance of cim_class_name (call

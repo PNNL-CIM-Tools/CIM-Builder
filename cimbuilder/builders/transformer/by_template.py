@@ -36,7 +36,7 @@ import cimprofiles.cim18.cim18v17.construction as CONST
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 
 from cimbuilder.builders.base import ObjectBuilder
-from cimtables import graph_write
+from cimtables import graph_write, impedance
 
 
 class TransformerTankConfigurationBuilder(ObjectBuilder):
@@ -106,11 +106,12 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         * baseS: a Qty resolved to ApparentPower (VA, SI base) - used for
           calculation of percent impedance; for a split-phase center-tap
           transformer, the rating of the primary winding is used as the
-          basis for both secondary windings. Also consumed by this method's
-          own `_winding_z_base` helper (via `r`'s z_base, below) and by
-          add_mesh_impedance's `x` z_base - so set this BEFORE passing a
-          relative (pu/percent) `r` or calling add_mesh_impedance with a
-          relative `x`, or the z_base resolves to None.
+          basis for both secondary windings. Also consumed by
+          cimtables.impedance.resolve_winding_z_base (via `r`'s z_base,
+          below) and by add_mesh_impedance's `x` z_base - so set this
+          BEFORE passing a relative (pu/percent) `r` or calling
+          add_mesh_impedance with a relative `x`, or the z_base resolves to
+          None.
         * baseU: a Qty resolved to Voltage (V, SI base) - phase-to-neutral
           voltage for wye, phase-to-phase voltage for delta. Same
           before-r/before-add_mesh_impedance ordering requirement as baseS.
@@ -120,8 +121,8 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
           graph; omitted entirely (no association write) when None.
         * r: a Qty resolved to Resistance (ohm, SI base) if absolute, or
           converted to ohms against a z_base computed from this winding's
-          OWN baseU/baseS (via the module-level `_winding_z_base` helper) if
-          relative (pu/percent) - e.g. Qty(2, 'percent'). Raises ValueError
+          OWN baseU/baseS (via cimtables.impedance.resolve_winding_z_base)
+          if relative (pu/percent) - e.g. Qty(2, 'percent'). Raises ValueError
           if relative and baseU/baseS aren't both already set on `winding`
           (z_base resolves to None, which set_attr then rejects). A bare
           number is stored unconverted via plain setattr.
@@ -142,7 +143,7 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         graph_write.set_attr(winding, EL_BAL, 'ratedS', ratedS)
         graph_write.set_attr(winding, EL_BAL, 'ratedU', ratedU)
         if r is not None:
-            z_base = _winding_z_base(winding)
+            z_base = impedance.resolve_winding_z_base([winding])
             graph_write.set_attr(winding, EL_BAL, 'r', r, z_base=z_base)
         graph_write.add_to_graph(self.network, winding)
         return winding
@@ -162,10 +163,11 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
           error.
         * x: a Qty resolved to Reactance (ohm, SI base) if absolute, or
           converted to ohms against a z_base computed from FromWinding's OWN
-          baseU/baseS (via `_winding_z_base`) if relative (pu/percent) - same
-          rule as add_winding's `r`. Raises ValueError if relative and
-          FromWinding's baseU/baseS aren't both already set. A bare number
-          is stored unconverted via plain setattr.
+          baseU/baseS (via cimtables.impedance.resolve_winding_z_base) if
+          relative (pu/percent) - same rule as add_winding's `r`. Raises
+          ValueError if relative and FromWinding's baseU/baseS aren't both
+          already set. A bare number is stored unconverted via plain
+          setattr.
 
         Returns the built, graph-added TransformerMeshImpedance.
         """
@@ -179,30 +181,6 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         graph_write.set_assc(mesh, EL_BAL, 'FromWinding', from_winding)
         graph_write.set_assc(mesh, EL_BAL, 'ToWinding', to_winding)
         if x is not None:
-            graph_write.set_attr(mesh, EL_BAL, 'x', x, z_base=_winding_z_base(from_winding))
+            graph_write.set_attr(mesh, EL_BAL, 'x', x, z_base=impedance.resolve_winding_z_base([from_winding]))
         graph_write.add_to_graph(self.network, mesh)
         return mesh
-
-
-def _winding_z_base(winding: object) -> float | None:
-    """z_base in ohms (U**2 / S) from a winding's own baseU/baseS - mirrors
-    cimtables/binder.py's _winding_z_base for the single-winding case this
-    builder always has (no From*-reference fallback needed here, since the
-    winding being written is always the one carrying the relative value).
-    Uses getattr, not direct attribute access, since TransformerWinding is a
-    runtime-only class resolved off network.cim, not a static import - same
-    convention binder.py's own _rating helper uses.
-    * winding: a live TransformerWinding object (already built, with baseU/
-      baseS set as CIMUnit instances, not Qtys/bare numbers - `.to()` is
-      called directly on them).
-
-    Returns z_base in ohms, or None if baseU or baseS is unset (missing) or
-    zero (falsy) on `winding`.
-    """
-    base_u = getattr(winding, 'baseU', None)
-    base_s = getattr(winding, 'baseS', None)
-    if base_u is None or base_s is None:
-        return None
-    u = base_u.to('V')
-    s = base_s.to('VA')
-    return (u ** 2 / s) if u and s else None
