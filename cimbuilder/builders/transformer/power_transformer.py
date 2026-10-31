@@ -59,9 +59,21 @@ class PowerTransformerBuilder(ObjectBuilder):
         entry: the end's PowerTransformer/endNumber are set first (required by
         connectivity.add_connectivity's TransformerEnd branch), then the node
         wiring is delegated to that same generic function - no terminal/node
-        logic is reimplemented here. Returns the created PowerTransformerEnds,
-        in the given order, for a caller to pass into add_electrical/
-        add_mesh_impedance/add_tap_changer."""
+        logic is reimplemented here.
+        * ends: each dict's 'node' is an mRID string (auto-vivified if not
+          already in the graph, not a required-FK-raises lookup);
+          'endNumber' is a plain int (1=high, 2=low, 3=tertiary by
+          convention, but not enforced here); 'connectionKind' is an
+          optional string value of connectivity_unbalanced.WindingConnection
+          (e.g. 'Y', 'D') - converted via `self.cim.WindingConnection(...)`
+          before set_attr; omitted entirely (no attribute write) when absent.
+        * container: a live EquipmentContainer object, NOT an mRID string -
+          falls back to `self.container`, then `self.network.container`, if
+          omitted.
+
+        Returns the created PowerTransformerEnds, in the given order, for a
+        caller to pass into add_electrical/add_mesh_impedance/add_tap_changer.
+        """
         resolved_container = container if container is not None else self.container
         if resolved_container is None:
             resolved_container = self.network.container
@@ -88,7 +100,19 @@ class PowerTransformerBuilder(ObjectBuilder):
         ends, not the transformer itself. r/x/b/g are whatever
         already-computed values the caller has; this method performs no
         star<->mesh conversion (that stays in cimhub_core.transformations,
-        or a future standalone conversion utility - never here)."""
+        or a future standalone conversion utility - never here).
+        * r: a Qty resolved to Resistance (ohm, SI base). No `z_base` is ever
+          passed to set_attr here, so a pu/percent r raises ValueError - the
+          caller must already have an absolute-ohm value.
+        * x: a Qty resolved to Reactance (ohm, SI base); same z_base caveat
+          as r.
+        * b: a Qty resolved to Susceptance (siemens, SI base).
+        * g: a Qty resolved to Conductance (siemens, SI base).
+        * ratedS: a Qty resolved to ApparentPower (VA, SI base).
+        * ratedU: a Qty resolved to Voltage (V, SI base).
+        A bare number for any of these is stored unconverted via plain
+        setattr.
+        """
         graph_write.set_attr(end, EL_BAL, 'r', r)
         graph_write.set_attr(end, EL_BAL, 'x', x)
         graph_write.set_attr(end, EL_BAL, 'b', b)
@@ -100,7 +124,19 @@ class PowerTransformerBuilder(ObjectBuilder):
                             r=None, x=None) -> object:
         """Shape 2 (mesh-by-end): builds+returns a TransformerMeshImpedance
         directly between two PowerTransformerEnds, resolved by mRID, no
-        TransformerWinding layer."""
+        TransformerWinding layer.
+        * FromTransformerEnd/ToTransformerEnd: mRID strings of existing
+          PowerTransformerEnds (e.g. from add_connectivity's return value).
+          Resolved via graph_write.resolve (not set_assc_from_mrid); if
+          either is not found, this raises ValueError itself rather than
+          delegating to resolve/set_assc's own error.
+        * r: a Qty resolved to Resistance (ohm, SI base). No `z_base` is
+          passed to set_attr, so a pu/percent r raises ValueError.
+        * x: a Qty resolved to Reactance (ohm, SI base); same caveat as r.
+        A bare number for either is stored unconverted via plain setattr.
+
+        Returns the built, graph-added TransformerMeshImpedance.
+        """
         from_end = graph_write.resolve(self.network, self.cim.PowerTransformerEnd, FromTransformerEnd)
         to_end = graph_write.resolve(self.network, self.cim.PowerTransformerEnd, ToTransformerEnd)
         if from_end is None or to_end is None:
@@ -124,7 +160,17 @@ class PowerTransformerBuilder(ObjectBuilder):
         EquipmentContainer/FK resolution generally. TankConfiguration is
         resolved before the PowerTransformer FK is set, so a failed lookup
         leaves xfmr untouched (set_assc_from_mrid raises before set_assc on
-        tank.PowerTransformer ever runs)."""
+        tank.PowerTransformer ever runs).
+        * mRID: plain string, used verbatim as the new TransformerTank's
+          identity key.
+        * TankConfiguration: mRID string of an existing
+          TransformerTankConfiguration (built earlier via
+          TransformerTankConfigurationBuilder). Resolved via
+          set_assc_from_mrid, which raises ValueError if that mRID isn't
+          already in the graph.
+
+        Returns the built, graph-added TransformerTank.
+        """
         tank = self.cim.TransformerTank(mRID=mRID)
         graph_write.set_assc_from_mrid(
             self.network, tank, CONST, 'TankConfiguration', self.cim.TransformerTankConfiguration, TankConfiguration)
@@ -141,7 +187,15 @@ class PowerTransformerBuilder(ObjectBuilder):
         fields; the FK back onto `end` is a connectivity_unbalanced field -
         two different part modules for the same object, confirmed by reading
         both classes directly rather than assuming one part module covers
-        the whole class."""
+        the whole class.
+        * highStep/lowStep: plain ints (not Qtys, despite the `float`
+          default), no unit wrapping - highest/lowest tap position.
+        * initialDelay: a Qty resolved to Seconds (s, SI base) despite its
+          `float = 0` default/type hint; a bare number is stored unconverted
+          via plain setattr.
+
+        Returns the built, graph-added RatioTapChanger.
+        """
         tap_changer = self.cim.RatioTapChanger(mRID=f'{end.mRID}_tap')
         graph_write.set_attr(tap_changer, REG, 'highStep', highStep)
         graph_write.set_attr(tap_changer, REG, 'lowStep', lowStep)

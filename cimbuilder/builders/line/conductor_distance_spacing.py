@@ -16,7 +16,20 @@ class ConductorDistanceSpacingBuilder(ObjectBuilder):
         """Builds+returns a ConductorDistance, FK'd to `spacing` via its own
         singular ConductorDistanceSpacing field (not the two undocumented
         fromSequenceNumber/toSequenceNumber fields - see this module's
-        docstring)."""
+        docstring).
+        * sequenceNumber1/sequenceNumber2: plain ints, the conductor-position
+          indices this distance is between (matches the phases= order a
+          line's add_connectivity sets on its ACLineSegmentPhase children).
+        * distance: a Qty (e.g. Qty(18, 'in'), Qty(0.5, 'm')) - set_attr
+          resolves it to construction.Displacement (meters, SI base). A bare
+          number is NOT unit-converted and should not be passed.
+        * conductorKind1/conductorKind2: string value of
+          construction.ConductorPositionKind (e.g. 'wire') - converted via
+          `self.cim.ConductorPositionKind(...)` before set_attr; left unset
+          (not even None-written) when omitted.
+
+        Returns the built, graph-added ConductorDistance.
+        """
         mRID = f'{spacing.mRID}_{sequenceNumber1}{sequenceNumber2}'
         pair = self.cim.ConductorDistance(mRID=mRID)
         graph_write.set_attr(pair, CONST, 'sequenceNumber1', sequenceNumber1)

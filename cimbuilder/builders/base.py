@@ -21,11 +21,18 @@ class ObjectBuilder(ABC):
         self.cim = network.cim
 
     def create(self, *, mRID: str = None, name: str = None, identifier: str = None) -> object:
-        """A new instance of cim_class_name, keyed on mRID (so a later rename
-        of `name` - plain, optional data - never changes its UUID): mRID if
-        given, else identifier seeded the same way, else a random UUID -
-        mirrors cimtables.binder._new_object's order (MRID_MIGRATION.md).
-        `name` is set after, independent of which key was used."""
+        """A new, NOT-yet-graph-added instance of cim_class_name (call
+        `.add()` once it's built, or let `add_connectivity`/etc. do it).
+        Keyed on mRID (so a later rename of `name` - plain, optional data -
+        never changes its UUID): mRID if given, else identifier seeded the
+        same way, else a random UUID - mirrors cimtables.binder._new_object's
+        order (MRID_MIGRATION.md).
+        * mRID: plain string, used verbatim as the object's identity key.
+        * name: plain string, set on the object as-is (no identity role).
+        * identifier: plain string seed for a deterministic UUID (used only
+          when mRID is not given); ignored if mRID is given.
+
+        Returns the new, unadded object."""
         cim_cls = getattr(self.network.cim, self.cim_class_name)
         if mRID is not None:
             obj = cim_cls(mRID=mRID)
@@ -45,6 +52,11 @@ class ObjectBuilder(ABC):
         maintain. Every class gets this for free; a subclass only needs
         cim_class_name.
 
+        * row: an already-validated `<Class>Row` dataclass instance (not a
+          dict or raw CIM object) - bind_row reflects over its fields to
+          populate the built object, including unit conversion for any Qty
+          fields and FK resolution for any mRID-reference fields.
+
         Returns the object already added to the graph (bind_row's own
         contract, matching bind_row's direct callers) - unlike the direct
         create()/add_<part>()/add() API, do not call .add() again on the
@@ -55,5 +67,9 @@ class ObjectBuilder(ABC):
         return bind_row(self.network, row, container=self.container)
 
     def add(self, obj: object) -> object:
+        """Adds `obj` (a live CIM object, already built via `create()` and
+        any `add_<part>()` calls) to the graph and indexes it by mRID.
+        Returns `obj` unchanged, so this can be chained at the end of a
+        builder call sequence."""
         graph_write.add_to_graph(self.network, obj)
         return obj

@@ -15,17 +15,38 @@ class SwitchBuilder(ObjectBuilder):
                           phaseSide1: list[str] | None = None, phaseSide2: list[str] | None = None,
                           container: object = None, normalOpen=None, retained=None,
                           areaBoundary=None, topologicalUsage=None, BaseVoltage=None) -> list[object]:
-        """phaseSide1/phaseSide2 are parallel lists, one entry per SwitchPhase
-        row: phaseSide1[i] is that row's phase on terminal 1 (node1 side),
-        phaseSide2[i] is its phase on terminal 2 (node2 side) - independently,
-        since a switch (unlike a line or wye/delta shunt) can carry a
-        different phase on each side (an open-phase device, a cross-phased
-        jumper, ...). cimtables.connectivity.add_phase_children cannot
-        express this - it always sets phaseSide1 == phaseSide2 for a given
-        child - so this method does NOT call it; it sets each terminal's own
-        `phases` from that side's own token superset, and builds one
-        SwitchPhase per row itself via SwitchPhaseBuilder (which owns the
-        Switch FK/part-module details - see switch_phase.py)."""
+        """Adds connectivity_unbalanced profile layer: terminals/nodes,
+        per-side phasing, base voltage, and switch status flags.
+        * node1/node2: mRID of the "from"/"to" ConnectivityNode or
+          TopologicalNode. Each is auto-vivified (an empty node with just
+          that mRID) if not already in the graph - not a
+          required-FK-raises-if-missing lookup.
+        * phaseSide1/phaseSide2 are parallel lists, one entry per SwitchPhase
+          row: phaseSide1[i] is that row's phase on terminal 1 (node1 side),
+          phaseSide2[i] is its phase on terminal 2 (node2 side) -
+          independently, since a switch (unlike a line or wye/delta shunt)
+          can carry a different phase on each side (an open-phase device, a
+          cross-phased jumper, ...). cimtables.connectivity.add_phase_children
+          cannot express this - it always sets phaseSide1 == phaseSide2 for a
+          given child - so this method does NOT call it; it sets each
+          terminal's own `phases` from that side's own token superset, and
+          builds one SwitchPhase per row itself via SwitchPhaseBuilder (which
+          owns the Switch FK/part-module details - see switch_phase.py).
+          Each entry is a SinglePhaseKind string token (e.g. 'A', 's1'), not
+          a PhaseCode string. Both lists must be given together, same length,
+          or this raises ValueError.
+        * container: a live EquipmentContainer object, NOT an mRID string -
+          falls back to `self.container` if omitted.
+        * normalOpen/retained/areaBoundary: plain bools, no unit wrapping.
+        * topologicalUsage: string value of
+          connectivity_unbalanced.TopologicalUsageKind - converted via
+          `self.cim.TopologicalUsageKind(...)` before set_attr.
+        * BaseVoltage: mRID string of an existing BaseVoltage; resolved via
+          set_assc_from_mrid, which raises ValueError if it's not already in
+          the graph.
+
+        Returns the two Terminals created for node1/node2, in that order.
+        """
         resolved_container = container if container is not None else self.container
         terminals = connectivity.add_connectivity(
             self.network, switch, node_cols={'node1': node1, 'node2': node2},
@@ -59,7 +80,13 @@ class SwitchBuilder(ObjectBuilder):
     def add_electrical(self, switch, *, ratedCurrent=None,
                                 gangOperated=None, motorOperated=None,
                                 remotelyOperated=None, loadBreak=None) -> None:
-       
+        """Adds electrical_balanced.Switch's nameplate/operating-mode fields.
+        * ratedCurrent: a Qty resolved to CurrentFlow (A, SI base) - e.g.
+          Qty(200, 'A'). A bare number is stored unconverted via plain
+          setattr.
+        * gangOperated/motorOperated/remotelyOperated/loadBreak: plain bools,
+          no unit wrapping.
+        """
         graph_write.set_attr(switch, EL_BAL, 'ratedCurrent', ratedCurrent)
         graph_write.set_attr(switch, EL_BAL, 'gangOperated', gangOperated)
         graph_write.set_attr(switch, EL_BAL, 'motorOperated', motorOperated)
@@ -67,6 +94,10 @@ class SwitchBuilder(ObjectBuilder):
         graph_write.set_attr(switch, EL_BAL, 'loadBreak', loadBreak)
 
     def add_ssh(self, switch, *, open=None) -> None:
+        """Adds steady_state_hypothesis.Switch's solved operating state.
+        * open: plain bool, no unit wrapping - True means the switch is
+          open (not conducting).
+        """
         graph_write.set_attr(switch, SSH, 'open', open)
 
 

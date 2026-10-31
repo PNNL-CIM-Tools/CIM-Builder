@@ -82,6 +82,23 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
 
     def add_electrical(self, impedance, *, r=None, x=None, bch=None, gch=None,
                     calculatedFrequency=None, rg=None, xg=None) -> None:
+        """Positive-sequence per-length impedance (electrical_balanced.PerLengthSequenceImpedance),
+        the OpenDSS LineCode form. All params are per-unit-length Qtys unless noted:
+        * r: resolves to Resistance (ohm, SI base) - but note this is really
+          an ohm-per-length value stored on a field typed as plain
+          Resistance, not a PerLength unit; the caller is responsible for
+          using whatever length basis the rest of the model assumes.
+        * x: resolves to Reactance (ohm, SI base), same per-length caveat.
+        * bch: resolves to Susceptance (siemens, SI base), same caveat.
+        * gch: resolves to Conductance (siemens, SI base), same caveat.
+        * calculatedFrequency: resolves to Frequency (Hz, SI base) - the
+          frequency r/x/bch/gch were calculated at.
+        * rg/xg: resolve to Resistance/Reactance (ohm, SI base) - ground
+          return path values.
+        A bare number for any of these is stored unconverted via plain
+        setattr. No `z_base` is ever passed here, so a pu/percent r or x
+        would raise ValueError.
+        """
         graph_write.set_attr(impedance, EL_BAL, 'r', r)
         graph_write.set_attr(impedance, EL_BAL, 'x', x)
         graph_write.set_attr(impedance, EL_BAL, 'bch', bch)
@@ -99,6 +116,14 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
 
     def add_electrical_earthing(self, matrix, *, conductorCount: int | None = None,
                     calculatedFrequency=None, rg=None, xg=None) -> None:
+        """
+        * conductorCount: plain int, no unit wrapping.
+        * calculatedFrequency: a Qty resolved to Frequency (Hz, SI base).
+        * rg/xg: Qtys resolved to ResistancePerLength/ReactancePerLength
+          (ohm/m, SI base) - ground return path values, inherited
+          PerLengthImpedance base-class fields.
+        A bare number for calculatedFrequency/rg/xg is stored unconverted.
+        """
         # calculatedFrequency/rg/xg are PerLengthImpedance's own base-class
         # fields, inherited by both PerLengthSequenceImpedance and
         # PerLengthPhaseImpedance - but _part_field matches by exact class
@@ -117,7 +142,18 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         linecodes.cimtbl's PhaseImpedanceData table exactly (row >= column).
         Builds+returns the PhaseImpedanceData rows, FK'd to `matrix` via its
         PhaseImpedanceData list field (the only side of the association that
-        carries an explicit FK - see this module's docstring)."""
+        carries an explicit FK - see this module's docstring).
+
+        Each entry dict:
+        * row/column: plain ints, no unit wrapping (also note: entries with
+          no 'row'/'column' key will KeyError, since these are accessed via
+          entry['row']/entry['column'] rather than .get()).
+        * r/x: optional Qtys (via entry.get, defaulting to None) resolved to
+          ResistancePerLength/ReactancePerLength (ohm/m, SI base).
+        * b/g: optional Qtys resolved to SusceptancePerLength/
+          ConductancePerLength (siemens/m, SI base).
+        A bare number for r/x/b/g is stored unconverted via plain setattr.
+        """
         data_rows = []
         for entry in entries:
             # Identity-only class (no mRID/name field) - seed its UUID from a

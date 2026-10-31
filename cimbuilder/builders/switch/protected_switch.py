@@ -14,7 +14,17 @@ class ProtectedSwitchBuilder(SwitchBuilder):
                                 gangOperated=None, motorOperated=None,
                                 remotelyOperated=None, loadBreak=None,
                                 breakingCapacity=None, makingCapacity=None) -> None:
-        
+        """Extends SwitchBuilder.add_electrical with ProtectedSwitch's own
+        interrupting-capacity ratings (electrical_balanced.ProtectedSwitch);
+        ratedCurrent/gangOperated/motorOperated/remotelyOperated/loadBreak
+        are passed straight through to the parent (same contract as
+        SwitchBuilder.add_electrical).
+        * breakingCapacity: a Qty resolved to CurrentFlow (A, SI base) -
+          max current this switch can safely interrupt.
+        * makingCapacity: a Qty resolved to CurrentFlow (A, SI base) - max
+          current this switch can safely close onto.
+        A bare number for either is stored unconverted via plain setattr.
+        """
         super().add_electrical(switch, ratedCurrent=ratedCurrent, gangOperated=gangOperated,
                                motorOperated=motorOperated, remotelyOperated=remotelyOperated,
                                loadBreak=loadBreak)
@@ -29,10 +39,18 @@ class BreakerBuilder(ProtectedSwitchBuilder):
                        motorOperated=None, remotelyOperated=None, loadBreak=None,
                        breakingCapacity=None, makingCapacity=None,
                        inTransitTime=None) -> None:
-
+        """Extends ProtectedSwitchBuilder.add_electrical with Breaker's own
+        operating-time field (electrical_balanced.Breaker); all other
+        params are passed straight through to the parent/grandparent (same
+        contract as ProtectedSwitchBuilder.add_electrical /
+        SwitchBuilder.add_electrical).
+        * inTransitTime: a Qty resolved to Seconds (s, SI base) - time the
+          breaker's contacts spend transitioning from closed to open. A bare
+          number is stored unconverted via plain setattr.
+        """
         super().add_electrical(switch, breakingCapacity=breakingCapacity, makingCapacity=makingCapacity,
                                ratedCurrent=ratedCurrent, gangOperated=gangOperated,
-                               motorOperated=motorOperated, remotelyOperated=remotelyOperated, 
+                               motorOperated=motorOperated, remotelyOperated=remotelyOperated,
                                loadBreak=loadBreak)
         graph_write.set_attr(switch, EL_BAL, 'inTransitTime', inTransitTime)
 

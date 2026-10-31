@@ -1,64 +1,4 @@
-"""ACLineSegmentBuilder: the instance tier (design: Phase 3 of
-cimbuilder/development/OBJECT_BUILDER_MIGRATION.md, resolved against real
-.cimtbl reference models and Visio modeling reference diagrams
-(LineModel01-05) - see the approved implementation plan for the full
-field-location evidence).
-
-Four coexisting CIM line-impedance representations, confirmed against the
-installed cimprofiles.cim18.cim18v17 package:
-
-1. Direct balanced PI (LineModel01) - add_electrical writes r/x/bch/gch
-   straight onto the ACLineSegment. Positive-sequence balanced impedance,
-   commonly used by PSS/E/PowerWorld.
-2. Direct zero-sequence PI (also LineModel01) - add_short_circuit writes
-   r0/x0/b0ch/g0ch, the zero-sequence counterpart to shape 1.
-3/4. Per-length reference (LineModel02 balanced, LineModel03 unbalanced
-   matrix) - add_per_length_impedance resolves a PerLengthSequenceImpedance
-   or PerLengthPhaseImpedance template by name and sets the one FK field
-   both shapes share. The template itself is built by
-   PerLengthImpedanceBuilder (by_template.py); this builder only
-   references it.
-5. Wire geometry reference (LineModel04/05) - add_wire_configuration
-   resolves a WireConfiguration template by name and sets the FK. The
-   template itself (WireConfiguration -> WireSpacing, either
-   ConductorDistanceSpacing (LineModel04, distance-pair form) or XYSpacing
-   (LineModel05, x/y coordinate form)) is built by WireConfigurationBuilder
-   / ConductorDistanceSpacingBuilder / XYSpacingBuilder (by_template.py);
-   this builder only references the WireConfiguration by name, same
-   ordering rule as shapes 3/4's templates.
-
-Field locations confirmed directly against the installed cimprofiles
-package (do not assume - every part module below was grepped, not guessed):
-- r/x/bch/gch (the balanced PI values) live on electrical_balanced.ACLineSegment.
-- r0/x0/b0ch/g0ch (the zero-sequence PI values) live on
-  short_circuit.ACLineSegment - a part module with no fields of its own
-  anywhere else in this file's scope, easy to mistake for empty on a casual
-  read (the shared multi-paragraph class docstring pushed the real field
-  list far enough down to look like there wasn't one).
-- The PerLengthImpedance FK itself lives on electrical_unbalanced.ACLineSegment,
-  not electrical_balanced (which only has the scalar fields, no FK) and not
-  short_circuit (which has neither).
-- circuitNumber lives on both connectivity_unbalanced and construction
-  (two different concerns reusing the same field name); this builder does
-  not set it today - add_connectivity only wires node1/node2/phases via the
-  existing generic cimtables.connectivity helpers.
-- ACLineSegmentPhase (the per-conductor child used by the matrix shape to
-  bind phase -> sequenceNumber -> PhaseImpedanceData.row/column) is built
-  generically by cimtables.connectivity.add_phase_children, confirmed via
-  /home/ande188/CIMTBL-Models/distribution/IEEE/IEEE13_CDPSM/lines.cimtbl's
-  own phases= column - this builder passes `phases` straight through rather
-  than reimplementing the per-conductor sequencing.
-- length (Conductor's own field) and BaseVoltage (ConductingEquipment's own
-  field) both live on connectivity_unbalanced only - neither exists in any
-  other part module, confirmed by grepping all five. Easy to assume these
-  are "generic enough to live wherever" since they're on shared base
-  classes; they are not - they're still a specific part module's fields,
-  same rule as every other attribute in this file.
-- WireConfiguration/WireSpacing (shape 5's FKs) live on construction.ACLineSegment
-  as singular fields - a different part module again from length/BaseVoltage
-  (connectivity_unbalanced) and from the per-length-impedance FK
-  (electrical_unbalanced). Every shape here lives in its own part module;
-  none of them share one.
+"""
 """
 
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
@@ -75,29 +15,65 @@ class ACLineSegmentBuilder(ObjectBuilder):
     cim_class_name = 'ACLineSegment'
 
     def add_connectivity(self, line, *, node1: str, node2: str, phases: str | None = None,
-                          length=None, container: object = None, BaseVoltage=None) -> list[object]:
-        """Two-terminal connectivity via the existing generic
-        cimtables.connectivity.add_connectivity (the non-TransformerEnd
-        branch already handles an arbitrary-terminal-count Conductor; no
-        terminal/node logic is reimplemented here). `phases`, if given,
-        builds the ACLineSegmentPhase children via add_phase_children -
-        the same per-conductor sequenceNumber ordering
-        lines.cimtbl's phases= column relies on. Returns the created
-        Terminals, in node1/node2 order."""
-        resolved_container = container if container is not None else self.container
+                          length=None, circuitNumber=None,
+                          EquipmentContainer: object = None, BaseVoltage=None) -> list[object]:
+        """
+        Adds connectivity_unbalanced profile layer: terminals/nodes, phasing,
+        length, circuit number, and base voltage.
+        * node1: mRID of the "from" ConnectivityNode/TopologicalNode. Must
+          already exist in the graph, or is auto-vivified (an empty node
+          object with just that mRID) if not found - this is NOT a
+          required-FK-raises-if-missing lookup like the mRID params below.
+        * node2: same as node1, for the "to" end.
+        * phases: phase-code string in conductor order (e.g. 'ABC', 'CB',
+          's1s2') - each character/token becomes one ACLineSegmentPhase child
+          (via connectivity.add_phase_children), and both terminals get this
+          same PhaseCode.
+        * length: a Qty (e.g. Qty(5, 'mile'), Qty(100, 'm')) - set_attr
+          resolves it to connectivity_unbalanced.Length (meters, SI base). A
+          bare number is NOT unit-converted (stored via plain setattr) and
+          should not be passed.
+        * circuitNumber: plain int, set as-is (no unit wrapping).
+        * EquipmentContainer: a live container object (e.g. a Feeder/Line),
+          NOT an mRID string - falls back to `self.container` if omitted.
+          Passed straight through to connectivity.add_connectivity, which
+          sets it as the line's EquipmentContainer and propagates it onto
+          any newly-vivified node.
+        * BaseVoltage: mRID string of an existing BaseVoltage; resolved via
+          set_assc_from_mrid, which raises ValueError if it's not already in
+          the graph.
+
+        Returns the Terminals created for node1/node2, in that order
+        (sequenceNumber 1, 2).
+        """
+        
+
+        resolved_container = EquipmentContainer if EquipmentContainer is not None else self.container
         terminals = connectivity.add_connectivity(
             self.network, line, node_cols={'node1': node1, 'node2': node2},
             container=resolved_container)
         if phases is not None:
             connectivity.add_phase_children(self.network, line, terminals, phases=phases)
-        graph_write.set_attr(line, CN, 'length', length)
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(self.network, line, CN, 'BaseVoltage', self.cim.BaseVoltage, BaseVoltage)
+        
+        graph_write.set_attr(line, CN, 'length', length)
+        graph_write.set_attr(line, CN, 'circuitNumber', circuitNumber)
         return terminals
 
     def add_electrical(self, line, *, r=None, x=None, bch=None, gch=None) -> None:
-        """Shape 1 (direct balanced PI): writes directly onto the
-        ACLineSegment. Part module electrical_balanced."""
+        """
+        Adds positive-sequence balanced electrical parameters (electrical_balanced.ACLineSegment).
+        All four are Qtys resolved to the line's whole length (not per-length):
+        * r: resolves to Resistance (ohm, SI base) - e.g. Qty(0.3, 'ohm').
+        * x: resolves to Reactance (ohm, SI base).
+        * bch: resolves to Susceptance (siemens, SI base).
+        * gch: resolves to Conductance (siemens, SI base).
+        A bare number for any of these is stored unconverted via plain
+        setattr, not wrapped in the CIMUnit type. A relative Qty (pu/percent)
+        would need a z_base to convert to ohms, but this method never passes
+        `z_base` to set_attr, so a pu/percent r or x raises ValueError.
+        """
         graph_write.set_attr(line, EL_BAL, 'r', r)
         graph_write.set_attr(line, EL_BAL, 'x', x)
         graph_write.set_attr(line, EL_BAL, 'bch', bch)
@@ -105,8 +81,15 @@ class ACLineSegmentBuilder(ObjectBuilder):
 
     def add_short_circuit(self, line, *, r0=None, x0=None, b0ch=None, g0ch=None) -> None:
         """
-        Adds short circuit zero sequence impedances for a balanced line
-        * 
+        Adds zero-sequence short-circuit parameters (short_circuit.ACLineSegment),
+        the short_circuit-profile counterpart to add_electrical's positive-sequence set.
+        All four are Qtys, same rules as add_electrical:
+        * r0: resolves to Resistance (ohm, SI base).
+        * x0: resolves to Reactance (ohm, SI base).
+        * b0ch: resolves to Susceptance (siemens, SI base).
+        * g0ch: resolves to Conductance (siemens, SI base).
+        No `z_base` is passed here either, so a pu/percent r0 or x0 raises
+        ValueError.
         """
         graph_write.set_attr(line, SC, 'r0', r0)
         graph_write.set_attr(line, SC, 'x0', x0)
@@ -114,19 +97,32 @@ class ACLineSegmentBuilder(ObjectBuilder):
         graph_write.set_attr(line, SC, 'g0ch', g0ch)
 
     def add_per_length_impedance(self, line, *, PerLengthImpedance: str) -> object:
-        """Resolves a PerLengthSequenceImpedance/PerLengthPhaseImpedance
-        template by mRID and sets electrical_unbalanced.ACLineSegment's FK.
-        `PerLengthImpedance` is that template's mRID - build it first or
-        this raises."""
+        """
+        Associates `line` with an existing per-length template
+        (electrical_unbalanced.ACLineSegment's PerLengthImpedance FK).
+        * PerLengthImpedance: mRID string of an existing
+          PerLengthSequenceImpedance or PerLengthPhaseImpedance (built
+          earlier, e.g. via PerLengthSequenceImpedanceBuilder/
+          PerLengthPhaseImpedanceBuilder). Resolved via set_assc_from_mrid,
+          which raises ValueError if that mRID isn't already in the graph.
+
+        Returns the resolved template object.
+        """
         target = graph_write.set_assc_from_mrid(
             self.network, line, EL_UNBAL, 'PerLengthImpedance', self.cim.PerLengthImpedance, PerLengthImpedance)
         return target
 
     def add_wire_configuration(self, line, *, WireConfiguration: str) -> object:
-        """Resolves a WireConfiguration template by mRID (equivalent to an
-        OpenDSS line code or geometry) and sets construction.ACLineSegment's
-        FK. `WireConfiguration` is that template's mRID - build it first or
-        this raises."""
+        """
+        Associates `line` with an existing wire-geometry template
+        (construction.ACLineSegment's WireConfiguration FK).
+        * WireConfiguration: mRID string of an existing WireConfiguration
+          (built earlier via WireConfigurationBuilder). Resolved via
+          set_assc_from_mrid, which raises ValueError if that mRID isn't
+          already in the graph.
+
+        Returns the resolved WireConfiguration object.
+        """
         target = graph_write.set_assc_from_mrid(
             self.network, line, CONST, 'WireConfiguration', self.cim.WireConfiguration, WireConfiguration)
         return target

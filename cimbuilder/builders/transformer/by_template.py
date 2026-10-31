@@ -44,7 +44,18 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
 
     def add_nameplate(self, config, *, percentImpedance=None, percentMagnetizingCurrent=None,
                     noLoadLoss=None, loadLoss=None) -> None:
-        """construction.TransformerTankConfiguration's own scalars."""
+        """construction.TransformerTankConfiguration's own scalars.
+        * percentImpedance: a Qty resolved to PerCent (dimensionless, SI
+          base) - e.g. Qty(2.5, 'percent'). Note: despite the name, this
+          field is itself a plain PerCent value, NOT the kind of
+          pu/percent-on-an-ohm-field Qty that set_attr special-cases for
+          z_base conversion (that only applies to ohm-typed attrs like r/x);
+          percentImpedance is simply stored as-is in PerCent.
+        * percentMagnetizingCurrent: a Qty resolved to PerCent.
+        * noLoadLoss/loadLoss: Qtys resolved to ActivePower (W, SI base).
+        A bare number for any of these is stored unconverted via plain
+        setattr.
+        """
         graph_write.set_attr(config, CONST, 'percentImpedance', percentImpedance)
         graph_write.set_attr(config, CONST, 'percentMagnetizingCurrent', percentMagnetizingCurrent)
         graph_write.set_attr(config, CONST, 'noLoadLoss', noLoadLoss)
@@ -53,9 +64,24 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
     def add_phase_end(self, config, *, mRID: str, endNumber: int, sequenceNumber: int,
                        phase: str, phaseNeutralU=None) -> object:
         """
-        Adds phase end information with
-        * endNumber = matches the PowerTransformerEnd side (1=high, 2=low, 3=tertiary)
-        * sequenceNumber =
+        Builds+returns a TransformerPhaseEnd on `config` (the
+        TransformerTankConfiguration template), one of shape 3's per-phase
+        end definitions.
+        * mRID: plain string, used verbatim as the new TransformerPhaseEnd's
+          identity key.
+        * endNumber: plain int, no unit wrapping - matches the
+          PowerTransformerEnd side (1=high, 2=low, 3=tertiary by convention,
+          not enforced here).
+        * sequenceNumber: plain int, no unit wrapping - this end's row/column
+          index into a matched PhaseImpedanceData matrix (same convention
+          per_length_impedance.py's add_phase_impedance_data documents).
+        * phase: string value of connectivity_unbalanced.SinglePhaseKind
+          (e.g. 'A', 's1') - converted via `self.cim.SinglePhaseKind(...)`
+          before set_attr.
+        * phaseNeutralU: a Qty resolved to Voltage (V, SI base) - phase-to-
+          neutral voltage for this end. A bare number is stored unconverted.
+
+        Returns the built, graph-added TransformerPhaseEnd.
         """
         end = self.cim.TransformerPhaseEnd(mRID=mRID)
         graph_write.set_attr(end, CN, 'endNumber', endNumber)
@@ -69,12 +95,38 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
     def add_winding(self, config, *, mRID: str, ratedS=None, ratedU=None, baseS=None, baseU=None,
                      r=None, FromTransformerEnd: str | None = None, ToTransformerEnd: str | None = None) -> object:
         """
-        Adds winding information to the tank template with
-        * ratedS: normal apparent power rating of the winding
-        * ratedU: phase-to-phase (12470/240) voltage at no load
-        * baseS: used for calculation of percent impedance, for a split-phase
-        center-tap transformer, the rating of the primary winding is used as the basis for both secondary windings.
-        * baseU: phase-to-neutral voltage for wye, phase-to-phase voltage for delta
+        Builds+returns a TransformerWinding on `config` (shape 3's
+        mesh-by-winding layer).
+        * mRID: plain string, used verbatim as the new TransformerWinding's
+          identity key.
+        * ratedS: a Qty resolved to ApparentPower (VA, SI base) - normal
+          apparent power rating of the winding.
+        * ratedU: a Qty resolved to Voltage (V, SI base) - phase-to-phase
+          (12470/240) voltage at no load.
+        * baseS: a Qty resolved to ApparentPower (VA, SI base) - used for
+          calculation of percent impedance; for a split-phase center-tap
+          transformer, the rating of the primary winding is used as the
+          basis for both secondary windings. Also consumed by this method's
+          own `_winding_z_base` helper (via `r`'s z_base, below) and by
+          add_mesh_impedance's `x` z_base - so set this BEFORE passing a
+          relative (pu/percent) `r` or calling add_mesh_impedance with a
+          relative `x`, or the z_base resolves to None.
+        * baseU: a Qty resolved to Voltage (V, SI base) - phase-to-neutral
+          voltage for wye, phase-to-phase voltage for delta. Same
+          before-r/before-add_mesh_impedance ordering requirement as baseS.
+        * FromTransformerEnd/ToTransformerEnd: mRID strings of existing
+          TransformerPhaseEnds (built via add_phase_end). Resolved via
+          set_assc_from_mrid, which raises ValueError if not already in the
+          graph; omitted entirely (no association write) when None.
+        * r: a Qty resolved to Resistance (ohm, SI base) if absolute, or
+          converted to ohms against a z_base computed from this winding's
+          OWN baseU/baseS (via the module-level `_winding_z_base` helper) if
+          relative (pu/percent) - e.g. Qty(2, 'percent'). Raises ValueError
+          if relative and baseU/baseS aren't both already set on `winding`
+          (z_base resolves to None, which set_attr then rejects). A bare
+          number is stored unconverted via plain setattr.
+
+        Returns the built, graph-added TransformerWinding.
         """
         winding = self.cim.TransformerWinding(mRID=mRID)
         graph_write.set_assc(winding, CONST, 'TankConfiguration', config)
@@ -102,9 +154,21 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         container itself (confirmed: electrical_balanced.TransformerMeshImpedance
         only has FromWinding/ToWinding/FromTransformerEnd/ToTransformerEnd/r/x),
         only to the two windings, which already carry their own
-        TankConfiguration FK. `x` (a relative Qty, percent) is resolved
-        against FromWinding's own baseU/baseS, same rule as add_winding's
-        `r`."""
+        TankConfiguration FK.
+        * FromWinding/ToWinding: mRID strings of existing TransformerWindings
+          (built via add_winding). Resolved via graph_write.resolve (not
+          set_assc_from_mrid); if either is not found, this raises
+          ValueError itself rather than delegating to resolve/set_assc's own
+          error.
+        * x: a Qty resolved to Reactance (ohm, SI base) if absolute, or
+          converted to ohms against a z_base computed from FromWinding's OWN
+          baseU/baseS (via `_winding_z_base`) if relative (pu/percent) - same
+          rule as add_winding's `r`. Raises ValueError if relative and
+          FromWinding's baseU/baseS aren't both already set. A bare number
+          is stored unconverted via plain setattr.
+
+        Returns the built, graph-added TransformerMeshImpedance.
+        """
         from_winding = graph_write.resolve(self.network, self.cim.TransformerWinding, FromWinding)
         to_winding = graph_write.resolve(self.network, self.cim.TransformerWinding, ToWinding)
         if from_winding is None or to_winding is None:
@@ -127,7 +191,14 @@ def _winding_z_base(winding: object) -> float | None:
     winding being written is always the one carrying the relative value).
     Uses getattr, not direct attribute access, since TransformerWinding is a
     runtime-only class resolved off network.cim, not a static import - same
-    convention binder.py's own _rating helper uses."""
+    convention binder.py's own _rating helper uses.
+    * winding: a live TransformerWinding object (already built, with baseU/
+      baseS set as CIMUnit instances, not Qtys/bare numbers - `.to()` is
+      called directly on them).
+
+    Returns z_base in ohms, or None if baseU or baseS is unset (missing) or
+    zero (falsy) on `winding`.
+    """
     base_u = getattr(winding, 'baseU', None)
     base_s = getattr(winding, 'baseS', None)
     if base_u is None or base_s is None:

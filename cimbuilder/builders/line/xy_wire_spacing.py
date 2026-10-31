@@ -14,7 +14,21 @@ class XYSpacingBuilder(ObjectBuilder):
     def add_conductor_position(self, spacing, *, sequenceNumber: int, xCoord, yCoord,
                                 circuitNumber: int | None = None, kind=None) -> object:
         """Builds+returns an XYConductorPosition, FK'd to `spacing` via its
-        own singular XYSpacing field."""
+        own singular XYSpacing field.
+        * sequenceNumber: plain int, no unit wrapping - the conductor
+          position index (matches the phases= order a line's
+          add_connectivity sets on its ACLineSegmentPhase children).
+        * xCoord/yCoord: Qtys (e.g. Qty(2, 'ft'), Qty(0.6, 'm')) - set_attr
+          resolves them to construction.Displacement (meters, SI base,
+          inherited from the shared SpacingPosition base). A bare number is
+          NOT unit-converted and should not be passed.
+        * circuitNumber: plain int, no unit wrapping.
+        * kind: string value of construction.ConductorPositionKind (e.g.
+          'wire') - converted via `self.cim.ConductorPositionKind(...)`
+          before set_attr; left unset (no attribute write) when omitted.
+
+        Returns the built, graph-added XYConductorPosition.
+        """
         position = self.cim.XYConductorPosition(name=f'{spacing.name}_{sequenceNumber}')
         graph_write.set_attr(position, CONST, 'sequenceNumber', sequenceNumber)
         graph_write.set_attr(position, CONST, 'xCoord', xCoord)
