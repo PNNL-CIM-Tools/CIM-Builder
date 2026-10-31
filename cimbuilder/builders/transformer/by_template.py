@@ -50,14 +50,14 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         graph_write.set_attr(config, CONST, 'noLoadLoss', noLoadLoss)
         graph_write.set_attr(config, CONST, 'loadLoss', loadLoss)
 
-    def add_phase_end(self, config, *, name: str, endNumber: int, sequenceNumber: int,
+    def add_phase_end(self, config, *, mRID: str, endNumber: int, sequenceNumber: int,
                        phase: str, phaseNeutralU=None) -> object:
         """
         Adds phase end information with
         * endNumber = matches the PowerTransformerEnd side (1=high, 2=low, 3=tertiary)
-        * sequenceNumber = 
+        * sequenceNumber =
         """
-        end = self.cim.TransformerPhaseEnd(name=name)
+        end = self.cim.TransformerPhaseEnd(mRID=mRID)
         graph_write.set_attr(end, CN, 'endNumber', endNumber)
         graph_write.set_attr(end, CN, 'sequenceNumber', sequenceNumber)
         graph_write.set_attr(end, CN, 'phase', self.cim.SinglePhaseKind(phase))
@@ -66,27 +66,27 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         graph_write.add_to_graph(self.network, end)
         return end
 
-    def add_winding(self, config, *, name: str, ratedS=None, ratedU=None, baseS=None, baseU=None,
+    def add_winding(self, config, *, mRID: str, ratedS=None, ratedU=None, baseS=None, baseU=None,
                      r=None, FromTransformerEnd: str | None = None, ToTransformerEnd: str | None = None) -> object:
         """
         Adds winding information to the tank template with
         * ratedS: normal apparent power rating of the winding
         * ratedU: phase-to-phase (12470/240) voltage at no load
-        * baseS: used for calculation of percent impedance, for a split-phase 
+        * baseS: used for calculation of percent impedance, for a split-phase
         center-tap transformer, the rating of the primary winding is used as the basis for both secondary windings.
         * baseU: phase-to-neutral voltage for wye, phase-to-phase voltage for delta
         """
-        winding = self.cim.TransformerWinding(name=name)
+        winding = self.cim.TransformerWinding(mRID=mRID)
         graph_write.set_assc(winding, CONST, 'TankConfiguration', config)
         if FromTransformerEnd is not None:
             from_end = graph_write.resolve(self.network, self.cim.TransformerPhaseEnd, FromTransformerEnd)
             if from_end is None:
-                raise ValueError(f"{name!r}: FromTransformerEnd {FromTransformerEnd!r} not found in graph")
+                raise ValueError(f"{mRID!r}: FromTransformerEnd {FromTransformerEnd!r} not found in graph")
             graph_write.set_assc(winding, CONST, 'FromTransformerEnd', from_end)
         if ToTransformerEnd is not None:
             to_end = graph_write.resolve(self.network, self.cim.TransformerPhaseEnd, ToTransformerEnd)
             if to_end is None:
-                raise ValueError(f"{name!r}: ToTransformerEnd {ToTransformerEnd!r} not found in graph")
+                raise ValueError(f"{mRID!r}: ToTransformerEnd {ToTransformerEnd!r} not found in graph")
             graph_write.set_assc(winding, CONST, 'ToTransformerEnd', to_end)
 
         graph_write.set_attr(winding, EL_BAL, 'baseS', baseS)
@@ -115,7 +115,7 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
             raise ValueError(
                 f"mesh impedance references {FromWinding!r}/{ToWinding!r}, not both found in graph"
             )
-        mesh = self.cim.TransformerMeshImpedance(name=f'{FromWinding}_{ToWinding}_mesh')
+        mesh = self.cim.TransformerMeshImpedance(mRID=f'{FromWinding}_{ToWinding}_mesh')
         graph_write.set_assc(mesh, EL_BAL, 'FromWinding', from_winding)
         graph_write.set_assc(mesh, EL_BAL, 'ToWinding', to_winding)
         if x is not None:

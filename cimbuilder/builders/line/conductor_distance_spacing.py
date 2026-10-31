@@ -17,8 +17,8 @@ class ConductorDistanceSpacingBuilder(ObjectBuilder):
         singular ConductorDistanceSpacing field (not the two undocumented
         fromSequenceNumber/toSequenceNumber fields - see this module's
         docstring)."""
-        name = f'{spacing.name}_{sequenceNumber1}{sequenceNumber2}'
-        pair = self.cim.ConductorDistance(name=name)
+        mRID = f'{spacing.mRID}_{sequenceNumber1}{sequenceNumber2}'
+        pair = self.cim.ConductorDistance(mRID=mRID)
         graph_write.set_attr(pair, CONST, 'sequenceNumber1', sequenceNumber1)
         graph_write.set_attr(pair, CONST, 'sequenceNumber2', sequenceNumber2)
         graph_write.set_attr(pair, CONST, 'distance', distance)

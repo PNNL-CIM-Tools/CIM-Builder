@@ -34,15 +34,16 @@ class SwitchPhaseBuilder(ObjectBuilder):
 
     def add_connectivity(self, switch_phase, *, Switch: str, phaseSide1, phaseSide2,
                           normalOpen=None) -> object:
-        """Resolves the named parent Switch (any concrete subclass -
-        Breaker/Disconnector/... - via resolve_any_subclass, since the
-        parent was built by whichever SwitchBuilder leaf matches its real
-        type) and sets phaseSide1/phaseSide2 independently, so a switch can
-        carry phase A on side 1 and phase B on side 2."""
-        target = graph_write.resolve_any_subclass(self.network, self.cim.Switch, Switch)
+        """Resolves the parent Switch by mRID (any concrete subclass -
+        Breaker/Disconnector/... - via resolve, since cim_cls may be an
+        abstract base and the parent was built by whichever SwitchBuilder
+        leaf matches its real type) and sets phaseSide1/phaseSide2
+        independently, so a switch can carry phase A on side 1 and phase B
+        on side 2."""
+        target = graph_write.resolve(self.network, self.cim.Switch, Switch)
         if target is None:
             raise ValueError(
-                f"{switch_phase.name!r}: Switch {Switch!r} not found in graph "
+                f"{switch_phase.mRID!r}: Switch {Switch!r} not found in graph "
                 f"(build the switch before the SwitchPhase that references it)"
             )
         graph_write.set_assc(switch_phase, CN, 'Switch', target)

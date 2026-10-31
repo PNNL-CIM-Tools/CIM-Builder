@@ -1,18 +1,18 @@
-Object EnergySource: name=IEEE13nodeckt 
+Object EnergySource: mRID=IEEE13nodeckt 
 
-Object BaseFrequency: name=base_freq, frequency=60
+Object BaseFrequency: mRID=base_freq, frequency=60
 
-Object BasePower: name=sbase, basePower (MVA)=100
+Object BasePower: mRID=sbase, basePower (MVA)=100
 
-Object Line: name=transmission_line
-Object Substation: name=sub
-Object Feeder: name=ieee_13_debug, NormalEnergizingSubstation=sub
+Object Line: mRID=transmission_line
+Object Substation: mRID=sub
+Object Feeder: mRID=ieee_13_debug, NormalEnergizingSubstation=sub
 
 # Define catalog data first
 
 Import wire_infos.cimtbl
 
-Table PerLengthPhaseImpedance: name, conductorCount, calculatedFrequency
+Table PerLengthPhaseImpedance: mRID, conductorCount, calculatedFrequency
     mtx601, 3, 60
     mtx603, 2, 60
 
@@ -30,7 +30,7 @@ Table PhaseImpedanceData: row, column, fromPhase, toPhase, r (ohm/mile), x (ohm/
 
 
 
-Table ConductorDistanceSpacing: name
+Table ConductorDistanceSpacing: mRID
     spacing_500601
 
 Table ConductorDistance: fromSequenceNumber, fromPhase, toSequenceNumber, toPhase, distance (ft)
@@ -43,94 +43,94 @@ Table ConductorDistance: fromSequenceNumber, fromPhase, toSequenceNumber, toPhas
 
 # Transformer Template
 
-Object TransformerAssembly: name=padmount_template
+Object TransformerAssembly: mRID=padmount_template
 
-Table TransformerTank: name, noLoadLoss (W), fullLoadLoss (W), percentMagnetizingCurrent, percentImpedance, TransformerTemplate
+Table TransformerTank: mRID, noLoadLoss (W), fullLoadLoss (W), percentMagnetizingCurrent, percentImpedance, TransformerTemplate
     padmount, 310, 2050, 0.5, 2.56,  padmount_template
 
-Table TransformerTankEnd: name, endNumber, sequenceNumber, phase, phaseNeutralU (V), TransformerTank
+Table TransformerTankEnd: mRID, endNumber, sequenceNumber, phase, phaseNeutralU (V), TransformerTank
     pad_end_1, 1, 1, A, 2400, padmount
     pad_end_2, 1, 2, B, 2400, padmount
     pad_end_3, 2, 3, s1, 120, padmount
     pad_end_4, 2, 4, N, 0, padmount
     pad_end_5, 2, 5, s2, 120, padmount
 
-Table TransformerWinding: name, ratedS (kVA), ratedU (V), FromTransformerEnd, ToTransformerEnd
+Table TransformerWinding: mRID, ratedS (kVA), ratedU (V), FromTransformerEnd, ToTransformerEnd
     pad_wdg1, 250, 4160, pad_end_1, pad_end_4
     pad_wdg2, 125, 240, pad_end_3, pad_end_4
     pad_wdg3, 125, 240, pad_end_4, pad_end_5
 
 
 
-Table BaseVoltage: name, nominalVoltage (V)
+Table BaseVoltage: mRID, nominalVoltage (V)
     base_115, 115000
     base_4160, 4160
     base_480, 480
 
-Table LoadResponseCharacteristic: name, pConstantPower, pConstantImpedance, pConstantCurrent, qConstantPower, qConstantImpedance, qConstantCurrent
+Table LoadResponseCharacteristic: mRID, pConstantPower, pConstantImpedance, pConstantCurrent, qConstantPower, qConstantImpedance, qConstantCurrent
     zip_constantPQ, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0
     zip_constantZ, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0
 
-Table ACLineSegment: name, bus1, bus2, circuitNumber, r (pu), x (pu), bch (pu), BaseVoltage, EquipmentContainer
+Table ACLineSegment: mRID, bus1, bus2, circuitNumber, r (pu), x (pu), bch (pu), BaseVoltage, EquipmentContainer
     line_1_2, topo_bus_1, topo_bus_2, 1, 1.93800E-2, 5.91700E-2, 0.05280, base_115, transmission_line
 
-Table ACLineSegment: name, node1, node2, phases, length (ft), PerLengthImpedance, BaseVoltage, EquipmentContainer=ieee_13_debug
+Table ACLineSegment: mRID, node1, node2, phases, length (ft), PerLengthImpedance, BaseVoltage, EquipmentContainer=ieee_13_debug
     650632, RG60, 362, ABCN, 2000, mtx601, base_4160
     362670, MID,  670, ABCN, 667,  mtx601, base_4160
     670671, 670,  671, ABCN, 671,  mtx601, base_4160
     632645, 632,  645, BC,   500,  mtx603, base_4160
     657894, 657,  894, ABCN, 600, 
 
-Table EnergyConsumer: name, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponse, EquipmentContainer=ieee_13_debug
+Table EnergyConsumer: mRID, node, p (kW), q (kVAr), phaseConnection, BaseVoltage, LoadResponse, EquipmentContainer=ieee_13_debug
     load_671, 671, 1155, 660, D, base_4160, zip_constantPQ
     load_634, 634, , , Y, base_480, zip_constantPQ
     load_646, 646, , , D, base_4160, zip_constantZ
     load_sub, SourceBus, 2000, 1000, Y, base_115, zip_constantPQ, sub
 
 
-Table EnergyConsumerPhase: name, phase, p (kW), q (kW), EnergyConsumer
+Table EnergyConsumerPhase: mRID, phase, p (kW), q (kW), EnergyConsumer
     load_634a, A, 160, 110, load_634
     load_634b, B, 120, 90,  load_634
     load_634c, C, 120, 90, load_634
     load_646bc, BC, 230, 132, load_646
 
-Table LinearShuntCompensator: name, node, nomQ (kVAr), nomU (V), sections, phaseConnection, maximumSections, BaseVoltage, EquipmentContainer=ieee_13_debug
+Table LinearShuntCompensator: mRID, node, nomQ (kVAr), nomU (V), sections, phaseConnection, maximumSections, BaseVoltage, EquipmentContainer=ieee_13_debug
     cap_1, 675, 600.0, 4160, 1, Y, 1, base_4160
     cap_2, 611, 100.0, 4160, 1, Y, 1, base_4160
 
-Table LinearShuntCompensatorPhase: name, phase, nomQ (kVAr), sections, ShuntCompensator
+Table LinearShuntCompensatorPhase: mRID, phase, nomQ (kVAr), sections, ShuntCompensator
     cap_2c, C, 100.0, 1, cap_2
 
-Object LoadBreakSwitch: name=671692, node1=671, node2=692, EquipmentContainer=ieee_13_debug
+Object LoadBreakSwitch: mRID=671692, node1=671, node2=692, EquipmentContainer=ieee_13_debug
 
-Table Fuse: name, node1, node2, ratedCurrent (A), open, normalOpen, EquipmentContainer=ieee_13_debug
+Table Fuse: mRID, node1, node2, ratedCurrent (A), open, normalOpen, EquipmentContainer=ieee_13_debug
     fuse_1, 633, XF1, 100.0, false, false
 
-Table Sectionaliser: name, node1, node2, open, normalOpen, EquipmentContainer=ieee_13_debug
+Table Sectionaliser: mRID, node1, node2, open, normalOpen, EquipmentContainer=ieee_13_debug
     sect_1, 684, tap, false, false
 
-Table SwitchPhase: name, phaseSide1, phaseSide2, open, Switch
+Table SwitchPhase: mRID, phaseSide1, phaseSide2, open, Switch
     sect_1c, C, C, false, sect_1
 
-Table PowerElectronicsConnection: name, node, ratedS (kVA), ratedU (V), p (kW), q (kVAr), EquipmentContainer=ieee_13_debug
+Table PowerElectronicsConnection: mRID, node, ratedS (kVA), ratedU (V), p (kW), q (kVAr), EquipmentContainer=ieee_13_debug
     pv_inverter, 634, 300, 480, 240, 0
     batt_inverter, 634, 100, 480, 0, 0
 
 
-Table PhotoVoltaicUnit: name, minP, maxP, PowerElectronicsConnection
+Table PhotoVoltaicUnit: mRID, minP, maxP, PowerElectronicsConnection
     pv, 0, 300, pv_inverter
 
-Table BatteryUnit: name, minP, maxP, ratedE, storedE, batteryState, PowerElectronicsConnection
+Table BatteryUnit: mRID, minP, maxP, ratedE, storedE, batteryState, PowerElectronicsConnection
     batt, -100, 100, 200, 100, discharging, batt_inverter
 
-Object PowerTransformer: name=Sub3, EquipmentContainer=sub
+Object PowerTransformer: mRID=Sub3, EquipmentContainer=sub
 
 # PI model represtation
-Table PowerTransformerEnd: name, node, endNumber, r (ohm), x (ohm), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer
+Table PowerTransformerEnd: mRID, node, endNumber, r (ohm), x (ohm), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer
     sub3_end1, SourceBus, 1, 2.645, 21.160, 5000, 115, D, base_115, Sub3
     sub3_end2, 650, 2, 0, 0, 5000, 4.16, Y, base_4160, Sub3
 
-Table PowerTransformerEnd: name, node, endNumber, r (percent), x (percent), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer
+Table PowerTransformerEnd: mRID, node, endNumber, r (percent), x (percent), ratedS (kVA), ratedU (kV), connectionKind, BaseVoltage, PowerTransformer
     xfm_end1, XF1, 1, 1.10, 2.0, 500, 4160, Y, base_4160
     xfm_end2, 634, 2, 0, 0, 500, 480, Y, base_480
 
@@ -139,7 +139,7 @@ Table PowerTransformerEnd: name, node, endNumber, r (percent), x (percent), rate
 
 # Transformer Instance
 
-Object PowerTransformer: name = padmount_2341, Template = padmount_template
-Table PowerTransformerEnd: name, node, endNumber
+Object PowerTransformer: mRID = padmount_2341, Template = padmount_template
+Table PowerTransformerEnd: mRID, node, endNumber
     pad_2341_1, 671, 1
     pad_2341_2, House, 2

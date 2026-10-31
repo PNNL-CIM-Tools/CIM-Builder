@@ -19,10 +19,10 @@ class WireConfigurationBuilder(ObjectBuilder):
         
     def add_construction(self, config, WireSpacing: str | None = None) -> None:
         if WireSpacing is not None:
-            target = graph_write.resolve_any_subclass(self.network, self.cim.WireSpacing, WireSpacing)
+            target = graph_write.resolve(self.network, self.cim.WireSpacing, WireSpacing)
             if target is None:
                 raise ValueError(
-                    f"{config.name!r}: WireSpacing {WireSpacing!r} not found in graph "
+                    f"{config.mRID!r}: WireSpacing {WireSpacing!r} not found in graph "
                     f"(build the spacing before the WireConfiguration that references it)"
                 )
             graph_write.set_assc(config, CONST, 'WireSpacing', target)

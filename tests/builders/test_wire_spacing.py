@@ -51,7 +51,7 @@ def test_conductor_distance_spacing_builds_pairs(network):
     """Mirrors LineModel04's GridLAB-D example: object line_spacing:12 with
     distance_AB/distance_BC/distance_AC/... pairs."""
     spacing_builder = ConductorDistanceSpacingBuilder(network)
-    spacing = spacing_builder.create(name='line_spacing_500')
+    spacing = spacing_builder.create(mRID='line_spacing_500')
     graph_write.add_to_graph(network, spacing)
 
     ab = spacing_builder.add_conductor_distance(
@@ -69,14 +69,15 @@ def test_conductor_distance_spacing_builds_pairs(network):
 
 def test_wire_configuration_references_conductor_distance_spacing(network):
     spacing_builder = ConductorDistanceSpacingBuilder(network)
-    spacing = spacing_builder.create(name='line_spacing_500')
+    spacing = spacing_builder.create(mRID='line_spacing_500')
     graph_write.add_to_graph(network, spacing)
     spacing_builder.add_conductor_distance(spacing, sequenceNumber1=1, sequenceNumber2=2, distance=Qty(60.5, 'in'))
 
     config_builder = WireConfigurationBuilder(network)
-    config = config_builder.create(name='wireconfig_500')
+    config = config_builder.create(mRID='wireconfig_500')
     graph_write.add_to_graph(network, config)
-    config_builder.add_rating(config, numberOfPhases=4, WireSpacing='line_spacing_500')
+    config_builder.add_config_template(config, numberOfPhases=4)
+    config_builder.add_construction(config, WireSpacing='line_spacing_500')
 
     assert config.WireSpacing is spacing
     assert config in spacing.WireConfiguration
@@ -88,7 +89,7 @@ def test_xy_spacing_builds_conductor_positions(network):
     """Mirrors LineModel05's OpenDSS example: LineGeometry.3PH_H-4_ACSR4...
     with cond=1..4 x=/h= positions."""
     spacing_builder = XYSpacingBuilder(network)
-    spacing = spacing_builder.create(name='geometry_3ph_h4')
+    spacing = spacing_builder.create(mRID='geometry_3ph_h4')
     graph_write.add_to_graph(network, spacing)
 
     cond1 = spacing_builder.add_conductor_position(
@@ -106,15 +107,16 @@ def test_xy_spacing_builds_conductor_positions(network):
 
 def test_wire_configuration_references_xy_spacing(network):
     spacing_builder = XYSpacingBuilder(network)
-    spacing = spacing_builder.create(name='geometry_3ph_h4')
+    spacing = spacing_builder.create(mRID='geometry_3ph_h4')
     graph_write.add_to_graph(network, spacing)
     spacing_builder.add_conductor_position(spacing, sequenceNumber=1, xCoord=Qty(-0.6096, 'm'), yCoord=Qty(9.7536, 'm'))
 
     config_builder = WireConfigurationBuilder(network)
-    config = config_builder.create(name='wireconfig_geometry')
+    config = config_builder.create(mRID='wireconfig_geometry')
     graph_write.add_to_graph(network, config)
-    config_builder.add_rating(config, numberOfPhases=3, installationType='overheadBare',
-                               usage='distribution', WireSpacing='geometry_3ph_h4')
+    config_builder.add_config_template(config, numberOfPhases=3, installationType='overheadBare',
+                               usage='distribution')
+    config_builder.add_construction(config, WireSpacing='geometry_3ph_h4')
 
     assert config.WireSpacing is spacing
     assert config.installationType == network.cim.WireInstallationKind.overheadBare
@@ -125,16 +127,16 @@ def test_wire_configuration_references_xy_spacing(network):
 
 def test_ac_line_segment_references_wire_configuration(network):
     spacing_builder = XYSpacingBuilder(network)
-    spacing = spacing_builder.create(name='geometry_3ph_h4')
+    spacing = spacing_builder.create(mRID='geometry_3ph_h4')
     graph_write.add_to_graph(network, spacing)
 
     config_builder = WireConfigurationBuilder(network)
-    config = config_builder.create(name='wireconfig_geometry')
+    config = config_builder.create(mRID='wireconfig_geometry')
     graph_write.add_to_graph(network, config)
-    config_builder.add_rating(config, WireSpacing='geometry_3ph_h4')
+    config_builder.add_construction(config, WireSpacing='geometry_3ph_h4')
 
     line_builder = ACLineSegmentBuilder(network)
-    line = line_builder.create(name='632670')
+    line = line_builder.create(mRID='632670')
     target = line_builder.add_wire_configuration(line, WireConfiguration='wireconfig_geometry')
 
     assert target is config
@@ -143,14 +145,14 @@ def test_ac_line_segment_references_wire_configuration(network):
 
 def test_add_wire_configuration_missing_template_raises(network):
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='line1')
+    line = builder.create(mRID='line1')
     with pytest.raises(ValueError, match='not found in graph'):
         builder.add_wire_configuration(line, WireConfiguration='does_not_exist')
 
 
-def test_add_rating_missing_wire_spacing_raises(network):
+def test_add_construction_missing_wire_spacing_raises(network):
     builder = WireConfigurationBuilder(network)
-    config = builder.create(name='wireconfig1')
+    config = builder.create(mRID='wireconfig1')
     graph_write.add_to_graph(network, config)
     with pytest.raises(ValueError, match='not found in graph'):
-        builder.add_rating(config, WireSpacing='does_not_exist')
+        builder.add_construction(config, WireSpacing='does_not_exist')

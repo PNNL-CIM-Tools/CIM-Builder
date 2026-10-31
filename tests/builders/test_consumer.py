@@ -17,14 +17,12 @@ field) and LoadResponse inside add_electrical (it's an electrical field), each
 via graph_write.resolve + set_assc, same as every other field that method owns.
 """
 
+import importlib
 import os
 import tempfile
 
 import pytest
-
-os.environ['CIMG_CIM_PROFILE'] = 'cimhub_2026'
-
-import cimprofiles.cim18.cimhub_2026 as cim
+from cimgraph.core.env_vars import get_cim_profile
 from cimgraph.databases import XMLFile
 from cimgraph.models import BusBranchModel
 
@@ -35,25 +33,37 @@ from cimtables import parser, validate
 
 SAMPLES_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'cimbuilder', 'development')
 
+# Profile set per test via monkeypatch (+ cache_clear), matching every other
+# tests/builders/* fixture - a bare os.environ assignment at module scope
+# would leak into every other test file collected in the same pytest process.
+
 
 @pytest.fixture
-def network():
+def cim(monkeypatch):
+    monkeypatch.setenv('CIMG_CIM_PROFILE', 'cim18v17')
+    get_cim_profile.cache_clear()
+    yield importlib.import_module('cimprofiles.cim18.cim18v17')
+    get_cim_profile.cache_clear()
+
+
+@pytest.fixture
+def network(cim):
     conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
-    container = cim.Feeder(name='test_feeder')
+    container = cim.Feeder(mRID='test_feeder')
     net = BusBranchModel(connection=conn, container=container, distributed=False)
     return net
 
 
 # --- direct API -------------------------------------------------------------
 
-def test_create_add_connectivity_add_ssh_add(network):
+def test_create_add_connectivity_add_ssh_add(network, cim):
     builder = EnergyConsumerBuilder(network)
-    load = builder.create(name='load_671')
+    load = builder.create(mRID='load_671')
     builder.add_connectivity(load, node='671')
     builder.add_ssh(load, p=Qty(1155.0, 'kW'), q=Qty(660.0, 'kVAr'))
     consumer = builder.add(load)
 
-    assert consumer.name == 'load_671'
+    assert consumer.mRID == 'load_671'
     assert consumer.p.to('kW') == pytest.approx(1155.0)
     assert consumer.q.to('kVAr') == pytest.approx(660.0)
     assert len(consumer.Terminals) == 1
@@ -64,27 +74,27 @@ def test_create_add_connectivity_add_ssh_add(network):
 
 def test_add_connectivity_uses_network_default_container(network):
     builder = EnergyConsumerBuilder(network)
-    load = builder.create(name='load_671')
+    load = builder.create(mRID='load_671')
     builder.add_connectivity(load, node='671')
     consumer = builder.add(load)
     assert consumer.EquipmentContainer is network.container
 
 
-def test_add_connectivity_explicit_container_overrides_default(network):
-    other = cim.Feeder(name='other_feeder')
+def test_add_connectivity_explicit_container_overrides_default(network, cim):
+    other = cim.Feeder(mRID='other_feeder')
     builder = EnergyConsumerBuilder(network, container=other)
-    load = builder.create(name='load_671')
+    load = builder.create(mRID='load_671')
     builder.add_connectivity(load, node='671')
     consumer = builder.add(load)
     assert consumer.EquipmentContainer is other
 
 
-def test_add_connectivity_resolves_base_voltage_by_name(network):
-    base_voltage = cim.BaseVoltage(name='base_4160')
+def test_add_connectivity_resolves_base_voltage_by_mrid(network, cim):
+    base_voltage = cim.BaseVoltage(mRID='base_4160')
     graph_write.add_to_graph(network, base_voltage)
 
     builder = EnergyConsumerBuilder(network)
-    load = builder.create(name='load_671')
+    load = builder.create(mRID='load_671')
     builder.add_connectivity(load, node='671', BaseVoltage='base_4160')
     consumer = builder.add(load)
 
@@ -92,20 +102,19 @@ def test_add_connectivity_resolves_base_voltage_by_name(network):
     assert consumer in base_voltage.ConductingEquipment
 
 
-def test_add_connectivity_unresolved_base_voltage_name_links_none(network):
+def test_add_connectivity_unresolved_base_voltage_raises(network):
     builder = EnergyConsumerBuilder(network)
-    load = builder.create(name='load_671')
-    builder.add_connectivity(load, node='671', BaseVoltage='does_not_exist')
-    consumer = builder.add(load)
-    assert consumer.BaseVoltage is None
+    load = builder.create(mRID='load_671')
+    with pytest.raises(ValueError, match='not found in graph'):
+        builder.add_connectivity(load, node='671', BaseVoltage='does_not_exist')
 
 
-def test_add_electrical_resolves_load_response_by_name(network):
-    load_response = cim.LoadResponseCharacteristic(name='zip_constantPQ')
+def test_add_electrical_resolves_load_response_by_mrid(network, cim):
+    load_response = cim.LoadResponseCharacteristic(mRID='zip_constantPQ')
     graph_write.add_to_graph(network, load_response)
 
     builder = EnergyConsumerBuilder(network)
-    load = builder.create(name='load_671')
+    load = builder.create(mRID='load_671')
     builder.add_connectivity(load, node='671')
     builder.add_electrical(load, LoadResponse='zip_constantPQ')
     consumer = builder.add(load)
@@ -125,16 +134,16 @@ def ieee13_energy_consumer_rows():
 
 
 @pytest.fixture
-def network_with_referents(network):
+def network_with_referents(network, cim):
     """The BaseVoltage/LoadResponseCharacteristic/container objects the real
-    ieee13 EnergyConsumer rows reference by name, so from_table has
+    ieee13 EnergyConsumer rows reference by mRID, so from_table has
     something real to resolve against."""
-    for name in ('base_4160', 'base_480', 'base_115'):
-        graph_write.add_to_graph(network, cim.BaseVoltage(name=name))
-    for name in ('zip_constantPQ', 'zip_constantZ'):
-        graph_write.add_to_graph(network, cim.LoadResponseCharacteristic(name=name))
-    graph_write.add_to_graph(network, cim.Feeder(name='ieee_13_debug'))
-    graph_write.add_to_graph(network, cim.Feeder(name='sub'))
+    for mRID in ('base_4160', 'base_480', 'base_115'):
+        graph_write.add_to_graph(network, cim.BaseVoltage(mRID=mRID))
+    for mRID in ('zip_constantPQ', 'zip_constantZ'):
+        graph_write.add_to_graph(network, cim.LoadResponseCharacteristic(mRID=mRID))
+    graph_write.add_to_graph(network, cim.Feeder(mRID='ieee_13_debug'))
+    graph_write.add_to_graph(network, cim.Feeder(mRID='sub'))
     return network
 
 
@@ -143,7 +152,7 @@ def _build_all(network, rows):
     for row in rows:
         builder = EnergyConsumerBuilder(network)
         consumer = builder.from_table(row)
-        built[consumer.name] = consumer
+        built[consumer.mRID] = consumer
     return built
 
 
@@ -159,7 +168,7 @@ def test_from_table_sets_electrical_values(network_with_referents, ieee13_energy
     assert load_671.q.to('kVAr') == pytest.approx(660.0)
 
 
-def test_from_table_resolves_base_voltage_and_load_response(network_with_referents, ieee13_energy_consumer_rows):
+def test_from_table_resolves_base_voltage_and_load_response(network_with_referents, ieee13_energy_consumer_rows, cim):
     built = _build_all(network_with_referents, ieee13_energy_consumer_rows)
     load_671 = built['load_671']
     assert load_671.BaseVoltage is graph_write.resolve(network_with_referents, cim.BaseVoltage, 'base_4160')
@@ -169,7 +178,7 @@ def test_from_table_resolves_base_voltage_and_load_response(network_with_referen
     assert load_671 in graph_write.resolve(network_with_referents, cim.BaseVoltage, 'base_4160').ConductingEquipment
 
 
-def test_from_table_equipment_container_default_and_row_override(network_with_referents, ieee13_energy_consumer_rows):
+def test_from_table_equipment_container_default_and_row_override(network_with_referents, ieee13_energy_consumer_rows, cim):
     # load_671/634/646 sit in a table whose header defaults EquipmentContainer
     # to ieee_13_debug; load_sub's row supplies its own trailing value ('sub'),
     # which must override that default (dsl/parser.py's table_stmt).
@@ -183,7 +192,7 @@ def test_from_table_equipment_container_default_and_row_override(network_with_re
     assert built['load_sub'].EquipmentContainer is sub
 
 
-def test_from_table_auto_vivifies_connectivity_node(network_with_referents, ieee13_energy_consumer_rows):
+def test_from_table_auto_vivifies_connectivity_node(network_with_referents, ieee13_energy_consumer_rows, cim):
     built = _build_all(network_with_referents, ieee13_energy_consumer_rows)
     node_671 = graph_write.resolve(network_with_referents, cim.ConnectivityNode, '671')
     assert node_671 is not None
@@ -196,6 +205,6 @@ def test_from_table_missing_equipment_container_raises(network, ieee13_energy_co
     # than silently fall back to network.container (bind_row raises directly,
     # same posture as resolve() never raising but a caller deciding a named
     # FK's absence is an error - CIMTBL_DESIGN.md §12.3).
-    load_671 = next(r for r in ieee13_energy_consumer_rows if r.name == 'load_671')
+    load_671 = next(r for r in ieee13_energy_consumer_rows if r.mRID == 'load_671')
     with pytest.raises(ValueError, match='EquipmentContainer'):
         EnergyConsumerBuilder(network).from_table(load_671)

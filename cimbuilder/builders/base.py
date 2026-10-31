@@ -20,9 +20,22 @@ class ObjectBuilder(ABC):
         self.container = container
         self.cim = network.cim
 
-    def create(self, *, name: str, mRID=None, identifier=None) -> object:
+    def create(self, *, mRID: str = None, name: str = None, identifier: str = None) -> object:
+        """A new instance of cim_class_name, keyed on mRID (so a later rename
+        of `name` - plain, optional data - never changes its UUID): mRID if
+        given, else identifier seeded the same way, else a random UUID -
+        mirrors cimtables.binder._new_object's order (MRID_MIGRATION.md).
+        `name` is set after, independent of which key was used."""
         cim_cls = getattr(self.network.cim, self.cim_class_name)
-        return cim_cls(name=name, mRID=mRID, identifier=identifier)
+        if mRID is not None:
+            obj = cim_cls(mRID=mRID)
+        else:
+            obj = cim_cls()
+            if identifier is not None:
+                obj.uuid(mRID=identifier)
+        if name is not None:
+            obj.name = name
+        return obj
 
     def from_table(self, row: object) -> object:
         """DSL/bulk entry point (§4.2): bind a validated <Class>Row onto a
@@ -35,9 +48,11 @@ class ObjectBuilder(ABC):
         Returns the object already added to the graph (bind_row's own
         contract, matching bind_row's direct callers) - unlike the direct
         create()/add_<part>()/add() API, do not call .add() again on the
-        result."""
-        obj = self.create(name=row.name)
-        return bind_row(self.network, row, obj=obj, container=self.container)
+        result. No `obj` is passed in: bind_row builds it itself (mRID,
+        else identifier, else a random UUID) since a row is keyed by mRID,
+        not name - create() is the name-seeded path for the direct API,
+        not what from_table wants (MRID_MIGRATION.md)."""
+        return bind_row(self.network, row, container=self.container)
 
     def add(self, obj: object) -> object:
         graph_write.add_to_graph(self.network, obj)

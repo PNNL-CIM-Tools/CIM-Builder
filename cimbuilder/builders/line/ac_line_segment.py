@@ -93,6 +93,11 @@ class ACLineSegmentBuilder(ObjectBuilder):
         graph_write.set_attr(line, CN, 'length', length)
         if BaseVoltage is not None:
             target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
+            if target is None:
+                raise ValueError(
+                    f"{line.mRID!r}: BaseVoltage {BaseVoltage!r} not found in graph "
+                    f"(build it before the instance that references it)"
+                )
             graph_write.set_assc(line, CN, 'BaseVoltage', target)
         return terminals
 
@@ -115,27 +120,28 @@ class ACLineSegmentBuilder(ObjectBuilder):
         graph_write.set_attr(line, SC, 'g0ch', g0ch)
 
     def add_per_length_impedance(self, line, *, PerLengthImpedance: str) -> object:
-        """
-        
-        """
-        target = graph_write.resolve_any_subclass(self.network, self.cim.PerLengthImpedance, PerLengthImpedance)
+        """Resolves a PerLengthSequenceImpedance/PerLengthPhaseImpedance
+        template by mRID and sets electrical_unbalanced.ACLineSegment's FK.
+        `PerLengthImpedance` is that template's mRID - build it first or
+        this raises."""
+        target = graph_write.resolve(self.network, self.cim.PerLengthImpedance, PerLengthImpedance)
         if target is None:
             raise ValueError(
-                f"{line.name!r}: PerLengthImpedance {PerLengthImpedance!r} not found in graph "
+                f"{line.mRID!r}: PerLengthImpedance {PerLengthImpedance!r} not found in graph "
                 f"(build the template before the instance that references it)"
             )
         graph_write.set_assc(line, EL_UNBAL, 'PerLengthImpedance', target)
         return target
 
     def add_wire_configuration(self, line, *, WireConfiguration: str) -> object:
-        """
-        Adds reference to a wire configuration template, equivalent to OpenDSS line code or geometry
-        * WireConfiguration: mRID or obj reference to 
-        """
+        """Resolves a WireConfiguration template by mRID (equivalent to an
+        OpenDSS line code or geometry) and sets construction.ACLineSegment's
+        FK. `WireConfiguration` is that template's mRID - build it first or
+        this raises."""
         target = graph_write.resolve(self.network, self.cim.WireConfiguration, WireConfiguration)
         if target is None:
             raise ValueError(
-                f"{line.name!r}: WireConfiguration {WireConfiguration!r} not found in graph "
+                f"{line.mRID!r}: WireConfiguration {WireConfiguration!r} not found in graph "
                 f"(build the template before the instance that references it)"
             )
         graph_write.set_assc(line, CONST, 'WireConfiguration', target)

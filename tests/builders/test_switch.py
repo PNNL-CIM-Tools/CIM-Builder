@@ -56,11 +56,11 @@ def test_add_connectivity_builds_two_terminals_with_distinct_names(network):
     twice, t2 never seeded. connectivity.add_connectivity names each
     terminal from its own index, so this can't regress silently."""
     builder = DisconnectorBuilder(network)
-    switch = _add(network, builder.create(name='sw1'))
+    switch = _add(network, builder.create(mRID='sw1'))
     terminals = builder.add_connectivity(switch, node1='busA', node2='busB')
 
     assert len(terminals) == 2
-    assert terminals[0].name != terminals[1].name
+    assert terminals[0].mRID != terminals[1].mRID
     assert terminals[0].sequenceNumber == 1
     assert terminals[1].sequenceNumber == 2
     assert switch.Terminals == terminals
@@ -69,7 +69,7 @@ def test_add_connectivity_builds_two_terminals_with_distinct_names(network):
 def test_add_connectivity_same_phase_both_sides(network):
     """The symmetric case: one SwitchPhase row, same phase on both sides."""
     builder = DisconnectorBuilder(network)
-    switch = _add(network, builder.create(name='sw1'))
+    switch = _add(network, builder.create(mRID='sw1'))
     terminals = builder.add_connectivity(
         switch, node1='busA', node2='busB', phaseSide1=['A'], phaseSide2=['A'])
 
@@ -85,7 +85,7 @@ def test_add_connectivity_different_phase_per_side(network):
     B on side 2 (an open-phase/cross-connected switch) - each terminal gets
     only its own side's phase, not a shared canonical set."""
     builder = DisconnectorBuilder(network)
-    switch = _add(network, builder.create(name='sw1'))
+    switch = _add(network, builder.create(mRID='sw1'))
     terminals = builder.add_connectivity(
         switch, node1='busA', node2='busB', phaseSide1=['A'], phaseSide2=['B'])
 
@@ -103,7 +103,7 @@ def test_add_connectivity_multiple_rows_build_per_terminal_superset(network):
     superset {A, B} = AB; terminal 2's is {A, C} = AC - independently, not a
     single shared set the way a line's phases= would produce."""
     builder = DisconnectorBuilder(network)
-    switch = _add(network, builder.create(name='sw1'))
+    switch = _add(network, builder.create(mRID='sw1'))
     terminals = builder.add_connectivity(
         switch, node1='busA', node2='busB',
         phaseSide1=['A', 'B'], phaseSide2=['A', 'C'])
@@ -120,7 +120,7 @@ def test_add_connectivity_multiple_rows_build_per_terminal_superset(network):
 
 def test_add_connectivity_mismatched_phase_side_lengths_raises(network):
     builder = DisconnectorBuilder(network)
-    switch = _add(network, builder.create(name='sw1'))
+    switch = _add(network, builder.create(mRID='sw1'))
     with pytest.raises(ValueError, match='parallel lists of equal length'):
         builder.add_connectivity(switch, node1='busA', node2='busB', phaseSide1=['A', 'B'], phaseSide2=['A'])
 
@@ -134,7 +134,7 @@ def test_breaker_builder_add_electrical_writes_shared_and_own_fields(network):
     LoadBreakSwitch - is where this chain actually reaches the graph without
     raising; see switch.py's module docstring)."""
     builder = BreakerBuilder(network)
-    switch = _add(network, builder.create(name='brk1'))
+    switch = _add(network, builder.create(mRID='brk1'))
     builder.add_connectivity(switch, node1='busA', node2='busB')
     builder.add_electrical(
         switch, ratedCurrent=Qty(600, 'A'), gangOperated=True,
@@ -148,7 +148,7 @@ def test_breaker_builder_add_electrical_writes_shared_and_own_fields(network):
 
 def test_protected_switch_builder_add_electrical(network):
     builder = ProtectedSwitchBuilder(network)
-    switch = _add(network, builder.create(name='ps1'))
+    switch = _add(network, builder.create(mRID='ps1'))
     builder.add_electrical(switch, breakingCapacity=Qty(5000, 'A'))
 
     assert switch.breakingCapacity.to('A') == pytest.approx(5000)
@@ -162,7 +162,7 @@ def test_add_electrical_reachable_on_every_leaf(network, builder_cls):
     Switch.ratedCurrent (and ProtectedSwitch.breakingCapacity for the
     protected ones), so add_electrical no longer raises on any of them."""
     builder = builder_cls(network)
-    switch = _add(network, builder.create(name='sw1'))
+    switch = _add(network, builder.create(mRID='sw1'))
     builder.add_electrical(switch, ratedCurrent=Qty(100, 'A'))
 
     assert switch.ratedCurrent.to('A') == pytest.approx(100)

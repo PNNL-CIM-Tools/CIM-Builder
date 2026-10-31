@@ -14,10 +14,11 @@ PowerTransformerEnd at all):
    mirrored end values) is the caller's job - this builder only ever writes
    already-computed values, never derives them.
 2. Mesh-by-end - add_mesh_impedance builds a TransformerMeshImpedance directly
-   between two named PowerTransformerEnds, no TransformerWinding layer.
+   between two PowerTransformerEnds (resolved by mRID), no TransformerWinding
+   layer.
 3. Mesh-by-winding (template) - the TransformerTankConfigurationBuilder
    (by_template.py) builds this tier; PowerTransformerBuilder only
-   references a template by name via add_tank.
+   references a template by mRID via add_tank.
 
 Field locations confirmed directly against the installed cimprofiles package
 (do not assume - every part module below was grepped, not guessed):
@@ -69,7 +70,7 @@ class PowerTransformerBuilder(ObjectBuilder):
 
         created_ends = []
         for entry in ends:
-            end = self.cim.PowerTransformerEnd(name=f"{xfmr.name}_end{entry['endNumber']}")
+            end = self.cim.PowerTransformerEnd(mRID=f"{xfmr.mRID}_end{entry['endNumber']}")
             graph_write.set_assc(end, CN, 'PowerTransformer', xfmr)
             graph_write.set_attr(end, CN, 'endNumber', entry['endNumber'])
             connection_kind = entry.get('connectionKind')
@@ -98,16 +99,16 @@ class PowerTransformerBuilder(ObjectBuilder):
     def add_mesh_impedance(self, xfmr, *, FromTransformerEnd: str, ToTransformerEnd: str,
                             r=None, x=None) -> object:
         """Shape 2 (mesh-by-end): builds+returns a TransformerMeshImpedance
-        directly between two named PowerTransformerEnds (resolved by name),
-        no TransformerWinding layer."""
+        directly between two PowerTransformerEnds, resolved by mRID, no
+        TransformerWinding layer."""
         from_end = graph_write.resolve(self.network, self.cim.PowerTransformerEnd, FromTransformerEnd)
         to_end = graph_write.resolve(self.network, self.cim.PowerTransformerEnd, ToTransformerEnd)
         if from_end is None or to_end is None:
             raise ValueError(
-                f"{xfmr.name!r}: mesh impedance references "
+                f"{xfmr.mRID!r}: mesh impedance references "
                 f"{FromTransformerEnd!r}/{ToTransformerEnd!r}, not both found in graph"
             )
-        mesh = self.cim.TransformerMeshImpedance(name=f'{xfmr.name}_mesh_{FromTransformerEnd}_{ToTransformerEnd}')
+        mesh = self.cim.TransformerMeshImpedance(mRID=f'{xfmr.mRID}_mesh_{FromTransformerEnd}_{ToTransformerEnd}')
         graph_write.set_assc(mesh, EL_BAL, 'FromTransformerEnd', from_end)
         graph_write.set_assc(mesh, EL_BAL, 'ToTransformerEnd', to_end)
         graph_write.set_attr(mesh, EL_BAL, 'r', r)
@@ -115,16 +116,23 @@ class PowerTransformerBuilder(ObjectBuilder):
         graph_write.add_to_graph(self.network, mesh)
         return mesh
 
-    def add_tank(self, xfmr, *, name: str, TankConfiguration: str | object) -> object:
-        """Builds+returns a TransformerTank(name=name, PowerTransformer=xfmr),
-        referencing a TransformerTankConfiguration template object or its
-        name - a name must already be built (via
-        TransformerTankConfigurationBuilder) or this raises, same ordering
-        rule CIMTBL_DESIGN.md §12.3 documents for EquipmentContainer/FK
-        resolution generally. TankConfiguration is set first so a failed
-        lookup leaves xfmr untouched."""
-        tank = self.cim.TransformerTank(name=name)
-        graph_write.set_assc(tank, CONST, 'TankConfiguration', TankConfiguration, network=self.network)
+    def add_tank(self, xfmr, *, mRID: str, TankConfiguration: str) -> object:
+        """Builds+returns a TransformerTank(mRID=mRID, PowerTransformer=xfmr),
+        referencing a TransformerTankConfiguration template by mRID - build
+        the template first (via TransformerTankConfigurationBuilder) or this
+        raises, same ordering rule CIMTBL_DESIGN.md §12.3 documents for
+        EquipmentContainer/FK resolution generally. TankConfiguration is
+        resolved first so a failed lookup leaves xfmr untouched (resolve,
+        then set_assc on the live object - set_assc itself takes no string
+        targets, MRID_MIGRATION.md)."""
+        config = graph_write.resolve(self.network, self.cim.TransformerTankConfiguration, TankConfiguration)
+        if config is None:
+            raise ValueError(
+                f"{xfmr.mRID!r}: TankConfiguration {TankConfiguration!r} not found in graph "
+                f"(build the template before the instance that references it)"
+            )
+        tank = self.cim.TransformerTank(mRID=mRID)
+        graph_write.set_assc(tank, CONST, 'TankConfiguration', config)
         graph_write.set_assc(tank, CONST, 'PowerTransformer', xfmr)
         graph_write.add_to_graph(self.network, tank)
         return tank
@@ -139,7 +147,7 @@ class PowerTransformerBuilder(ObjectBuilder):
         two different part modules for the same object, confirmed by reading
         both classes directly rather than assuming one part module covers
         the whole class."""
-        tap_changer = self.cim.RatioTapChanger(name=f'{end.name}_tap')
+        tap_changer = self.cim.RatioTapChanger(mRID=f'{end.mRID}_tap')
         graph_write.set_attr(tap_changer, REG, 'highStep', highStep)
         graph_write.set_attr(tap_changer, REG, 'lowStep', lowStep)
         graph_write.set_attr(tap_changer, REG, 'initialDelay', initialDelay)

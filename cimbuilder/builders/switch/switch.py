@@ -34,7 +34,7 @@ class SwitchBuilder(ObjectBuilder):
         if phaseSide1 is not None or phaseSide2 is not None:
             if phaseSide1 is None or phaseSide2 is None or len(phaseSide1) != len(phaseSide2):
                 raise ValueError(
-                    f"{switch.name!r}: phaseSide1 and phaseSide2 must both be given, "
+                    f"{switch.mRID!r}: phaseSide1 and phaseSide2 must both be given, "
                     f"as parallel lists of equal length (one entry per SwitchPhase row)"
                 )
             terminal1, terminal2 = terminals
@@ -43,9 +43,9 @@ class SwitchBuilder(ObjectBuilder):
 
             phase_builder = SwitchPhaseBuilder(self.network)
             for i, (side1, side2) in enumerate(zip(phaseSide1, phaseSide2), start=1):
-                switch_phase = phase_builder.create(name=f'{switch.name}_phase{i}')
+                switch_phase = phase_builder.create(mRID=f'{switch.mRID}_phase{i}')
                 graph_write.add_to_graph(self.network, switch_phase)
-                phase_builder.add_connectivity(switch_phase, Switch=switch.name, phaseSide1=side1, phaseSide2=side2)
+                phase_builder.add_connectivity(switch_phase, Switch=switch.mRID, phaseSide1=side1, phaseSide2=side2)
 
         graph_write.set_attr(switch, CN, 'normalOpen', normalOpen)
         graph_write.set_attr(switch, CN, 'retained', retained)
@@ -54,6 +54,11 @@ class SwitchBuilder(ObjectBuilder):
             graph_write.set_attr(switch, CN, 'topologicalUsage', self.cim.TopologicalUsageKind(topologicalUsage))
         if BaseVoltage is not None:
             target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
+            if target is None:
+                raise ValueError(
+                    f"{switch.mRID!r}: BaseVoltage {BaseVoltage!r} not found in graph "
+                    f"(build it before the instance that references it)"
+                )
             graph_write.set_assc(switch, CN, 'BaseVoltage', target)
         return terminals
 

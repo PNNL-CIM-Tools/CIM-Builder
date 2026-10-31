@@ -1,19 +1,19 @@
 
 
 
-Object BaseFrequency: name=base_freq, frequency=60
+Object BaseFrequency: mRID=base_freq, frequency=60
 
-Object BasePower: name=sbase, basePower (MVA)=100
+Object BasePower: mRID=sbase, basePower (MVA)=100
 
-Table BaseVoltage: name, nominalVoltage (kV)
+Table BaseVoltage: mRID, nominalVoltage (kV)
     base_138, 138
 
-Table ACLineSegment: name, bus1, bus2, circuitNumber, r (pu), x (pu), b (pu), BaseVoltage
+Table ACLineSegment: mRID, bus1, bus2, circuitNumber, r (pu), x (pu), b (pu), BaseVoltage
     line_1_2, bus_1, bus_2, 1, 1.93800E-2, 5.91700E-2, 0.05280, base_138
     
 
 
-Table SynchronousMachine: name, bus, p, q
+Table SynchronousMachine: mRID, bus, p, q
 
 
 

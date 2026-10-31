@@ -108,7 +108,6 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         # PerLengthSequenceImpedanceBuilder's EL_BAL.
         graph_write.set_attr(matrix, EL_UNBAL, 'conductorCount', conductorCount)
         graph_write.set_attr(matrix, EL_UNBAL, 'calculatedFrequency', calculatedFrequency)
-        graph_write.set_attr(matrix, EL_UNBAL, 'calculatedTemperature', calculatedFrequency)
         graph_write.set_attr(matrix, EL_UNBAL, 'rg', rg)
         graph_write.set_attr(matrix, EL_UNBAL, 'xg', xg)
 
@@ -121,7 +120,11 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         carries an explicit FK - see this module's docstring)."""
         data_rows = []
         for entry in entries:
-            data = self.cim.PhaseImpedanceData(name=f"{matrix.name}_{entry['row']}_{entry['column']}")
+            # Identity-only class (no mRID/name field) - seed its UUID from a
+            # stable key instead, same route cimtables.binder uses for
+            # Identity-only rows (MRID_MIGRATION.md).
+            data = self.cim.PhaseImpedanceData()
+            data.uuid(mRID=f"{matrix.mRID}_{entry['row']}_{entry['column']}")
             graph_write.set_attr(data, EL_UNBAL, 'row', entry['row'])
             graph_write.set_attr(data, EL_UNBAL, 'column', entry['column'])
             graph_write.set_attr(data, EL_UNBAL, 'r', entry.get('r'))

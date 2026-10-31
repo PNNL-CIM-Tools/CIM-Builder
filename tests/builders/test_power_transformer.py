@@ -46,7 +46,7 @@ def network(cim):
 
 def test_add_connectivity_builds_one_end_per_winding(network, cim):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     ends = builder.add_connectivity(xfmr, ends=[
         {'node': 'busA', 'endNumber': 1, 'connectionKind': 'Y'},
         {'node': 'busB', 'endNumber': 2, 'connectionKind': 'I'},
@@ -57,22 +57,22 @@ def test_add_connectivity_builds_one_end_per_winding(network, cim):
     assert ends[1].endNumber == 2
     assert ends[0].connectionKind == cim.WindingConnection.Y
     assert ends[1].connectionKind == cim.WindingConnection.I
-    assert ends[0].Terminal.ConnectivityNode.name == 'busA'
-    assert ends[1].Terminal.ConnectivityNode.name == 'busB'
+    assert ends[0].Terminal.ConnectivityNode.mRID == 'busA'
+    assert ends[1].Terminal.ConnectivityNode.mRID == 'busB'
     assert ends[0].PowerTransformer is xfmr
     assert ends[1].PowerTransformer is xfmr
 
 
 def test_add_connectivity_uses_network_default_container(network):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
     assert xfmr.EquipmentContainer is network.container
 
 
 def test_add_electrical_writes_pi_model_values(network):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     end1, end2 = builder.add_connectivity(xfmr, ends=[
         {'node': 'busA', 'endNumber': 1},
         {'node': 'busB', 'endNumber': 2},
@@ -96,14 +96,14 @@ def test_add_electrical_writes_pi_model_values(network):
 
 def test_add_mesh_impedance_between_two_ends(network):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     end1, end2, end3 = builder.add_connectivity(xfmr, ends=[
         {'node': 'busA', 'endNumber': 1},
         {'node': 'busB', 'endNumber': 2},
         {'node': 'busC', 'endNumber': 3},
     ])
     mesh = builder.add_mesh_impedance(
-        xfmr, FromTransformerEnd=end1.name, ToTransformerEnd=end2.name, r=Qty(34, 'ohm'), x=Qty(456, 'ohm'))
+        xfmr, FromTransformerEnd=end1.mRID, ToTransformerEnd=end2.mRID, r=Qty(34, 'ohm'), x=Qty(456, 'ohm'))
 
     assert mesh.FromTransformerEnd is end1
     assert mesh.ToTransformerEnd is end2
@@ -115,7 +115,7 @@ def test_add_mesh_impedance_between_two_ends(network):
 
 def test_add_mesh_impedance_unresolved_end_raises(network):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
     with pytest.raises(ValueError, match='not both found'):
         builder.add_mesh_impedance(xfmr, FromTransformerEnd='xfmr1_end1', ToTransformerEnd='does_not_exist', r=1)
@@ -123,41 +123,30 @@ def test_add_mesh_impedance_unresolved_end_raises(network):
 
 # --- add_tank / add_tap_changer --------------------------------------------
 
-def test_add_tank_resolves_template_by_name(network):
+def test_add_tank_resolves_template_by_mrid(network):
     config_builder = TransformerTankConfigurationBuilder(network)
-    config = config_builder.create(name='padmount_1ph_250kva')
+    config = config_builder.create(mRID='padmount_1ph_250kva')
     graph_write.add_to_graph(network, config)
 
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='padmount_2341')
-    tank = builder.add_tank(xfmr, name='padmount_2341_tank', TankConfiguration='padmount_1ph_250kva')
+    xfmr = builder.create(mRID='padmount_2341')
+    tank = builder.add_tank(xfmr, mRID='padmount_2341_tank', TankConfiguration='padmount_1ph_250kva')
 
     assert tank.PowerTransformer is xfmr
     assert tank.TankConfiguration is config
 
 
-def test_add_tank_accepts_template_object(network):
-    config = TransformerTankConfigurationBuilder(network).create(name='padmount_1ph_250kva')
-
-    builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='padmount_2341')
-    tank = builder.add_tank(xfmr, name='padmount_2341_tank', TankConfiguration=config)
-
-    assert tank.TankConfiguration is config
-    assert tank in config.TransformerTank
-
-
 def test_add_tank_missing_template_raises(network):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     with pytest.raises(ValueError, match='TankConfiguration'):
-        builder.add_tank(xfmr, name='tank1', TankConfiguration='does_not_exist')
+        builder.add_tank(xfmr, mRID='tank1', TankConfiguration='does_not_exist')
     assert xfmr.TransformerTanks == []
 
 
 def test_add_tap_changer_builds_ratio_tap_changer(network):
     builder = PowerTransformerBuilder(network)
-    xfmr = builder.create(name='xfmr1')
+    xfmr = builder.create(mRID='xfmr1')
     [end1] = builder.add_connectivity(xfmr, ends=[{'node': 'busA', 'endNumber': 1}])
     tap_changer = builder.add_tap_changer(end1, highStep=16, lowStep=-16, initialDelay=Qty(30, 's'))
 
@@ -174,23 +163,23 @@ def test_template_tier_builds_the_ct5_pole_top_example(network):
     """Mirrors /home/ande188/CIMTBL-Models/distribution/IEEE/IEEE13_CDPSM/xfmrcodes.cimtbl's
     ct5 example end to end via the direct/manual API."""
     builder = TransformerTankConfigurationBuilder(network)
-    config = builder.create(name='ct5')
+    config = builder.create(mRID='ct5')
     graph_write.add_to_graph(network, config)
-    builder.add_rating(config, percentImpedance=Qty(2.08, 'percent'),
+    builder.add_nameplate(config, percentImpedance=Qty(2.08, 'percent'),
                         percentMagnetizingCurrent=Qty(0.5, 'percent'),
                         noLoadLoss=Qty(10, 'W'), loadLoss=Qty(60, 'W'))
 
-    h1 = builder.add_phase_end(config, name='ct5_h1', endNumber=1, sequenceNumber=1,
+    h1 = builder.add_phase_end(config, mRID='ct5_h1', endNumber=1, sequenceNumber=1,
                                 phase='X', phaseNeutralU=Qty(2400, 'V'))
-    x1 = builder.add_phase_end(config, name='ct5_x1', endNumber=2, sequenceNumber=2,
+    x1 = builder.add_phase_end(config, mRID='ct5_x1', endNumber=2, sequenceNumber=2,
                                 phase='s1', phaseNeutralU=Qty(120, 'V'))
-    n = builder.add_phase_end(config, name='ct5_n', endNumber=2, sequenceNumber=4,
+    n = builder.add_phase_end(config, mRID='ct5_n', endNumber=2, sequenceNumber=4,
                                phase='N', phaseNeutralU=Qty(0, 'V'))
 
-    wdg1 = builder.add_winding(config, name='ct5_wdg1', ratedS=Qty(5, 'kVA'), baseS=Qty(5, 'kVA'),
+    wdg1 = builder.add_winding(config, mRID='ct5_wdg1', ratedS=Qty(5, 'kVA'), baseS=Qty(5, 'kVA'),
                                 ratedU=Qty(4160, 'V'), baseU=Qty(2400, 'V'), r=Qty(0.6, 'percent'),
                                 FromTransformerEnd='ct5_h1', ToTransformerEnd='ct5_n')
-    wdg2 = builder.add_winding(config, name='ct5_wdg2', ratedS=Qty(2.5, 'kVA'), baseS=Qty(5, 'kVA'),
+    wdg2 = builder.add_winding(config, mRID='ct5_wdg2', ratedS=Qty(2.5, 'kVA'), baseS=Qty(5, 'kVA'),
                                 ratedU=Qty(240, 'V'), baseU=Qty(120, 'V'), r=Qty(1.2, 'percent'),
                                 FromTransformerEnd='ct5_x1', ToTransformerEnd='ct5_n')
 
@@ -213,18 +202,18 @@ def test_add_tank_references_template_built_separately(network, cim):
     PowerTransformer + PowerTransformerEnd connectivity + a TransformerTank
     referencing a template built by TransformerTankConfigurationBuilder."""
     config_builder = TransformerTankConfigurationBuilder(network)
-    config = config_builder.create(name='padmount_1ph_250kva')
+    config = config_builder.create(mRID='padmount_1ph_250kva')
     graph_write.add_to_graph(network, config)
-    config_builder.add_rating(config, percentImpedance=Qty(2.56, 'percent'),
+    config_builder.add_nameplate(config, percentImpedance=Qty(2.56, 'percent'),
                                noLoadLoss=Qty(310, 'W'), loadLoss=Qty(2050, 'W'))
 
     xfmr_builder = PowerTransformerBuilder(network)
-    xfmr = xfmr_builder.create(name='padmount_2341')
+    xfmr = xfmr_builder.create(mRID='padmount_2341')
     ends = xfmr_builder.add_connectivity(xfmr, ends=[
         {'node': 'cn_2341_hv', 'endNumber': 1, 'connectionKind': 'Y'},
         {'node': 'cn_2341_lv', 'endNumber': 2, 'connectionKind': 'I'},
     ])
-    tank = xfmr_builder.add_tank(xfmr, name='padmount_2341_tank', TankConfiguration='padmount_1ph_250kva')
+    tank = xfmr_builder.add_tank(xfmr, mRID='padmount_2341_tank', TankConfiguration='padmount_1ph_250kva')
 
     assert tank.PowerTransformer is xfmr
     assert tank.TankConfiguration is config

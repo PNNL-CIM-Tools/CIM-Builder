@@ -55,19 +55,19 @@ def network(cim):
 
 def test_add_connectivity_builds_two_terminals(network):
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='650632')
+    line = builder.create(mRID='650632')
     terminals = builder.add_connectivity(line, node1='rg60', node2='632', phases='ABC', length=Qty(2000, 'ft'))
 
     assert len(terminals) == 2
-    assert terminals[0].ConnectivityNode.name == 'rg60'
-    assert terminals[1].ConnectivityNode.name == '632'
+    assert terminals[0].ConnectivityNode.mRID == 'rg60'
+    assert terminals[1].ConnectivityNode.mRID == '632'
     assert line.length.to('ft') == pytest.approx(2000)
     assert line.EquipmentContainer is network.container
 
 
 def test_add_connectivity_builds_phase_children_in_order(network):
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='632645')
+    line = builder.create(mRID='632645')
     builder.add_connectivity(line, node1='632', node2='645', phases='CB')
 
     phases = line.ACLineSegmentPhases
@@ -76,11 +76,11 @@ def test_add_connectivity_builds_phase_children_in_order(network):
 
 
 def test_add_connectivity_resolves_base_voltage(network, cim):
-    bv = cim.BaseVoltage(name='bv_4p16kv')
+    bv = cim.BaseVoltage(mRID='bv_4p16kv')
     graph_write.add_to_graph(network, bv)
 
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='650632')
+    line = builder.create(mRID='650632')
     builder.add_connectivity(line, node1='rg60', node2='632', BaseVoltage='bv_4p16kv')
 
     assert line.BaseVoltage is bv
@@ -90,7 +90,7 @@ def test_add_connectivity_resolves_base_voltage(network, cim):
 
 def test_add_electrical_writes_balanced_pi_values(network):
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='line1')
+    line = builder.create(mRID='line1')
     builder.add_electrical(line, r=Qty(1.04, 'ohm'), x=Qty(33.4, 'ohm'),
                             bch=Qty(5.6e-6, 'S'), gch=Qty(0, 'S'))
 
@@ -102,7 +102,7 @@ def test_add_electrical_writes_balanced_pi_values(network):
 
 def test_add_short_circuit_writes_zero_sequence_pi_values(network):
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='line1')
+    line = builder.create(mRID='line1')
     builder.add_short_circuit(line, r0=Qty(3.0, 'ohm'), x0=Qty(10.0, 'ohm'),
                                b0ch=Qty(1.2e-6, 'S'), g0ch=Qty(0, 'S'))
 
@@ -115,13 +115,13 @@ def test_add_short_circuit_writes_zero_sequence_pi_values(network):
 
 def test_per_length_sequence_impedance_builder(network):
     seq_builder = PerLengthSequenceImpedanceBuilder(network)
-    seq = seq_builder.create(name='linecode1')
+    seq = seq_builder.create(mRID='linecode1')
     graph_write.add_to_graph(network, seq)
-    seq_builder.add_rating(seq, r=Qty(0.306, 'ohm/mi'), x=Qty(0.6276, 'ohm/mi'),
+    seq_builder.add_electrical(seq, r=Qty(0.306, 'ohm/mi'), x=Qty(0.6276, 'ohm/mi'),
                             bch=Qty(0, 'S/mi'), calculatedFrequency=Qty(60, 'Hz'))
 
     line_builder = ACLineSegmentBuilder(network)
-    line = line_builder.create(name='line1')
+    line = line_builder.create(mRID='line1')
     target = line_builder.add_per_length_impedance(line, PerLengthImpedance='linecode1')
 
     assert target is seq
@@ -131,7 +131,7 @@ def test_per_length_sequence_impedance_builder(network):
 
 def test_add_per_length_impedance_missing_template_raises(network):
     builder = ACLineSegmentBuilder(network)
-    line = builder.create(name='line1')
+    line = builder.create(mRID='line1')
     with pytest.raises(ValueError, match='not found in graph'):
         builder.add_per_length_impedance(line, PerLengthImpedance='does_not_exist')
 
@@ -143,9 +143,9 @@ def test_mtx601_pole_top_example(network):
     linecodes.cimtbl's mtx601 + lines.cimtbl's 650632 line end to end via the
     direct/manual API."""
     matrix_builder = PerLengthPhaseImpedanceBuilder(network)
-    mtx601 = matrix_builder.create(name='mtx601')
+    mtx601 = matrix_builder.create(mRID='mtx601')
     graph_write.add_to_graph(network, mtx601)
-    matrix_builder.add_rating(mtx601, conductorCount=3, calculatedFrequency=Qty(60, 'Hz'))
+    matrix_builder.add_electrical_earthing(mtx601, conductorCount=3, calculatedFrequency=Qty(60, 'Hz'))
     matrix_builder.add_phase_impedance_data(mtx601, entries=[
         {'row': 1, 'column': 1, 'r': Qty(0.3465, 'ohm/mi'), 'x': Qty(1.0179, 'ohm/mi')},
         {'row': 2, 'column': 1, 'r': Qty(0.1560, 'ohm/mi'), 'x': Qty(0.5017, 'ohm/mi')},
@@ -156,7 +156,7 @@ def test_mtx601_pole_top_example(network):
     ])
 
     line_builder = ACLineSegmentBuilder(network)
-    line = line_builder.create(name='650632')
+    line = line_builder.create(mRID='650632')
     line_builder.add_connectivity(line, node1='rg60', node2='632', phases='ABC', length=Qty(2000, 'ft'))
     line_builder.add_per_length_impedance(line, PerLengthImpedance='mtx601')
 
