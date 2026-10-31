@@ -30,7 +30,6 @@ from cimgraph.models import BusBranchModel
 
 from cimbuilder.builders.load.consumer import EnergyConsumerBuilder
 from cimtables import graph_write
-from cimtables.name_index import NameIndex
 from cimtables.units import Qty
 from cimtables import parser, validate
 
@@ -42,7 +41,6 @@ def network():
     conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
     container = cim.Feeder(name='test_feeder')
     net = BusBranchModel(connection=conn, container=container, distributed=False)
-    net.name_index = NameIndex()
     return net
 
 

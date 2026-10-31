@@ -26,7 +26,6 @@ from cimbuilder.builders.line import (
     PerLengthSequenceImpedanceBuilder,
 )
 from cimtables import graph_write
-from cimtables.name_index import NameIndex
 from cimtables.units import Qty
 
 # Profile set per test via monkeypatch (+ cache_clear, since get_cim_profile
@@ -49,7 +48,6 @@ def network(cim):
     conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
     container = cim.Feeder(name='ieee13nodeckt')
     net = BusBranchModel(connection=conn, container=container, distributed=False)
-    net.name_index = NameIndex()
     return net
 
 

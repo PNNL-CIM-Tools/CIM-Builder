@@ -27,7 +27,6 @@ from cimbuilder.builders.switch import (
     RecloserBuilder,
 )
 from cimtables import graph_write
-from cimtables.name_index import NameIndex
 from cimtables.units import Qty
 
 
@@ -44,7 +43,6 @@ def network(cim):
     conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
     container = cim.Feeder(name='ieee13nodeckt')
     net = BusBranchModel(connection=conn, container=container, distributed=False)
-    net.name_index = NameIndex()
     return net
 
 

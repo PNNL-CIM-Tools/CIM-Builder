@@ -115,21 +115,17 @@ class PowerTransformerBuilder(ObjectBuilder):
         graph_write.add_to_graph(self.network, mesh)
         return mesh
 
-    def add_tank(self, xfmr, *, name: str, TankConfiguration: str) -> object:
+    def add_tank(self, xfmr, *, name: str, TankConfiguration: str | object) -> object:
         """Builds+returns a TransformerTank(name=name, PowerTransformer=xfmr),
-        referencing a TransformerTankConfiguration template by name - build
-        the template first (via TransformerTankConfigurationBuilder) or this
-        raises, same ordering rule CIMTBL_DESIGN.md §12.3 documents for
-        EquipmentContainer/FK resolution generally."""
-        config = graph_write.resolve(self.network, self.cim.TransformerTankConfiguration, TankConfiguration)
-        if config is None:
-            raise ValueError(
-                f"{xfmr.name!r}: TankConfiguration {TankConfiguration!r} not found in graph "
-                f"(build the template before the instance that references it)"
-            )
+        referencing a TransformerTankConfiguration template object or its
+        name - a name must already be built (via
+        TransformerTankConfigurationBuilder) or this raises, same ordering
+        rule CIMTBL_DESIGN.md §12.3 documents for EquipmentContainer/FK
+        resolution generally. TankConfiguration is set first so a failed
+        lookup leaves xfmr untouched."""
         tank = self.cim.TransformerTank(name=name)
+        graph_write.set_assc(tank, CONST, 'TankConfiguration', TankConfiguration, network=self.network)
         graph_write.set_assc(tank, CONST, 'PowerTransformer', xfmr)
-        graph_write.set_assc(tank, CONST, 'TankConfiguration', config)
         graph_write.add_to_graph(self.network, tank)
         return tank
 

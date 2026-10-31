@@ -18,7 +18,6 @@ from cimgraph.models import BusBranchModel
 
 from cimbuilder.builders.transformer import PowerTransformerBuilder, TransformerTankConfigurationBuilder
 from cimtables import graph_write
-from cimtables.name_index import NameIndex
 from cimtables.units import Qty
 
 # Profile set per test via monkeypatch (+ cache_clear, since get_cim_profile
@@ -40,7 +39,6 @@ def network(cim):
     conn = XMLFile(filename=tempfile.mktemp(suffix='.xml'))
     container = cim.Substation(name='test_substation')
     net = BusBranchModel(connection=conn, container=container, distributed=False)
-    net.name_index = NameIndex()
     return net
 
 
@@ -138,11 +136,23 @@ def test_add_tank_resolves_template_by_name(network):
     assert tank.TankConfiguration is config
 
 
+def test_add_tank_accepts_template_object(network):
+    config = TransformerTankConfigurationBuilder(network).create(name='padmount_1ph_250kva')
+
+    builder = PowerTransformerBuilder(network)
+    xfmr = builder.create(name='padmount_2341')
+    tank = builder.add_tank(xfmr, name='padmount_2341_tank', TankConfiguration=config)
+
+    assert tank.TankConfiguration is config
+    assert tank in config.TransformerTank
+
+
 def test_add_tank_missing_template_raises(network):
     builder = PowerTransformerBuilder(network)
     xfmr = builder.create(name='xfmr1')
     with pytest.raises(ValueError, match='TankConfiguration'):
         builder.add_tank(xfmr, name='tank1', TankConfiguration='does_not_exist')
+    assert xfmr.TransformerTanks == []
 
 
 def test_add_tap_changer_builds_ratio_tap_changer(network):

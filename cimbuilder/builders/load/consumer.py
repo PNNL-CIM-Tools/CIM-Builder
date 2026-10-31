@@ -1,16 +1,5 @@
-"""Phase 5: EnergyConsumerBuilder (design: CIMTBL_DESIGN.md §8.1,
-cimbuilder/development/GRAPH_WRITE_CONTRACT.md).
-
-Direct/manual API only - bulk .cimtbl loading goes through the generic,
-reflective ObjectBuilder.from_table (builders/base.py), not per-class
-add_<part> dispatch here. Stateless: every add_<part> method takes `load` as
-an explicit parameter, and returns nothing - callers chain values through the
-object itself, not through `self`. See GRAPH_WRITE_CONTRACT.md §6 for the
-worked walkthrough this file follows.
-"""
-
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
-import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL
+import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 
 from cimbuilder.builders.base import ObjectBuilder
@@ -34,14 +23,14 @@ class EnergyConsumerBuilder(ObjectBuilder):
 
     def add_electrical(self, load, *, pfixed=None, qfixed=None, pfixedPct=None, qfixedPct=None, LoadResponse=None) -> None:
 
-        graph_write.set_attr(load, EL, 'pfixed', pfixed)
-        graph_write.set_attr(load, EL, 'qfixed', qfixed)
-        graph_write.set_attr(load, EL, 'pfixedPct', pfixedPct)
-        graph_write.set_attr(load, EL, 'qfixedPct', qfixedPct)
+        graph_write.set_attr(load, EL_BAL, 'pfixed', pfixed)
+        graph_write.set_attr(load, EL_BAL, 'qfixed', qfixed)
+        graph_write.set_attr(load, EL_BAL, 'pfixedPct', pfixedPct)
+        graph_write.set_attr(load, EL_BAL, 'qfixedPct', qfixedPct)
         
         if LoadResponse is not None:
                     target = graph_write.resolve(self.network, self.cim.LoadResponseCharacteristic, LoadResponse)
-                    graph_write.set_assc(load, EL, 'LoadResponse', target)
+                    graph_write.set_assc(load, EL_BAL, 'LoadResponse', target)
 
     def add_ssh(self, load, *, p=None, q=None) -> None:
         graph_write.set_attr(load, SSH, 'p', p)

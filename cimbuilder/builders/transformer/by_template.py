@@ -42,7 +42,7 @@ from cimtables import graph_write
 class TransformerTankConfigurationBuilder(ObjectBuilder):
     cim_class_name = 'TransformerTankConfiguration'
 
-    def add_rating(self, config, *, percentImpedance=None, percentMagnetizingCurrent=None,
+    def add_nameplate(self, config, *, percentImpedance=None, percentMagnetizingCurrent=None,
                     noLoadLoss=None, loadLoss=None) -> None:
         """construction.TransformerTankConfiguration's own scalars."""
         graph_write.set_attr(config, CONST, 'percentImpedance', percentImpedance)
@@ -52,11 +52,11 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
 
     def add_phase_end(self, config, *, name: str, endNumber: int, sequenceNumber: int,
                        phase: str, phaseNeutralU=None) -> object:
-        """Builds+returns a TransformerPhaseEnd, FK'd to `config`. endNumber/
-        sequenceNumber/phase/phaseNeutralU are connectivity_unbalanced fields
-        (the shared TransformerEnd/TransformerPhaseEnd identity, not a
-        template-specific concept); the TankConfiguration FK itself is
-        construction's own field."""
+        """
+        Adds phase end information with
+        * endNumber = matches the PowerTransformerEnd side (1=high, 2=low, 3=tertiary)
+        * sequenceNumber = 
+        """
         end = self.cim.TransformerPhaseEnd(name=name)
         graph_write.set_attr(end, CN, 'endNumber', endNumber)
         graph_write.set_attr(end, CN, 'sequenceNumber', sequenceNumber)
@@ -68,14 +68,14 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
 
     def add_winding(self, config, *, name: str, ratedS=None, ratedU=None, baseS=None, baseU=None,
                      r=None, FromTransformerEnd: str | None = None, ToTransformerEnd: str | None = None) -> object:
-        """Shape 3's winding layer: builds+returns a TransformerWinding.
-        ratedS/ratedU/baseS/baseU/r (a relative Qty, percent) are
-        electrical_balanced scalars, with z_base resolved from THIS
-        winding's own baseU/baseS - the same rule cimtables/binder.py's
-        _winding_z_base already applies for .cimtbl loading, invoked
-        directly here for the manual API. FromTransformerEnd/
-        ToTransformerEnd/TankConfiguration are construction FKs, resolved by
-        name against the TransformerPhaseEnds built by add_phase_end."""
+        """
+        Adds winding information to the tank template with
+        * ratedS: normal apparent power rating of the winding
+        * ratedU: phase-to-phase (12470/240) voltage at no load
+        * baseS: used for calculation of percent impedance, for a split-phase 
+        center-tap transformer, the rating of the primary winding is used as the basis for both secondary windings.
+        * baseU: phase-to-neutral voltage for wye, phase-to-phase voltage for delta
+        """
         winding = self.cim.TransformerWinding(name=name)
         graph_write.set_assc(winding, CONST, 'TankConfiguration', config)
         if FromTransformerEnd is not None:

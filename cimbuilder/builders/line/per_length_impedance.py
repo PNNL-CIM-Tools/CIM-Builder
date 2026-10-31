@@ -80,7 +80,7 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
 
     cim_class_name = 'PerLengthSequenceImpedance'
 
-    def add_rating(self, impedance, *, r=None, x=None, bch=None, gch=None,
+    def add_electrical(self, impedance, *, r=None, x=None, bch=None, gch=None,
                     calculatedFrequency=None, rg=None, xg=None) -> None:
         graph_write.set_attr(impedance, EL_BAL, 'r', r)
         graph_write.set_attr(impedance, EL_BAL, 'x', x)
@@ -97,7 +97,7 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
 
     cim_class_name = 'PerLengthPhaseImpedance'
 
-    def add_rating(self, matrix, *, conductorCount: int | None = None,
+    def add_electrical_earthing(self, matrix, *, conductorCount: int | None = None,
                     calculatedFrequency=None, rg=None, xg=None) -> None:
         # calculatedFrequency/rg/xg are PerLengthImpedance's own base-class
         # fields, inherited by both PerLengthSequenceImpedance and
@@ -108,6 +108,7 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         # PerLengthSequenceImpedanceBuilder's EL_BAL.
         graph_write.set_attr(matrix, EL_UNBAL, 'conductorCount', conductorCount)
         graph_write.set_attr(matrix, EL_UNBAL, 'calculatedFrequency', calculatedFrequency)
+        graph_write.set_attr(matrix, EL_UNBAL, 'calculatedTemperature', calculatedFrequency)
         graph_write.set_attr(matrix, EL_UNBAL, 'rg', rg)
         graph_write.set_attr(matrix, EL_UNBAL, 'xg', xg)
 
@@ -133,78 +134,3 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         return data_rows
 
 
-class WireConfigurationBuilder(ObjectBuilder):
-    """LineModel04/05's template container: WireConfiguration ->
-    WireSpacing. Build the WireSpacing first (via ConductorDistanceSpacingBuilder
-    or XYSpacingBuilder), then add_rating here to set it - same build-template-
-    then-reference-it ordering as every other template tier in this codebase."""
-
-    cim_class_name = 'WireConfiguration'
-
-    def add_rating(self, config, *, numberOfPhases: int | None = None, installationType=None,
-                    usage=None, WireSpacing: str | None = None) -> None:
-        graph_write.set_attr(config, CONST, 'numberOfPhases', numberOfPhases)
-        if installationType is not None:
-            graph_write.set_attr(config, CONST, 'installationType', self.cim.WireInstallationKind(installationType))
-        if usage is not None:
-            graph_write.set_attr(config, CONST, 'usage', self.cim.WireUsageKind(usage))
-        if WireSpacing is not None:
-            target = graph_write.resolve_any_subclass(self.network, self.cim.WireSpacing, WireSpacing)
-            if target is None:
-                raise ValueError(
-                    f"{config.name!r}: WireSpacing {WireSpacing!r} not found in graph "
-                    f"(build the spacing before the WireConfiguration that references it)"
-                )
-            graph_write.set_assc(config, CONST, 'WireSpacing', target)
-
-
-class ConductorDistanceSpacingBuilder(ObjectBuilder):
-    """LineModel04: distance-pair wire spacing (equivalent to GridLAB-D
-    line_spacing). add_conductor_distance builds one ConductorDistance row
-    per described pair, mirroring GridLAB-D's distance_AB/distance_BC/...
-    convention - one call per pair, not a single matrix."""
-
-    cim_class_name = 'ConductorDistanceSpacing'
-
-    def add_conductor_distance(self, spacing, *, sequenceNumber1: int, sequenceNumber2: int,
-                                distance, conductorKind1=None, conductorKind2=None) -> object:
-        """Builds+returns a ConductorDistance, FK'd to `spacing` via its own
-        singular ConductorDistanceSpacing field (not the two undocumented
-        fromSequenceNumber/toSequenceNumber fields - see this module's
-        docstring)."""
-        name = f'{spacing.name}_{sequenceNumber1}{sequenceNumber2}'
-        pair = self.cim.ConductorDistance(name=name)
-        graph_write.set_attr(pair, CONST, 'sequenceNumber1', sequenceNumber1)
-        graph_write.set_attr(pair, CONST, 'sequenceNumber2', sequenceNumber2)
-        graph_write.set_attr(pair, CONST, 'distance', distance)
-        if conductorKind1 is not None:
-            graph_write.set_attr(pair, CONST, 'conductorKind1', self.cim.ConductorPositionKind(conductorKind1))
-        if conductorKind2 is not None:
-            graph_write.set_attr(pair, CONST, 'conductorKind2', self.cim.ConductorPositionKind(conductorKind2))
-        graph_write.set_assc(pair, CONST, 'ConductorDistanceSpacing', spacing)
-        graph_write.add_to_graph(self.network, pair)
-        return pair
-
-
-class XYSpacingBuilder(ObjectBuilder):
-    """LineModel05: x/y coordinate wire spacing (equivalent to OpenDSS
-    LineSpacing/LineGeometry). add_conductor_position builds one
-    XYConductorPosition per conductor, mirroring OpenDSS's cond=/x=/h=
-    convention - one call per conductor, not a single table."""
-
-    cim_class_name = 'XYSpacing'
-
-    def add_conductor_position(self, spacing, *, sequenceNumber: int, xCoord, yCoord,
-                                circuitNumber: int | None = None, kind=None) -> object:
-        """Builds+returns an XYConductorPosition, FK'd to `spacing` via its
-        own singular XYSpacing field."""
-        position = self.cim.XYConductorPosition(name=f'{spacing.name}_{sequenceNumber}')
-        graph_write.set_attr(position, CONST, 'sequenceNumber', sequenceNumber)
-        graph_write.set_attr(position, CONST, 'xCoord', xCoord)
-        graph_write.set_attr(position, CONST, 'yCoord', yCoord)
-        graph_write.set_attr(position, CONST, 'circuitNumber', circuitNumber)
-        if kind is not None:
-            graph_write.set_attr(position, CONST, 'kind', self.cim.ConductorPositionKind(kind))
-        graph_write.set_assc(position, CONST, 'XYSpacing', spacing)
-        graph_write.add_to_graph(self.network, position)
-        return position

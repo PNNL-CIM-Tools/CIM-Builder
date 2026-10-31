@@ -105,22 +105,19 @@ class ACLineSegmentBuilder(ObjectBuilder):
         graph_write.set_attr(line, EL_BAL, 'gch', gch)
 
     def add_short_circuit(self, line, *, r0=None, x0=None, b0ch=None, g0ch=None) -> None:
-        """Shape 2 (direct zero-sequence PI): the zero-sequence counterpart
-        to add_electrical. Part module short_circuit."""
+        """
+        Adds short circuit zero sequence impedances for a balanced line
+        * 
+        """
         graph_write.set_attr(line, SC, 'r0', r0)
         graph_write.set_attr(line, SC, 'x0', x0)
         graph_write.set_attr(line, SC, 'b0ch', b0ch)
         graph_write.set_attr(line, SC, 'g0ch', g0ch)
 
     def add_per_length_impedance(self, line, *, PerLengthImpedance: str) -> object:
-        """Shapes 3/4 (per-length reference): resolves a
-        PerLengthSequenceImpedance (LineModel02, balanced) or
-        PerLengthPhaseImpedance (LineModel03, unbalanced matrix) template by
-        name and sets the one FK field both shapes share
-        (electrical_unbalanced.ACLineSegment.PerLengthImpedance). Build the
-        template first (via PerLengthImpedanceBuilder) or this raises, same
-        ordering rule Phase 1's add_tank already established for
-        TankConfiguration."""
+        """
+        
+        """
         target = graph_write.resolve_any_subclass(self.network, self.cim.PerLengthImpedance, PerLengthImpedance)
         if target is None:
             raise ValueError(
@@ -131,13 +128,10 @@ class ACLineSegmentBuilder(ObjectBuilder):
         return target
 
     def add_wire_configuration(self, line, *, WireConfiguration: str) -> object:
-        """Shape 5 (wire geometry reference): resolves a WireConfiguration
-        template by name and sets construction.ACLineSegment.WireConfiguration.
-        The template's own WireSpacing (ConductorDistanceSpacing or XYSpacing)
-        is set when the template is built (WireConfigurationBuilder.add_rating
-        in by_template.py) - this method never touches WireSpacing directly,
-        same separation as add_per_length_impedance only ever referencing a
-        template, never building one."""
+        """
+        Adds reference to a wire configuration template, equivalent to OpenDSS line code or geometry
+        * WireConfiguration: mRID or obj reference to 
+        """
         target = graph_write.resolve(self.network, self.cim.WireConfiguration, WireConfiguration)
         if target is None:
             raise ValueError(
