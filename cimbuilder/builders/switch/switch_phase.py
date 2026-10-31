@@ -40,13 +40,7 @@ class SwitchPhaseBuilder(ObjectBuilder):
         leaf matches its real type) and sets phaseSide1/phaseSide2
         independently, so a switch can carry phase A on side 1 and phase B
         on side 2."""
-        target = graph_write.resolve(self.network, self.cim.Switch, Switch)
-        if target is None:
-            raise ValueError(
-                f"{switch_phase.mRID!r}: Switch {Switch!r} not found in graph "
-                f"(build the switch before the SwitchPhase that references it)"
-            )
-        graph_write.set_assc(switch_phase, CN, 'Switch', target)
+        target = graph_write.set_assc_from_mrid(self.network, switch_phase, CN, 'Switch', self.cim.Switch, Switch)
         graph_write.set_attr(switch_phase, CN, 'phaseSide1', self.cim.SinglePhaseKind(phaseSide1))
         graph_write.set_attr(switch_phase, CN, 'phaseSide2', self.cim.SinglePhaseKind(phaseSide2))
         graph_write.set_attr(switch_phase, CN, 'normalOpen', normalOpen)

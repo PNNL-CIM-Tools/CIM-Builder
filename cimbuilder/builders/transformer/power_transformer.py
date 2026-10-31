@@ -122,17 +122,12 @@ class PowerTransformerBuilder(ObjectBuilder):
         the template first (via TransformerTankConfigurationBuilder) or this
         raises, same ordering rule CIMTBL_DESIGN.md §12.3 documents for
         EquipmentContainer/FK resolution generally. TankConfiguration is
-        resolved first so a failed lookup leaves xfmr untouched (resolve,
-        then set_assc on the live object - set_assc itself takes no string
-        targets, MRID_MIGRATION.md)."""
-        config = graph_write.resolve(self.network, self.cim.TransformerTankConfiguration, TankConfiguration)
-        if config is None:
-            raise ValueError(
-                f"{xfmr.mRID!r}: TankConfiguration {TankConfiguration!r} not found in graph "
-                f"(build the template before the instance that references it)"
-            )
+        resolved before the PowerTransformer FK is set, so a failed lookup
+        leaves xfmr untouched (set_assc_from_mrid raises before set_assc on
+        tank.PowerTransformer ever runs)."""
         tank = self.cim.TransformerTank(mRID=mRID)
-        graph_write.set_assc(tank, CONST, 'TankConfiguration', config)
+        graph_write.set_assc_from_mrid(
+            self.network, tank, CONST, 'TankConfiguration', self.cim.TransformerTankConfiguration, TankConfiguration)
         graph_write.set_assc(tank, CONST, 'PowerTransformer', xfmr)
         graph_write.add_to_graph(self.network, tank)
         return tank

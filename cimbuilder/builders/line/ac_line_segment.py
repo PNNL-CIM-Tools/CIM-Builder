@@ -92,13 +92,7 @@ class ACLineSegmentBuilder(ObjectBuilder):
             connectivity.add_phase_children(self.network, line, terminals, phases=phases)
         graph_write.set_attr(line, CN, 'length', length)
         if BaseVoltage is not None:
-            target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
-            if target is None:
-                raise ValueError(
-                    f"{line.mRID!r}: BaseVoltage {BaseVoltage!r} not found in graph "
-                    f"(build it before the instance that references it)"
-                )
-            graph_write.set_assc(line, CN, 'BaseVoltage', target)
+            graph_write.set_assc_from_mrid(self.network, line, CN, 'BaseVoltage', self.cim.BaseVoltage, BaseVoltage)
         return terminals
 
     def add_electrical(self, line, *, r=None, x=None, bch=None, gch=None) -> None:
@@ -124,13 +118,8 @@ class ACLineSegmentBuilder(ObjectBuilder):
         template by mRID and sets electrical_unbalanced.ACLineSegment's FK.
         `PerLengthImpedance` is that template's mRID - build it first or
         this raises."""
-        target = graph_write.resolve(self.network, self.cim.PerLengthImpedance, PerLengthImpedance)
-        if target is None:
-            raise ValueError(
-                f"{line.mRID!r}: PerLengthImpedance {PerLengthImpedance!r} not found in graph "
-                f"(build the template before the instance that references it)"
-            )
-        graph_write.set_assc(line, EL_UNBAL, 'PerLengthImpedance', target)
+        target = graph_write.set_assc_from_mrid(
+            self.network, line, EL_UNBAL, 'PerLengthImpedance', self.cim.PerLengthImpedance, PerLengthImpedance)
         return target
 
     def add_wire_configuration(self, line, *, WireConfiguration: str) -> object:
@@ -138,11 +127,6 @@ class ACLineSegmentBuilder(ObjectBuilder):
         OpenDSS line code or geometry) and sets construction.ACLineSegment's
         FK. `WireConfiguration` is that template's mRID - build it first or
         this raises."""
-        target = graph_write.resolve(self.network, self.cim.WireConfiguration, WireConfiguration)
-        if target is None:
-            raise ValueError(
-                f"{line.mRID!r}: WireConfiguration {WireConfiguration!r} not found in graph "
-                f"(build the template before the instance that references it)"
-            )
-        graph_write.set_assc(line, CONST, 'WireConfiguration', target)
+        target = graph_write.set_assc_from_mrid(
+            self.network, line, CONST, 'WireConfiguration', self.cim.WireConfiguration, WireConfiguration)
         return target

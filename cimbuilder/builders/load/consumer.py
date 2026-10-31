@@ -18,13 +18,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
         graph_write.set_attr(load, CN, 'grounded', grounded)
         graph_write.set_attr(load, CN, 'phaseConnection', phaseConnection)
         if BaseVoltage is not None:
-            target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
-            if target is None:
-                raise ValueError(
-                    f"{load.mRID!r}: BaseVoltage {BaseVoltage!r} not found in graph "
-                    f"(build it before the instance that references it)"
-                )
-            graph_write.set_assc(load, CN, 'BaseVoltage', target)
+            graph_write.set_assc_from_mrid(self.network, load, CN, 'BaseVoltage', self.cim.BaseVoltage, BaseVoltage)
 
     def add_electrical(self, load, *, pfixed=None, qfixed=None, pfixedPct=None, qfixedPct=None, LoadResponse=None) -> None:
 
@@ -34,13 +28,8 @@ class EnergyConsumerBuilder(ObjectBuilder):
         graph_write.set_attr(load, EL_BAL, 'qfixedPct', qfixedPct)
 
         if LoadResponse is not None:
-            target = graph_write.resolve(self.network, self.cim.LoadResponseCharacteristic, LoadResponse)
-            if target is None:
-                raise ValueError(
-                    f"{load.mRID!r}: LoadResponse {LoadResponse!r} not found in graph "
-                    f"(build it before the instance that references it)"
-                )
-            graph_write.set_assc(load, EL_BAL, 'LoadResponse', target)
+            graph_write.set_assc_from_mrid(
+                self.network, load, EL_BAL, 'LoadResponse', self.cim.LoadResponseCharacteristic, LoadResponse)
 
     def add_ssh(self, load, *, p=None, q=None) -> None:
         graph_write.set_attr(load, SSH, 'p', p)

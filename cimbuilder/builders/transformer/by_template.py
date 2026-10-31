@@ -79,15 +79,11 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         winding = self.cim.TransformerWinding(mRID=mRID)
         graph_write.set_assc(winding, CONST, 'TankConfiguration', config)
         if FromTransformerEnd is not None:
-            from_end = graph_write.resolve(self.network, self.cim.TransformerPhaseEnd, FromTransformerEnd)
-            if from_end is None:
-                raise ValueError(f"{mRID!r}: FromTransformerEnd {FromTransformerEnd!r} not found in graph")
-            graph_write.set_assc(winding, CONST, 'FromTransformerEnd', from_end)
+            graph_write.set_assc_from_mrid(
+                self.network, winding, CONST, 'FromTransformerEnd', self.cim.TransformerPhaseEnd, FromTransformerEnd)
         if ToTransformerEnd is not None:
-            to_end = graph_write.resolve(self.network, self.cim.TransformerPhaseEnd, ToTransformerEnd)
-            if to_end is None:
-                raise ValueError(f"{mRID!r}: ToTransformerEnd {ToTransformerEnd!r} not found in graph")
-            graph_write.set_assc(winding, CONST, 'ToTransformerEnd', to_end)
+            graph_write.set_assc_from_mrid(
+                self.network, winding, CONST, 'ToTransformerEnd', self.cim.TransformerPhaseEnd, ToTransformerEnd)
 
         graph_write.set_attr(winding, EL_BAL, 'baseS', baseS)
         graph_write.set_attr(winding, EL_BAL, 'baseU', baseU)

@@ -53,13 +53,7 @@ class SwitchBuilder(ObjectBuilder):
         if topologicalUsage is not None:
             graph_write.set_attr(switch, CN, 'topologicalUsage', self.cim.TopologicalUsageKind(topologicalUsage))
         if BaseVoltage is not None:
-            target = graph_write.resolve(self.network, self.cim.BaseVoltage, BaseVoltage)
-            if target is None:
-                raise ValueError(
-                    f"{switch.mRID!r}: BaseVoltage {BaseVoltage!r} not found in graph "
-                    f"(build it before the instance that references it)"
-                )
-            graph_write.set_assc(switch, CN, 'BaseVoltage', target)
+            graph_write.set_assc_from_mrid(self.network, switch, CN, 'BaseVoltage', self.cim.BaseVoltage, BaseVoltage)
         return terminals
 
     def add_electrical(self, switch, *, ratedCurrent=None,
