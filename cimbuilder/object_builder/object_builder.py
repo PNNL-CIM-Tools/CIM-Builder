@@ -13,8 +13,9 @@ class ObjectBuilder(ABC):
 
     def __init__(self, network: GraphModel, container: object):
         self.network = network
-        self.container:cim18v17.EquipmentContainer = container
-        self.cim = cast("cim18v17", network.cim)
+        self.container = cast(cim18v17.EquipmentContainer, container)
+        self.cim = network.cim
+        # self.cim = cast("cim18v17", network.cim)
 
     def create(self, *, mRID: Optional[str] = None, name: Optional[str] = None, identifier: Optional[str] = None) -> object:
         """
