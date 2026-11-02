@@ -20,7 +20,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
         customerCount: int | None = None,
         EquipmentContainer: str | None = None,
         BaseVoltage: str,
-    ) -> tuple[CN.EnergyConsumer, list[CN.Terminal], list[CN.EnergyConsumerPhase]]:
+    ) -> tuple[CN.EnergyConsumer, CN.Terminal, list[CN.EnergyConsumerPhase]]:
         """
         Adds base connectivity layer of terminals, base voltage, phasing
         * node: mRID of the ConnectivityNode or TopologicalNode
@@ -71,7 +71,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
                 target_class=cn.BaseVoltage,
                 target_mRID=BaseVoltage,
             )
-        return load, terminals, load.EnergyConsumerPhase
+        return load, terminals[0], load.EnergyConsumerPhase
 
     def add_electrical(
         self,

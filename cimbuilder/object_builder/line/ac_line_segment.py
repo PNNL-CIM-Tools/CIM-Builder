@@ -65,7 +65,7 @@ class ACLineSegmentBuilder(ObjectBuilder):
                 equipment_container=line.EquipmentContainer,
             )
         else:
-            terminals=sort_terminals_by_sequence(line)
+            terminals = sort_terminals_by_sequence(line)
 
         if phases is not None:
             line_phs: list[CN.ACLineSegmentPhase] = connectivity.add_phase_children(
@@ -75,17 +75,23 @@ class ACLineSegmentBuilder(ObjectBuilder):
         graph_write.set_attr(line, CN, "length", length)
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(
-                network=self.network, 
+                network=self.network,
                 source_object=line,
                 profile_part=CN,
                 association_name="BaseVoltage",
                 target_class=cn.BaseVoltage,
-                target_mRID= BaseVoltage,
+                target_mRID=BaseVoltage,
             )
         return line, terminals, line_phs
 
     def add_electrical(
-        self, line, *, r=None, x=None, bch=None, gch=None
+        self,
+        line: EL_BAL.ACLineSegment,
+        *,
+        r: float | Qty | None = None,
+        x: float | Qty | None = None,
+        bch: float | Qty | None = None,
+        gch: float | Qty | None = None,
     ) -> EL_BAL.ACLineSegment:
         """
         Adds positive sequence three-phase balanced impedance values:
@@ -102,7 +108,13 @@ class ACLineSegmentBuilder(ObjectBuilder):
         return line
 
     def add_short_circuit(
-        self, line, *, r0=None, x0=None, b0ch=None, g0ch=None
+        self,
+        line: SC.ACLineSegment,
+        *,
+        r0: float | Qty | None = None,
+        x0: float | Qty | None = None,
+        b0ch: float | Qty | None = None,
+        g0ch: float | Qty | None = None,
     ) -> SC.ACLineSegment:
         """
         Adds zero-sequence short-circuit impedances to the line
@@ -137,7 +149,9 @@ class ACLineSegmentBuilder(ObjectBuilder):
         )
         return line
 
-    def add_wire_configuration(self, line, *, WireConfiguration: str) -> object:
+    def add_wire_configuration(
+        self, line: CONSTR.ACLineSegment, *, WireConfiguration: str
+    ) -> CONSTR.ACLineSegment:
         """
         Associates `line` with an existing WireConfiguration template
         * WireConfiguration: mRID string of the target WireConfiguration
@@ -154,7 +168,7 @@ class ACLineSegmentBuilder(ObjectBuilder):
         return line
 
     def add_multi_circuit_group(
-        self, line, *, circuitNumber=None, MultiCircuitGroup
+        self, line:CN.ACLineSegment, *, circuitNumber:int, MultiCircuitGroup:str
     ) -> CN.ACLineSegment:
         """
         * circuitNumber: integer denotes adjacent lines, default None
@@ -173,14 +187,14 @@ class ACLineSegmentBuilder(ObjectBuilder):
 
 
 def add_ssh(
-        self,
-        line: SSH.ACLineSegment,
-        *,
-        inService: bool | None = None,
-    ) -> SSH.ACLineSegment:
-        """
-        Adds real-time values from measurement or basecase.
-        * inService: boolean, load is de-energized if false
-        """
-        graph_write.set_attr(line, SSH, "inService", inService)
-        return line
+    self,
+    line: SSH.ACLineSegment,
+    *,
+    inService: bool | None = None,
+) -> SSH.ACLineSegment:
+    """
+    Adds real-time values from measurement or basecase.
+    * inService: boolean, load is de-energized if false
+    """
+    graph_write.set_attr(line, SSH, "inService", inService)
+    return line
