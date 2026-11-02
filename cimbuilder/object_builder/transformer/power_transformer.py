@@ -1,8 +1,6 @@
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
-import cimprofiles.cim18.cim18v17.construction as CONSTR
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
-import cimprofiles.cim18.cim18v17.regulating_control as REG
-from cimprofiles.cim18 import cim18v17
+import cimprofiles.cim18.cim18v17.short_circuit as SC
 from cimtables import connectivity, graph_write, impedance
 from cimtables.units import Qty
 
@@ -144,10 +142,10 @@ class PowerTransformerBuilder(ObjectBuilder):
         * x: positive sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent')
         """
         el_bal: EL_BAL = self.cim  # type:ignore
-        from_end: cim18v17.PowerTransformerEnd = graph_write.resolve(
+        from_end: EL_BAL.PowerTransformerEnd = graph_write.resolve(
             self.network, el_bal.PowerTransformerEnd, FromTransformerEnd
         )  # type:ignore
-        to_end: cim18v17.PowerTransformerEnd = graph_write.resolve(
+        to_end: EL_BAL.PowerTransformerEnd = graph_write.resolve(
             self.network, el_bal.PowerTransformerEnd, ToTransformerEnd
         )  # type:ignore
         if from_end is None or to_end is None:
@@ -156,7 +154,7 @@ class PowerTransformerBuilder(ObjectBuilder):
                 f"{FromTransformerEnd!r}/{ToTransformerEnd!r}, not both found in graph"
             )
         mesh = el_bal.TransformerMeshImpedance(
-            mRID=f"{xfmr.mRID}_mesh_end_{from_end.endNumber}_{from_end.endNumber}"
+            mRID=f"{xfmr.mRID}_mesh_end_{from_end.endNumber}_{from_end.endNumber}" #type:ignore
         )
         graph_write.set_assc(mesh, EL_BAL, "FromTransformerEnd", from_end)
         graph_write.set_assc(mesh, EL_BAL, "ToTransformerEnd", to_end)
@@ -170,49 +168,41 @@ class PowerTransformerBuilder(ObjectBuilder):
         graph_write.add_to_graph(self.network, mesh)
         return xfmr, mesh
 
-    def add_transformer_tank(
+    def add_short_circuit(
         self,
-        xfmr: CONSTR.PowerTransformer,
+        xfmr_end: SC.PowerTransformerEnd,
         *,
-        TransformerTank: str,
-        loadLoss: float | Qty | None = None,
-        noLoadLoss: float | Qty | None = None,
-        percentImpdance: float | None = None,
-        percentMagnetizingCurrent: float | None = None,
-        TankConfiguration: str | None = None,
-    ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerTank]:
+        r0: float | Qty | None = None,
+        x0: float | Qty | None = None,
+        b0: float | Qty | None = None,
+        g0: float | Qty | None = None,
+        base_code_key: int = 3,
+    ) -> None:
         """
-        Adds a per-phase TransformerTank to the PowerTransformer
-        * TransformerTank: mRID of the tank to be added
-        * loadLoss: active power thermal loss at rated power, float in W or Qty('kW')
-        * noLoadLoss: active power thermal loss at no load, float in W or Qty('kW')
-        * percentImpedance: %Z or %IZ, float in percentage (e.g. 2.7)
-        * percentMagnetizingCurrent: Magnetizing current expressed as percentage of base current, float
-        * TankConfiguration: mRID of tank configuation template (equivalent to OpenDSS XfmrCode)
+        Adds star model positive sequence balanced impedance.
+        For 2-winding transformer, all impedance on end with endNumber=1, no impedance on endNumber=2
+        For 3-winding transformer, star impedance on each end, b and g preferred on end with endNumber=1
+        For transformers with more than 3 ends, r and x should be pairwise mesh, with b and g specfied per end
+        * r0: zero sequence resistance, float in ohm or Qty('ohm'|'pu'|'percent')
+        * x0: zero sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent')
+        * b0: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu'|'percent')
+        * g0: zero sequence shunt conductance, float in siemens or Qty('S'|'pu'|'percent')
+        * base_code_key: 1 = winding MVA base, 2 = system MVA base, 3 = ohms, matches PSSE RAW CW
         """
-        constr: CONSTR = self.cim  # type:ignore
-        tank = self.network.find_by_mRID(mRID=TransformerTank)
-        if tank is not None and not isinstance(tank, constr.TransformerTank):
-            raise ValueError(f"{TransformerTank} is another object that is not a TransformerTank")
-        if not tank:
-            tank = constr.TransformerTank(mRID=TransformerTank)
 
-        graph_write.set_assc(tank, CONSTR, "PowerTransformer", xfmr)
-        graph_write.set_attr(tank, CONSTR, "loadLoss", loadLoss)
-        graph_write.set_attr(tank, CONSTR, "noLoadLoss", noLoadLoss)
-        graph_write.set_attr(tank, CONSTR, "percentImpedance", percentImpdance)
-        graph_write.set_attr(
-            tank, CONSTR, "percentMagnetizingCurrent", percentMagnetizingCurrent
-        )
+        relative = any(isinstance(v, Qty) and v.is_relative() for v in (r0, x0, b0, g0))
+        if base_code_key == 1:
+            z_base = impedance.z_base(xfmr_end, [], xfmr_end.ratedS)  # type:ignore
+        elif base_code_key == 2:
+            z_base = impedance.z_base(xfmr_end, [], self.network.base_power)
+        elif base_code_key == 3 and relative:
+            raise ValueError("base_code_key of 3 for ohms but r,x,b,g were in per-unit")
+        else:
+            raise ValueError(
+                "base_code_key must be one of: 1 = winding MVA base, 2 = system MVA base, 3 = ohms"
+            )
 
-        graph_write.set_assc_from_mrid(
-            network=self.network,
-            source_object=tank,
-            profile_part=CONSTR,
-            association_name="TankConfiguration",
-            target_class=constr.TransformerTankConfiguration,
-            target_mRID=TankConfiguration,
-        )
-        graph_write.add_to_graph(self.network, tank)
-        return xfmr, tank
-
+        graph_write.set_attr(xfmr_end, EL_BAL, "r", r0, z_base=z_base)
+        graph_write.set_attr(xfmr_end, EL_BAL, "x", x0, z_base=z_base)
+        graph_write.set_attr(xfmr_end, EL_BAL, "b", b0, z_base=z_base)
+        graph_write.set_attr(xfmr_end, EL_BAL, "g", g0, z_base=z_base)
