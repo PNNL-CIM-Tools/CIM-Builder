@@ -6,6 +6,7 @@ import cimprofiles.cim18.cim18v17.short_circuit as SC
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 from cimtables import Qty, connectivity, graph_write, impedance
 
+from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
 
@@ -63,6 +64,9 @@ class ACLineSegmentBuilder(ObjectBuilder):
                 node_cols={"node1": node1, "node2": node2},
                 equipment_container=line.EquipmentContainer,
             )
+        else:
+            terminals=sort_terminals_by_sequence(line)
+
         if phases is not None:
             line_phs: list[CN.ACLineSegmentPhase] = connectivity.add_phase_children(
                 self.network, line, terminals, phases=phases

@@ -11,7 +11,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
 
     def add_connectivity(
         self,
-        load,
+        load: CN.EnergyConsumer,
         *,
         node: str,
         phaseConnection: str | None = None,
@@ -58,9 +58,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
             )
 
         if phases is not None:
-            load_phs: list[CN.EnergyConsumerPhase] = connectivity.add_phase_children(
-                self.network, load, terminals, phases=phases
-            )  # type:ignore
+            connectivity.add_phase_children(self.network, load, terminals, phases=phases)
         graph_write.set_attr(load, CN, "customerCount", customerCount)
         graph_write.set_attr(load, CN, "grounded", grounded)
         graph_write.set_attr(load, CN, "phaseConnection", phaseConnection)
@@ -73,7 +71,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
                 target_class=cn.BaseVoltage,
                 target_mRID=BaseVoltage,
             )
-        return load, terminals, load_phs
+        return load, terminals, load.EnergyConsumerPhase
 
     def add_electrical(
         self,

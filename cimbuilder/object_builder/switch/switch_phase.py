@@ -24,56 +24,62 @@ below resolves and sets the FK through connectivity_unbalanced.
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL_UNBAL
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
+from cimtables import Qty, graph_write
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
-from cimtables import graph_write
+from cimbuilder.object_builder.switch import switch
 
 
 class SwitchPhaseBuilder(ObjectBuilder):
     cim_class_name = "SwitchPhase"
 
     def add_connectivity(
-        self, switch_phase, *, Switch: str, phaseSide1, phaseSide2, normalOpen=None
-    ) -> object:
-        """Resolves the parent Switch by mRID (any concrete subclass -
-        Breaker/Disconnector/... - via resolve, since cim_cls may be an
-        abstract base and the parent was built by whichever SwitchBuilder
-        leaf matches its real type) and sets phaseSide1/phaseSide2
-        independently, so a switch can carry phase A on side 1 and phase B
-        on side 2.
-        * Switch: mRID string of an existing Switch (or subclass, e.g.
-          Breaker/Disconnector) - already built via one of the SwitchBuilder
-          classes. Resolved via set_assc_from_mrid, which raises ValueError
-          if that mRID isn't already in the graph.
-        * phaseSide1/phaseSide2: string value of
-          connectivity_unbalanced.SinglePhaseKind (e.g. 'A', 's1'), converted
-          via `self.cim.SinglePhaseKind(...)` before set_attr - this switch
-          phase's phase on terminal 1 / terminal 2 respectively.
-        * normalOpen: plain bool, no unit wrapping.
-
-        Returns the resolved parent Switch object.
+        self,
+        switch_phase: CN.SwitchPhase,
+        *,
+        Switch: str,
+        phaseSide1: str,
+        phaseSide2: str,
+        normalOpen: bool | None = None,
+    ) -> CN.SwitchPhase:
         """
-        target = graph_write.set_assc_from_mrid(
-            self.network, switch_phase, CN, "Switch", self.cim.Switch, Switch
+        Add connectivity and phasing information
+        * sequenceNumber: integer for indexing of wire position / impedance matrix
+        * phaseSide1: Single phase kind string, A|B|C|N|s1|s2|X|Y
+        * phaseSide2: Single phase kind string, A|B|C|N|s1|s2|X|Y
+        """
+        cn: CN = self.cim  # type: ignore
+        graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=switch_phase,
+            profile_part=CN,
+            association_name="Switch",
+            target_class=cn.Switch,
+            target_mRID=Switch,
         )
         graph_write.set_attr(
-            switch_phase, CN, "phaseSide1", self.cim.SinglePhaseKind(phaseSide1)
+            switch_phase, CN, "phaseSide1", cn.SinglePhaseKind(phaseSide1)
         )
         graph_write.set_attr(
-            switch_phase, CN, "phaseSide2", self.cim.SinglePhaseKind(phaseSide2)
+            switch_phase, CN, "phaseSide2", cn.SinglePhaseKind(phaseSide2)
         )
         graph_write.set_attr(switch_phase, CN, "normalOpen", normalOpen)
-        return target
+        return switch_phase
 
-    def add_electrical(self, switch_phase, *, ratedCurrent=None) -> None:
-        """Adds electrical_unbalanced.SwitchPhase's per-phase rating.
-        * ratedCurrent: a Qty resolved to CurrentFlow (A, SI base). A bare
-          number is read as SI base (wrapped in its CIMUnit).
+    def add_electrical(
+        self, switch_phase: EL_UNBAL.SwitchPhase, *, ratedCurrent: float | Qty | None = None
+    ) -> EL_UNBAL.SwitchPhase:
+        """
+        Adds single-phase electrical parameters for the switch
+        * ratedCurrent: max normal operating current, float in amps or Qty('A')
         """
         graph_write.set_attr(switch_phase, EL_UNBAL, "ratedCurrent", ratedCurrent)
+        return switch_phase
 
-    def add_ssh(self, switch_phase, *, open=None) -> None:
-        """Adds steady_state_hypothesis.SwitchPhase's solved per-phase state.
-        * open: plain bool, no unit wrapping - True means this phase is open.
+    def add_ssh(self, switch_phase:SSH.SwitchPhase, *, open:bool) -> SSH.SwitchPhase:
+        """
+        Adds real-time switch status from measurement or basecase.
+        * open: boolean, indicates single-phase switch open/closed status
         """
         graph_write.set_attr(switch_phase, SSH, "open", open)
+        return switch_phase
