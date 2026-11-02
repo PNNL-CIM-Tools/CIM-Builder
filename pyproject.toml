@@ -21,6 +21,8 @@ dev = [
 
 [tool.uv.sources]
 cimtables = { path = "/home/ande188/CIM-Tables", editable = true }
+cimprofiles = { path = "/home/ande188/CIM-Profiles", editable = true }
+cim-graph = { path = "/home/ande188/CIM-Graph", editable = true }
 
 [build-system]
 requires = ["hatchling"]

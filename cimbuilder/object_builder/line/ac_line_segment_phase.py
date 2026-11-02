@@ -1,21 +1,56 @@
 from typing import Optional
 
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.asset_deployment as AD
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 from cimtables import connectivity, graph_write, impedance
 from cimtables.units import Qty
 
-class ACLineSegmentBuilder(ObjectBuilder):
-    cim_class_name = 'ACLineSegmentPhase'
 
-    def add_asset_deployment(self, line_phase, *, WireInfo):
+class ACLineSegmentPhaseBuilder(ObjectBuilder):
+    cim_class_name = "ACLineSegmentPhase"
+
+    def add_connectivity(
+        self,
+        line_phs: CN.ACLineSegmentPhase,
+        sequenceNumber: int,
+        phase: str,
+        ACLineSegment: str,
+    ) -> CN.ACLineSegmentPhase:
+        """
+        Add connectivity and phasing information
+        * sequenceNumber: integer for indexing of wire position / impedance matrix
+        * phase: Single phase kind, A|B|C|N|s1|s2|X|Y
+        """
+        cn: CN = self.cim  # type: ignore
+        graph_write.set_attr(line_phs, CN, "sequnceNumber", sequenceNumber)
+        graph_write.set_attr(line_phs, CN, "phase", phase)
+        if ACLineSegment is not None:
+            graph_write.set_assc_from_mrid(
+                network=self.network,
+                source_object=line_phs,
+                profile_part=CN,
+                association_name="ACLineSegment",
+                target_class=cn.ACLineSegment,
+                target_mRID=ACLineSegment,
+            )
+        return line_phs
+
+    def add_asset_deployment(
+        self, line_phs, *, WireInfo
+    ) -> tuple[AD.ACLineSegmentPhase, AD.WireInfo]:
         """
         Associates the line phase with an existing conductor AssetInfo
         * WireInfo: mRID string of the target WireInfo
         """
-        self.cim:AD # type: ignore
-        target:AD.WireInfo = graph_write.set_assc_from_mrid(
-            self.network, line_phase, AD, 'WireInfo', self.cim.WireInfo, WireInfo)
-        return target
-    
+        ad: AD = self.cim  # type: ignore
+        wire_info: AD.WireInfo = graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=line_phs,
+            profile_part=AD,
+            association_name="WireInfo",
+            target_class=ad.WireInfo,
+            target_mRID=WireInfo,
+        )
+        return line_phs, wire_info
