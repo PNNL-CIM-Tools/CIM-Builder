@@ -3,6 +3,7 @@ import cimprofiles.cim18.cim18v17.construction as CONSTR
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL_UNBAL
 import cimprofiles.cim18.cim18v17.short_circuit as SC
+import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 from cimtables import Qty, connectivity, graph_write, impedance
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
@@ -20,13 +21,13 @@ class ACLineSegmentBuilder(ObjectBuilder):
         phases: str | None = None,
         length: float | Qty | None = None,
         EquipmentContainer: str | None = None,
-        BaseVoltage: str | None = None,
+        BaseVoltage: str,
     ) -> tuple[CN.ACLineSegment, list[CN.Terminal], list[CN.ACLineSegmentPhase]]:
         """
         Adds base connectivity layer of terminals, base voltage, phasing
         * node1: mRID of the "from" ConnectivityNode or TopologicalNode
         * node2: mRID of the "to" ConnectivityNode or Topological Node
-        * phases: phase-code string in conductor order (e.g. CABN). None sets
+        * phases: phase-code string in conductor order (e.g. CABN). None sets no ACLineSegmentPhase objects
         * length: physical length, float in meters or Qty('mi'|'ft'|etc)
         * EquipmentContainer: mRID of the Line or Feeder containing the line. New mRID will create a new Line container
         * BaseVoltage: mRID string of the BaseVoltage
@@ -164,4 +165,18 @@ class ACLineSegmentBuilder(ObjectBuilder):
             target_class=cn.MultiCircuitGroup,
             target_mRID=MultiCircuitGroup,
         )
+        return line
+
+
+def add_ssh(
+        self,
+        line: SSH.ACLineSegment,
+        *,
+        inService: bool | None = None,
+    ) -> SSH.ACLineSegment:
+        """
+        Adds real-time values from measurement or basecase.
+        * inService: boolean, load is de-energized if false
+        """
+        graph_write.set_attr(line, SSH, "inService", inService)
         return line

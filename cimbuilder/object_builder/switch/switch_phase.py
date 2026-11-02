@@ -30,10 +30,11 @@ from cimtables import graph_write
 
 
 class SwitchPhaseBuilder(ObjectBuilder):
-    cim_class_name = 'SwitchPhase'
+    cim_class_name = "SwitchPhase"
 
-    def add_connectivity(self, switch_phase, *, Switch: str, phaseSide1, phaseSide2,
-                          normalOpen=None) -> object:
+    def add_connectivity(
+        self, switch_phase, *, Switch: str, phaseSide1, phaseSide2, normalOpen=None
+    ) -> object:
         """Resolves the parent Switch by mRID (any concrete subclass -
         Breaker/Disconnector/... - via resolve, since cim_cls may be an
         abstract base and the parent was built by whichever SwitchBuilder
@@ -52,10 +53,16 @@ class SwitchPhaseBuilder(ObjectBuilder):
 
         Returns the resolved parent Switch object.
         """
-        target = graph_write.set_assc_from_mrid(self.network, switch_phase, CN, 'Switch', self.cim.Switch, Switch)
-        graph_write.set_attr(switch_phase, CN, 'phaseSide1', self.cim.SinglePhaseKind(phaseSide1))
-        graph_write.set_attr(switch_phase, CN, 'phaseSide2', self.cim.SinglePhaseKind(phaseSide2))
-        graph_write.set_attr(switch_phase, CN, 'normalOpen', normalOpen)
+        target = graph_write.set_assc_from_mrid(
+            self.network, switch_phase, CN, "Switch", self.cim.Switch, Switch
+        )
+        graph_write.set_attr(
+            switch_phase, CN, "phaseSide1", self.cim.SinglePhaseKind(phaseSide1)
+        )
+        graph_write.set_attr(
+            switch_phase, CN, "phaseSide2", self.cim.SinglePhaseKind(phaseSide2)
+        )
+        graph_write.set_attr(switch_phase, CN, "normalOpen", normalOpen)
         return target
 
     def add_electrical(self, switch_phase, *, ratedCurrent=None) -> None:
@@ -63,10 +70,10 @@ class SwitchPhaseBuilder(ObjectBuilder):
         * ratedCurrent: a Qty resolved to CurrentFlow (A, SI base). A bare
           number is read as SI base (wrapped in its CIMUnit).
         """
-        graph_write.set_attr(switch_phase, EL_UNBAL, 'ratedCurrent', ratedCurrent)
+        graph_write.set_attr(switch_phase, EL_UNBAL, "ratedCurrent", ratedCurrent)
 
     def add_ssh(self, switch_phase, *, open=None) -> None:
         """Adds steady_state_hypothesis.SwitchPhase's solved per-phase state.
         * open: plain bool, no unit wrapping - True means this phase is open.
         """
-        graph_write.set_attr(switch_phase, SSH, 'open', open)
+        graph_write.set_attr(switch_phase, SSH, "open", open)

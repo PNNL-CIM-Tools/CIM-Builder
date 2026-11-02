@@ -1,11 +1,9 @@
-from typing import Optional
 
-import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.asset_deployment as AD
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+from cimtables import graph_write
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
-from cimtables import connectivity, graph_write, impedance
-from cimtables.units import Qty
 
 
 class ACLineSegmentPhaseBuilder(ObjectBuilder):
