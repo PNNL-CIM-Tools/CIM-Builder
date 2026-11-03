@@ -12,6 +12,18 @@ class XYSpacingBuilder(ObjectBuilder):
 
     cim_class_name = "XYSpacing"
 
+    def add_construction(
+        self,
+        spacing:CONSTR.XYSpacing,
+        *,
+        isTemplate: bool | None = None,
+    ) -> CONSTR.XYSpacing:
+        """
+        * isTemplate: denotes if used as part of a WireConfiguration template
+        """
+        graph_write.set_attr(spacing, CONSTR, "isTemplate", isTemplate)
+        return spacing
+
     def add_wire_position_row(
         self,
         spacing: CONSTR.XYSpacing,
@@ -30,7 +42,7 @@ class XYSpacingBuilder(ObjectBuilder):
         * circuitNumber: integer, matches the circuitNumber of the ACLineSegment
         * kind: string, phase|shield|neutral|mixed
         """
-        constr:CONSTR = self.cim # type: ignore
+        constr: CONSTR = self.cim  # type: ignore
         if circuitNumber is not None:
             name = f"{spacing.name}_{sequenceNumber}_{circuitNumber}"
         else:

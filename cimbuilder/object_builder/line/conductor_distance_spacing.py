@@ -11,13 +11,25 @@ class ConductorDistanceSpacingBuilder(ObjectBuilder):
 
     cim_class_name = "ConductorDistanceSpacing"
 
+    def add_construction(
+        self,
+        spacing: CONSTR.ConductorDistanceSpacing,
+        *,
+        isTemplate: bool | None = None,
+    ) -> CONSTR.ConductorDistanceSpacing:
+        """
+        * isTemplate: denotes if used as part of a WireConfiguration template
+        """
+        graph_write.set_attr(spacing, CONSTR, "isTemplate", isTemplate)
+        return spacing
+
     def add_conductor_distance_row(
         self,
         spacing: CONSTR.ConductorDistanceSpacing,
         *,
         sequenceNumber1: int,
         sequenceNumber2: int | None,
-        distance: float|Qty,
+        distance: float | Qty,
         conductorKind1: str,
         conductorKind2: str,
     ) -> tuple[CONSTR.ConductorDistanceSpacing, CONSTR.ConductorDistance]:

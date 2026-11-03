@@ -22,6 +22,9 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
         x: float | Qty | None = None,
         bch: float | Qty | None = None,
         gch: float | Qty | None = None,
+        isTemplate: bool | None = None,
+        calculatedFrequency: float | Qty | None = None,
+        calculatedTemperature: float | Qty | None,
     ) -> EL_BAL.PerLengthSequenceImpedance:
         """
         Positive-sequence per-length impedance. Per-unit not supported for these attributes
@@ -29,11 +32,21 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
         * x: positive sequence reactance, float in ohm/m or Qty('ohm/length')
         * bch: positive sequence shunt susceptance, float in siemens/m or Qty('siemens/length')
         * gch: positive sequence shunt conductance, float in siemens/m or Qty('siemens/length')
+        * isTemplate: denotes if used as part of a LineCode or other template
+        * calculatedFrequency: frequency at which r/x/bch/gch were calculated, float or Qty('Hz')
+        * calculatedTemperature at which r/x/bch/gch were calculated, float or Qty('degC')
         """
         graph_write.set_attr(impedance, EL_BAL, "r", r)
         graph_write.set_attr(impedance, EL_BAL, "x", x)
         graph_write.set_attr(impedance, EL_BAL, "bch", bch)
         graph_write.set_attr(impedance, EL_BAL, "gch", gch)
+        graph_write.set_attr(impedance, EL_BAL, "isTemplate", isTemplate)
+        graph_write.set_attr(
+            impedance, EL_BAL, "calculatedFrequency", calculatedFrequency
+        )
+        graph_write.set_attr(
+            impedance, EL_BAL, "calculatedTemperature", calculatedTemperature
+        )
         return impedance
 
     def add_short_circuit(
@@ -62,24 +75,15 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
         self,
         impedance: EL_BAL.PerLengthSequenceImpedance,
         *,
-        calculatedFrequency: float | Qty | None = None,
-        calculatedTemperature: float | Qty | None,
         rg: float | Qty | None = None,
         xg: float | Qty | None = None,
     ) -> EL_BAL.PerLengthSequenceImpedance:
         """
         Add earth resistance and base temperature / frequency
-        * calculatedFrequency: frequency at which r/x/bch/gch were calculated, float or Qty('Hz')
-        * calculatedTemperature at which r/x/bch/gch were calculated, float or Qty('degC')
         * rg: earth return resistance, float in ohm or Qty('ohm'|'pu')
         * xg: earth return reactance, float in ohm or Qty('ohm'|'pu')
         """
-        graph_write.set_attr(
-            impedance, EL_BAL, "calculatedFrequency", calculatedFrequency
-        )
-        graph_write.set_attr(
-            impedance, EL_BAL, "calculatedTemperature", calculatedTemperature
-        )
+
         graph_write.set_attr(impedance, EL_BAL, "rg", rg)
         graph_write.set_attr(impedance, EL_BAL, "xg", xg)
         return impedance
@@ -106,14 +110,39 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
 class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
     """
     Builder for lower-triangular line impedance per length matrix
-    (equivalent to OpenDSS linecode)
     """
 
     cim_class_name = "PerLengthPhaseImpedance"
 
+    def add_electrical(
+        self,
+        matrix: EL_UNBAL.PerLengthPhaseImpedance,
+        *,
+        conductorCount: int | None = None,
+        isTemplate: bool | None = None,
+        calculatedFrequency: float | Qty | None = None,
+        calculatedTemperature: float | Qty | None,
+    ) -> EL_UNBAL.PerLengthPhaseImpedance:
+        """
+        * isTemplate: denotes if used as part of a LineCode or other template
+        * calculatedFrequency: frequency at which r/x/bch/gch were calculated, float or Qty('Hz')
+        * calculatedTemperature at which r/x/bch/gch were calculated, float or Qty('degC')
+        """
+
+        graph_write.set_attr(matrix, EL_UNBAL, "conductorCount", conductorCount)
+        graph_write.set_attr(matrix, EL_UNBAL, "isTemplate", isTemplate)
+        graph_write.set_attr(
+            matrix, EL_UNBAL, "calculatedFrequency", calculatedFrequency
+        )
+        graph_write.set_attr(
+            matrix, EL_UNBAL, "calculatedTemperature", calculatedTemperature
+        )
+        return matrix
+
     def add_phase_impedance_data_row(
         self,
         matrix: EL_UNBAL.PerLengthPhaseImpedance,
+        *,
         row: int,
         column: int,
         r: float | Qty | None,
@@ -153,22 +182,12 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         self,
         matrix: EL_UNBAL.PerLengthPhaseImpedance,
         *,
-        conductorCount: int | None = None,
-        calculatedFrequency: float | Qty | None = None,
         rg: float | Qty | None = None,
         xg: float | Qty | None = None,
     ) -> None:
         """
-        * conductorCount: plain int, no unit wrapping.
-        * calculatedFrequency: a Qty resolved to Frequency (Hz, SI base).
-        * rg/xg: Qtys resolved to ResistancePerLength/ReactancePerLength
-          (ohm/m, SI base) - ground return path values, inherited
-          PerLengthImpedance base-class fields.
-        A bare number for calculatedFrequency/rg/xg is read as SI base (wrapped in its CIMUnit).
+        Adds eart
         """
-        graph_write.set_attr(matrix, EL_UNBAL, "conductorCount", conductorCount)
-        graph_write.set_attr(
-            matrix, EL_UNBAL, "calculatedFrequency", calculatedFrequency
-        )
+
         graph_write.set_attr(matrix, EL_UNBAL, "rg", rg)
         graph_write.set_attr(matrix, EL_UNBAL, "xg", xg)
