@@ -30,8 +30,7 @@ class PowerElectronicsConnectionBuilder(ObjectBuilder):
         * node: mRID of the ConnectivityNode or TopologicalNode
         * phaseConnection: string for whether wye or delta connected, D|Y|Yn|I
         * phases: phase-code string. None sets no PowerElectronicsConnectionPhase objects
-        * grounded: boolean, inverter is grounded if true
-        * customerCount: the number of metered customers aggregated into the inverter
+        * aggregate: indicates the inverter is a modeling aggregate of multiple inverters
         * EquipmentContainer: mRID of the VoltageLevel or Feeder containing the inverter.
         * BaseVoltage: mRID string of the BaseVoltage
         """

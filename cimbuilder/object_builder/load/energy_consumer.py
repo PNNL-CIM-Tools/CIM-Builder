@@ -29,6 +29,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
         * phases: phase-code string in conductor order (e.g. CABN). None sets no EnergyConsumerPhase objects
         * grounded: boolean, load is grounded if true
         * customerCount: the number of metered customers aggregated into the load
+        * aggregate: indicates the load is an aggregate of multiple customers
         * EquipmentContainer: mRID of the VoltageLevel or Feeder containing the load.
         * BaseVoltage: mRID string of the BaseVoltage
         """

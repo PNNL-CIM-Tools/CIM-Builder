@@ -32,8 +32,6 @@ class PowerElectronicsConnectionPhaseBuilder(ObjectBuilder):
             )
         return inverter_phs
 
-    
-
     def add_ssh(
         self,
         inverter_phs: SSH.PowerElectronicsConnectionPhase,
