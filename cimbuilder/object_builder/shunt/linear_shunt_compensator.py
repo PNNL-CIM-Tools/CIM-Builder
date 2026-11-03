@@ -29,6 +29,7 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         Adds base connectivity layer of terminals, base voltage, phasing
         * node: mRID of the ConnectivityNode or TopologicalNode
         * compensatorType: string, capacitor|reactor
+        * phaseConnection: string for whether wye or delta connected, D|Y|Yn|I
         * phases: phase-code string in conductor order (e.g. CABN). None sets no LinearShuntCompensatorPhase objects
         * grounded: boolean, shunt is grounded if true
         * customerCount: the number of metered customers aggregated into the shunt

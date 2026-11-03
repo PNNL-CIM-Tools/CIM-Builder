@@ -18,12 +18,14 @@ class EnergyConsumerBuilder(ObjectBuilder):
         phases: str | None = None,
         grounded: bool | None = None,
         customerCount: int | None = None,
+        aggregate: bool | None = None,
         EquipmentContainer: str | None = None,
         BaseVoltage: str,
     ) -> tuple[CN.EnergyConsumer, CN.Terminal, list[CN.EnergyConsumerPhase]]:
         """
         Adds base connectivity layer of terminals, base voltage, phasing
         * node: mRID of the ConnectivityNode or TopologicalNode
+        * phaseConnection: string for whether wye or delta connected, D|Y|Yn|I
         * phases: phase-code string in conductor order (e.g. CABN). None sets no EnergyConsumerPhase objects
         * grounded: boolean, load is grounded if true
         * customerCount: the number of metered customers aggregated into the load
@@ -35,6 +37,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
         graph_write.set_attr(load, CN, "customerCount", customerCount)
         graph_write.set_attr(load, CN, "grounded", grounded)
         graph_write.set_attr(load, CN, "phaseConnection", phaseConnection)
+        graph_write.set_attr(load, CN, "aggregate", aggregate)
 
         if EquipmentContainer is not None:
             graph_write.set_assc_from_mrid(
@@ -79,8 +82,10 @@ class EnergyConsumerBuilder(ObjectBuilder):
 
     def add_electrical(
         self,
-        load,
+        load: EL_BAL.EnergyConsumer,
         *,
+        minP: float | Qty | None = None,
+        maxP: float | Qty | None = None,
         pfixed: float | Qty | None = None,
         qfixed: float | Qty | None = None,
         pfixedPct: float | None = None,
@@ -88,6 +93,8 @@ class EnergyConsumerBuilder(ObjectBuilder):
         LoadResponse: str | None = None,
     ) -> EL_BAL.EnergyConsumer:
         """Adds electrical_balanced.EnergyConsumer's fixed-load parameters.
+        * minP: minimum power demand, float in watts or Qty('kW')
+        * maxP: 
         * pfixed: active power of the load that is a fixed quantity and does not vary as load group value varies
         * qfixed: reactive power of the load that is a fixed quantity and does not vary as load group value varies
         * pfixedPct: percentage of load group fixed active power. Used to represent the time-varying component
@@ -95,6 +102,8 @@ class EnergyConsumerBuilder(ObjectBuilder):
         * LoadResponse: mRID string of the LoadResponseCharacteristic ZIP fraction
         """
         el_bal: EL_BAL = self.cim  # type: ignore
+        graph_write.set_attr(load, EL_BAL, "minP", minP)
+        graph_write.set_attr(load, EL_BAL, "maxP", maxP)
         graph_write.set_attr(load, EL_BAL, "pfixed", pfixed)
         graph_write.set_attr(load, EL_BAL, "qfixed", qfixed)
         graph_write.set_attr(load, EL_BAL, "pfixedPct", pfixedPct)

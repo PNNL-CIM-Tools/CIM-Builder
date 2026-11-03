@@ -35,6 +35,8 @@ class ACLineSegmentBuilder(ObjectBuilder):
         """
         cn: CN = self.cim  # type: ignore
 
+        graph_write.set_attr(line, CN, "length", length)
+        
         if EquipmentContainer is not None:
             if not self.network.find_by_mRID(EquipmentContainer):
                 container = cn.Line(mRID=EquipmentContainer)
@@ -74,7 +76,6 @@ class ACLineSegmentBuilder(ObjectBuilder):
         else:
             line_phs = []
 
-        graph_write.set_attr(line, CN, "length", length)
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,
