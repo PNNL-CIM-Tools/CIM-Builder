@@ -1,36 +1,3 @@
-"""TransformerTankConfigurationBuilder: the reusable template tier (design:
-Phase 1 of cimbuilder/development/OBJECT_BUILDER_MIGRATION.md; see the
-approved implementation plan for the full field-location evidence).
-
-Builds the template xfmrcodes.cimtbl shows: TransformerTankConfiguration
-(the ratings container) + TransformerPhaseEnd (per-phase end definitions) +
-TransformerWinding (the winding layer, shape 3's mesh-by-winding
-representation) + TransformerMeshImpedance between two named windings.
-PowerTransformerBuilder.add_tank references a built config by name - it
-never builds one itself.
-
-Field locations confirmed directly against the installed cimprofiles
-package (do not assume):
-- percentImpedance/percentMagnetizingCurrent/noLoadLoss/loadLoss, and the
-  TankConfiguration FK on both TransformerPhaseEnd and TransformerWinding,
-  live on construction - the only part module TransformerTankConfiguration
-  itself exists in at all.
-- endNumber/sequenceNumber/phase/phaseNeutralU (TransformerPhaseEnd's own
-  identity fields) live on connectivity_unbalanced, inherited from the
-  shared TransformerEnd/TransformerPhaseEnd base every part module's version
-  subclasses - NOT duplicated onto construction's TransformerPhaseEnd, which
-  only adds the TankConfiguration FK.
-- TransformerWinding's rating/impedance scalars (baseS/baseU/r/ratedS/
-  ratedU/rDC) live on electrical_balanced; its connectivity/membership FKs
-  (FromTransformerEnd/ToTransformerEnd/TankConfiguration/connection) live on
-  construction instead - two different part modules for the same class,
-  confirmed by reading both directly.
-- TransformerMeshImpedance's FromWinding/ToWinding/r/x live on
-  electrical_balanced (the same class also carries FromTransformerEnd/
-  ToTransformerEnd there, used by PowerTransformerBuilder.add_mesh_impedance
-  for shape 2 instead).
-"""
-
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.construction as CONST
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL

@@ -31,6 +31,11 @@ class EnergyConsumerBuilder(ObjectBuilder):
         * BaseVoltage: mRID string of the BaseVoltage
         """
         cn: CN = self.cim  # type: ignore
+
+        graph_write.set_attr(load, CN, "customerCount", customerCount)
+        graph_write.set_attr(load, CN, "grounded", grounded)
+        graph_write.set_attr(load, CN, "phaseConnection", phaseConnection)
+
         if EquipmentContainer is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,
@@ -49,6 +54,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
                 target_class=cn.EquipmentContainer,
                 target_mRID=self.container.mRID,
             )
+            
         if len(load.Terminals) != 1:
             terminals = connectivity.add_connectivity(
                 network=self.network,
@@ -59,9 +65,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
 
         if phases is not None:
             connectivity.add_phase_children(self.network, load, terminals, phases=phases)
-        graph_write.set_attr(load, CN, "customerCount", customerCount)
-        graph_write.set_attr(load, CN, "grounded", grounded)
-        graph_write.set_attr(load, CN, "phaseConnection", phaseConnection)
+
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,

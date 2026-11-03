@@ -16,7 +16,7 @@ class PowerTransformerBuilder(ObjectBuilder):
         """
         Adds base connectivity layer of equipment containment. Add nodes using add_power_transformer_end
         * EquipmentContainer: mRID of the Substation or Feeder containing the line.
-        note: do NOT set BaseVoltage. It is set for each end individually
+        Note: do NOT set BaseVoltage for PowerTransformer. It is set for each end individually
         """
         cn: CN = self.cim  # type: ignore
         if EquipmentContainer is not None:

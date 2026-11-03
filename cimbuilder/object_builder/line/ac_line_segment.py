@@ -71,6 +71,8 @@ class ACLineSegmentBuilder(ObjectBuilder):
             line_phs: list[CN.ACLineSegmentPhase] = connectivity.add_phase_children(
                 self.network, line, terminals, phases=phases
             )  # type:ignore
+        else:
+            line_phs = []
 
         graph_write.set_attr(line, CN, "length", length)
         if BaseVoltage is not None:

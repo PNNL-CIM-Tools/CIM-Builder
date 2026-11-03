@@ -16,7 +16,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
     Builder for transformer banks composed of one of more tanks. Builder functions to be called in the following order:
     * create() - instantiate the PowerTransformer
     * add_power_transformer_end() - create PowerTransformerEnd, optionally create one phase end for every phase on high side and low side
-    * add_transformer_tank() - create one tank for every physical tank
+    * add_transformer_tank() - create one tank with %Z, loadloss, etc. for every physical tank 
     * add_transformer_phase_end() - add phaseNeutralU for existing phase ends or create new ones for each phase
     * add_transformer_lug() - create one lug for every physical connection point, including ungrounded floating lugs
     * add_transformer_core() - optional, adds the physical core
@@ -41,7 +41,6 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         BaseVoltage: str,
         phases: str | None,
         TankConfiguration: str | None,
-        BankConfiguration: str | None,
     ) -> tuple[CN.PowerTransformer, CN.Terminal, CN.PowerTransformerEnd]:
         xfmr, terminal, xfmr_end = super().add_power_transformer_end(
             xfmr,
