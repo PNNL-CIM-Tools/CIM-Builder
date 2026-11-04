@@ -72,3 +72,6 @@ class SynchronousMachineBuilder(RotatingMachineBuilder):
         graph_write.set_attr(machine, SC, "earthingStarPointX", earthingStarPointX)
 
         return machine
+
+    def add_dynamics(self):
+        pass
