@@ -1,7 +1,7 @@
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
-from cimtables import graph_write, impedance
+from cimtables import graph_write
 from cimtables.units import Qty
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
@@ -62,12 +62,9 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
         * 
         """
 
-
         graph_write.set_attr(shunt_phase, EL_BAL, "nomQ", nomQ)
         graph_write.set_attr(shunt_phase, EL_BAL, "normalSections", normalSections)
         graph_write.set_attr(shunt_phase, EL_BAL, "maximumSections", maximumSections)
-
-        z_base = impedance.z_base(shunt_phase, [], self.network.base_power)
 
         if bPerSection is None:
             if shunt_phase.nomQ is None or not shunt_phase.maximumSections:
@@ -79,8 +76,8 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
             bPerSection = shunt_phase.nomQ.to("VAr") / (
                 shunt_phase.ShuntCompensator.nomU.to("V") ** 2 * shunt_phase.maximumSections #type:ignore
             )  
-        graph_write.set_attr(shunt_phase, EL_BAL, "bPerSection", bPerSection, z_base=z_base)
-        graph_write.set_attr(shunt_phase, EL_BAL, "gPerSection", gPerSection, z_base=z_base)
+        graph_write.set_attr(shunt_phase, EL_BAL, "bPerSection", bPerSection, system_base=self.network.base_power)
+        graph_write.set_attr(shunt_phase, EL_BAL, "gPerSection", gPerSection, system_base=self.network.base_power)
 
         return shunt_phase
 

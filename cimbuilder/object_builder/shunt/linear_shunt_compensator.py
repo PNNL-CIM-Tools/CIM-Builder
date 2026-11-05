@@ -2,7 +2,7 @@ import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.short_circuit as SC
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
-from cimtables import connectivity, graph_write, impedance
+from cimtables import connectivity, graph_write
 from cimtables.units import Qty
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
@@ -116,8 +116,6 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         graph_write.set_attr(shunt, EL_BAL, "normalSections", normalSections)
         graph_write.set_attr(shunt, EL_BAL, "maximumSections", maximumSections)
 
-        z_base = impedance.z_base(shunt, [], self.network.base_power)
-
         if bPerSection is None:
             if shunt.nomQ is None or not shunt.maximumSections:
                 raise ValueError(
@@ -128,10 +126,26 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
             bPerSection = shunt.nomQ.to("VAr") / (
                 shunt.nomU.to("V") ** 2 * shunt.maximumSections  # pyright: ignore[reportOptionalMemberAccess]
             )
-        graph_write.set_attr(shunt, EL_BAL, "bPerSection", bPerSection, z_base=z_base)
-        graph_write.set_attr(shunt, EL_BAL, "gPerSection", gPerSection, z_base=z_base)
+        graph_write.set_attr(shunt, EL_BAL, "bPerSection", bPerSection, system_base=self.network.base_power)
+        graph_write.set_attr(shunt, EL_BAL, "gPerSection", gPerSection, system_base=self.network.base_power)
 
         return shunt
+
+    def add_short_circuit(
+            self,
+            shunt: SC.LinearShuntCompensator,
+            *,
+            b0PerSection: float | Qty | None = None,
+            g0PerSection: float | Qty | None = None,
+        ) -> SC.LinearShuntCompensator:
+            """Adds electrical_balanced.LinearShuntCompensator's fixed-shunt parameters.
+            * bPerSection: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu')
+            * gPerSection: zero sequence shunt conductance, float in siemens or Qty('S'|'pu')
+            """
+            graph_write.set_attr(shunt, SC, "bPerSection", b0PerSection, system_base=self.network.base_power)
+            graph_write.set_attr(shunt, SC, "gPerSection", g0PerSection, system_base=self.network.base_power)
+    
+            return shunt
 
     def add_ssh(
         self,

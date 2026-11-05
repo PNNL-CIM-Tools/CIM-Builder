@@ -1,7 +1,7 @@
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.short_circuit as SC
-from cimtables import connectivity, graph_write, impedance
+from cimtables import connectivity, graph_write
 from cimtables.units import Qty
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
@@ -91,40 +91,27 @@ class PowerTransformerBuilder(ObjectBuilder):
         g: float | Qty | None = None,
         ratedS: float | Qty,
         ratedU: float | Qty,
-        base_code_key: int = 3,
     ) -> None:
         """
         Adds star model positive sequence balanced impedance.
         For 2-winding transformer, all impedance on end with endNumber=1, no impedance on endNumber=2
         For 3-winding transformer, star impedance on each end, b and g preferred on end with endNumber=1
         For transformers with more than 3 ends, r and x should be pairwise mesh, with b and g specfied per end
-        * r: positive sequence resistance, float in ohm or Qty('ohm'|'pu'|'percent')
-        * x: positive sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent')
-        * b: positive sequence shunt susceptance, float in siemens or Qty('S'|'pu'|'percent')
-        * g: positive sequence shunt conductance, float in siemens or Qty('S'|'pu'|'percent')
+        * r: positive sequence resistance, float in ohm or Qty('ohm'|'pu'|'percent') or Qty('pu', base='system')
+        * x: positive sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent') or Qty('pu', base='system')
+        * b: positive sequence shunt susceptance, float in siemens or Qty('S'|'pu'|'percent') or Qty('pu', base='system')
+        * g: positive sequence shunt conductance, float in siemens or Qty('S'|'pu'|'percent') or Qty('pu', base='system')
         * ratedS: normal apparent power rating of this winding, float in VA or Qty('kVA'|'MVA')
         * ratedU: phase-to-phase rated voltage at no load, float in V or Qty('kV')
-        * base_code_key: 1 = winding MVA base, 2 = system MVA base, 3 = ohms, matches PSSE RAW CW
         """
 
-        relative = any(isinstance(v, Qty) and v.is_relative() for v in (r, x, b, g))
-        if base_code_key == 1:
-            z_base = impedance.z_base(xfmr_end, [], ratedS)
-        elif base_code_key == 2:
-            z_base = impedance.z_base(xfmr_end, [], self.network.base_power)
-        elif base_code_key == 3 and relative:
-            raise ValueError("base_code_key of 3 for ohms but r,x,b,g were in per-unit")
-        else:
-            raise ValueError(
-                "base_code_key must be one of: 1 = winding MVA base, 2 = system MVA base, 3 = ohms"
-            )
-
-        graph_write.set_attr(xfmr_end, EL_BAL, "r", r, z_base=z_base)
-        graph_write.set_attr(xfmr_end, EL_BAL, "x", x, z_base=z_base)
-        graph_write.set_attr(xfmr_end, EL_BAL, "b", b, z_base=z_base)
-        graph_write.set_attr(xfmr_end, EL_BAL, "g", g, z_base=z_base)
         graph_write.set_attr(xfmr_end, EL_BAL, "ratedS", ratedS)
         graph_write.set_attr(xfmr_end, EL_BAL, "ratedU", ratedU)
+        graph_write.set_attr(xfmr_end, EL_BAL, "r", r, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "x", x, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "b", b, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "g", g, system_base=self.network.base_power)
+
 
     def add_mesh_impedance(
         self,
@@ -159,13 +146,8 @@ class PowerTransformerBuilder(ObjectBuilder):
         )
         graph_write.set_assc(mesh, EL_BAL, "FromTransformerEnd", from_end)
         graph_write.set_assc(mesh, EL_BAL, "ToTransformerEnd", to_end)
-
-        relative = any(isinstance(v, Qty) and v.is_relative() for v in (r, x))
-        z_base = (
-            impedance.z_base(mesh, [from_end], from_end.ratedS) if relative else None
-        )
-        graph_write.set_attr(mesh, EL_BAL, "r", r, z_base=z_base)
-        graph_write.set_attr(mesh, EL_BAL, "x", x, z_base=z_base)
+        graph_write.set_attr(mesh, EL_BAL, "r", r, system_base=self.network.base_power)
+        graph_write.set_attr(mesh, EL_BAL, "x", x, system_base=self.network.base_power)
         graph_write.add_to_graph(self.network, mesh)
         return xfmr, mesh
 
@@ -191,19 +173,7 @@ class PowerTransformerBuilder(ObjectBuilder):
         * base_code_key: 1 = winding MVA base, 2 = system MVA base, 3 = ohms, matches PSSE RAW CW
         """
 
-        relative = any(isinstance(v, Qty) and v.is_relative() for v in (r0, x0, b0, g0))
-        if base_code_key == 1:
-            z_base = impedance.z_base(xfmr_end, [], xfmr_end.ratedS)  # type:ignore
-        elif base_code_key == 2:
-            z_base = impedance.z_base(xfmr_end, [], self.network.base_power)
-        elif base_code_key == 3 and relative:
-            raise ValueError("base_code_key of 3 for ohms but r,x,b,g were in per-unit")
-        else:
-            raise ValueError(
-                "base_code_key must be one of: 1 = winding MVA base, 2 = system MVA base, 3 = ohms"
-            )
-
-        graph_write.set_attr(xfmr_end, EL_BAL, "r", r0, z_base=z_base)
-        graph_write.set_attr(xfmr_end, EL_BAL, "x", x0, z_base=z_base)
-        graph_write.set_attr(xfmr_end, EL_BAL, "b", b0, z_base=z_base)
-        graph_write.set_attr(xfmr_end, EL_BAL, "g", g0, z_base=z_base)
+        graph_write.set_attr(xfmr_end, EL_BAL, "r", r0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "x", x0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "b", b0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "g", g0, system_base=self.network.base_power)

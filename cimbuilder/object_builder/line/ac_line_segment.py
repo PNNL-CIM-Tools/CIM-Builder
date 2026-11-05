@@ -103,11 +103,11 @@ class ACLineSegmentBuilder(ObjectBuilder):
         * bch: positive sequence shunt susceptance, float in siemens or Qty('S'|'pu')
         * gch: positive sequence shunt conductance, float in siemens or Qty('S'|'pu')
         """
-        z_base = impedance.z_base(line, [], self.network.base_power)
-        graph_write.set_attr(line, EL_BAL, "r", r, z_base=z_base)
-        graph_write.set_attr(line, EL_BAL, "x", x, z_base=z_base)
-        graph_write.set_attr(line, EL_BAL, "bch", bch, z_base=z_base)
-        graph_write.set_attr(line, EL_BAL, "gch", gch, z_base=z_base)
+
+        graph_write.set_attr(line, EL_BAL, "r", r, system_base=self.network.base_power)
+        graph_write.set_attr(line, EL_BAL, "x", x, system_base=self.network.base_power)
+        graph_write.set_attr(line, EL_BAL, "bch", bch, system_base=self.network.base_power)
+        graph_write.set_attr(line, EL_BAL, "gch", gch, system_base=self.network.base_power)
         return line
 
     def add_short_circuit(
@@ -126,11 +126,11 @@ class ACLineSegmentBuilder(ObjectBuilder):
         * b0ch: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu')
         * g0ch: zero sequence shunt conductance, float in siemens or Qty('S'|'pu')
         """
-        z_base = impedance.z_base(line, [], self.network.base_power)
-        graph_write.set_attr(line, SC, "r0", r0, z_base=z_base)
-        graph_write.set_attr(line, SC, "x0", x0, z_base=z_base)
-        graph_write.set_attr(line, SC, "b0ch", b0ch, z_base=z_base)
-        graph_write.set_attr(line, SC, "g0ch", g0ch, z_base=z_base)
+
+        graph_write.set_attr(line, SC, "r0", r0, system_base=self.network.base_power)
+        graph_write.set_attr(line, SC, "x0", x0, system_base=self.network.base_power)
+        graph_write.set_attr(line, SC, "b0ch", b0ch, system_base=self.network.base_power)
+        graph_write.set_attr(line, SC, "g0ch", g0ch, system_base=self.network.base_power)
         return line
 
     def add_per_length_impedance(
