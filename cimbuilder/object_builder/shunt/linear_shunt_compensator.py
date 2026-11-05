@@ -7,6 +7,8 @@ from cimtables.units import Qty
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
+
 
 class LinearShuntCompensatorBuilder(ObjectBuilder):
     cim_class_name = "LinearShuntCompensator"
@@ -15,13 +17,13 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         self,
         shunt: CN.LinearShuntCompensator,
         *,
-        node: str,
+        node: mRID,
         compensatorType: str,
         phaseConnection: str | None = None,
         phases: str | None = None,
         grounded: bool | None = None,
-        EquipmentContainer: str | None = None,
-        BaseVoltage: str,
+        EquipmentContainer: mRID | None = None,
+        BaseVoltage: mRID,
     ) -> tuple[
         CN.LinearShuntCompensator, CN.Terminal, list[CN.LinearShuntCompensatorPhase]
     ]:
@@ -106,7 +108,7 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         * gPerSection: shunt conductance, float in siemens or Qty('S'|'pu')
         * normalSections: number of individual caps within bank normally switched in
         * maximumSections: total number of individual caps within the bank
-        * 
+        *
         """
 
         graph_write.set_attr(shunt, EL_BAL, "nomU", nomU)
@@ -124,8 +126,8 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
                 )
             # nomQ is the whole bank: B per section = Q / (U² * maximumSections), in siemens
             bPerSection = shunt.nomQ.to("VAr") / (
-                shunt.nomU.to("V") ** 2 * shunt.maximumSections # pyright: ignore[reportOptionalMemberAccess]
-            )  
+                shunt.nomU.to("V") ** 2 * shunt.maximumSections  # pyright: ignore[reportOptionalMemberAccess]
+            )
         graph_write.set_attr(shunt, EL_BAL, "bPerSection", bPerSection, z_base=z_base)
         graph_write.set_attr(shunt, EL_BAL, "gPerSection", gPerSection, z_base=z_base)
 
@@ -146,5 +148,3 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         graph_write.set_attr(shunt, SSH, "sections", sections)
         graph_write.set_attr(shunt, SSH, "inService", inService)
         return shunt
-
-    

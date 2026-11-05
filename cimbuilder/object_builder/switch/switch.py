@@ -6,6 +6,7 @@ from cimtables import Qty, connectivity, graph_write
 from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
 
 class SwitchBuilder(ObjectBuilder):
     cim_class_name = "Switch"
@@ -14,8 +15,8 @@ class SwitchBuilder(ObjectBuilder):
         self,
         switch: CN.Switch,
         *,
-        node1: str,
-        node2: str,
+        node1: mRID,
+        node2: mRID,
         phases: str | None = None,
         phaseSide1: str | None = None,
         phaseSide2: str | None = None,
@@ -23,8 +24,8 @@ class SwitchBuilder(ObjectBuilder):
         retained: bool | None = None,
         areaBoundary: bool | None = None,
         topologicalUsage: str | None = None,
-        EquipmentContainer: str | None = None,
-        BaseVoltage,
+        EquipmentContainer: mRID | None = None,
+        BaseVoltage: mRID,
     ) -> tuple[CN.Switch, list[CN.Terminal], list[CN.SwitchPhase]]:
         """
         Adds connectivity_unbalanced profile layer: terminals/nodes,

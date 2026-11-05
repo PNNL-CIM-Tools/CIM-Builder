@@ -5,6 +5,7 @@ from cimtables import Qty, graph_write
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
 
 class SwitchPhaseBuilder(ObjectBuilder):
     cim_class_name = "SwitchPhase"
@@ -13,7 +14,7 @@ class SwitchPhaseBuilder(ObjectBuilder):
         self,
         switch_phase: CN.SwitchPhase,
         *,
-        Switch: str,
+        Switch: mRID,
         phaseSide1: str,
         phaseSide2: str,
         normalOpen: bool | None = None,

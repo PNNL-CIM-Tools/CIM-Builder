@@ -10,13 +10,15 @@ from cimbuilder.object_builder.transformer.power_transformer import (
     PowerTransformerBuilder,
 )
 
+mRID = str
+
 
 class TransformerBankBuilder(PowerTransformerBuilder):
     """
     Builder for transformer banks composed of one of more tanks. Builder functions to be called in the following order:
     * create() - instantiate the PowerTransformer
     * add_power_transformer_end() - create PowerTransformerEnd, optionally create one phase end for every phase on high side and low side
-    * add_transformer_tank() - create one tank with %Z, loadloss, etc. for every physical tank 
+    * add_transformer_tank() - create one tank with %Z, loadloss, etc. for every physical tank
     * add_transformer_phase_end() - add phaseNeutralU for existing phase ends or create new ones for each phase
     * add_transformer_lug() - create one lug for every physical connection point, including ungrounded floating lugs
     * add_transformer_core() - optional, adds the physical core
@@ -27,7 +29,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
     cim_class_name = "PowerTransformer"
 
     def add_connectivity(
-        self, xfmr: CN.PowerTransformer, *, EquipmentContainer: str | None = None
+        self, xfmr: CN.PowerTransformer, *, EquipmentContainer: mRID | None = None
     ) -> CN.PowerTransformer:
         return super().add_connectivity(xfmr, EquipmentContainer=EquipmentContainer)
 
@@ -35,12 +37,12 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         self,
         xfmr: CN.PowerTransformer,
         *,
-        node: str,
+        node: mRID,
         endNumber: int,
         connectionKind: str | None = None,
-        BaseVoltage: str,
+        BaseVoltage: mRID,
         phases: str | None,
-        TankConfiguration: str | None,
+        TankConfiguration: mRID | None,
     ) -> tuple[CN.PowerTransformer, CN.Terminal, CN.PowerTransformerEnd]:
         xfmr, terminal, xfmr_end = super().add_power_transformer_end(
             xfmr,
@@ -70,12 +72,12 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         self,
         xfmr: CONSTR.PowerTransformer,
         *,
-        TransformerTank: str,
+        TransformerTank: mRID,
         loadLoss: float | Qty | None = None,
         noLoadLoss: float | Qty | None = None,
         percentImpdance: float | None = None,
         percentMagnetizingCurrent: float | None = None,
-        TankConfiguration: str | None = None,
+        TankConfiguration: mRID | None = None,
     ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerTank]:
         """
         Adds a per-phase TransformerTank to the PowerTransformer
@@ -125,8 +127,8 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         sequenceNumber: int,
         phase: str,
         phaseNeutralU: float | Qty | None,
-        TankConfiguration: str | None,
-        TransformerPhaseEnd: str | None,
+        TankConfiguration: mRID | None,
+        TransformerPhaseEnd: mRID | None,
     ) -> tuple[CONSTR.PowerTransformer | None, CONSTR.TransformerPhaseEnd]:
         """
         Adds a single phase end for a transformer or configuration
@@ -168,8 +170,8 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         xfmr: CONSTR.PowerTransformer,
         *,
         designation: str,
-        TransformerTank: str,
-        TransformerEnd: str,
+        TransformerTank: mRID,
+        TransformerEnd: mRID,
     ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerLug]:
         """
         Add a physical lug / bushing to the transformer
@@ -206,7 +208,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         self,
         xfmr: CONSTR.PowerTransformer | None,
         *,
-        TransformerTank: str,
+        TransformerTank: mRID,
         form: str,
         b: float | Qty | None = None,
         g: float | Qty | None = None,
@@ -215,11 +217,16 @@ class TransformerBankBuilder(PowerTransformerBuilder):
     ) -> tuple[CONSTR.PowerTransformer | None, CONSTR.TransformerCore]:
         """
         Adds a transformer core to the transformer tank
-
+        * form: string, coreForm|shellForm
+        * b: core shunt susceptance, float in siemens or Qty('S')
+        * g: core sequence shunt conductance, float in siemens or Qty('S')
+        * b0: zero sequence shunt susceptance, float in siemens or Qty('S')
+        * g0: zero sequence shunt conductance, float in siemens or Qty('S')
         """
         constr: CONSTR = self.cim  # type:ignore
         mRID = f"{TransformerTank}_core"
         core = constr.TransformerCore(mRID=mRID)
+        graph_write.set_attr(core, EL_UNBAL, "form", form)
         graph_write.set_attr(core, EL_UNBAL, "b", b)
         graph_write.set_attr(core, EL_UNBAL, "g", g)
         graph_write.set_attr(core, SC, "b", b0)
@@ -231,10 +238,10 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         self,
         xfmr: CONSTR.PowerTransformer | None,
         *,
-        TransformerTank: str,
-        FromTransformerLug: str,
-        ToTransformerLug: str,
-        AutoTransformerLug: str | None,
+        TransformerTank: mRID,
+        FromTransformerLug: mRID,
+        ToTransformerLug: mRID,
+        AutoTransformerLug: mRID | None = None,
         connection: str,
         baseS: float | Qty | None = None,
         baseU: float | Qty | None = None,
@@ -270,10 +277,10 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         self,
         xfmr: EL_BAL.PowerTransformer,
         *,
-        FromTransformerEnd: str,
-        ToTransformerEnd: str,
-        FromWinding: str,
-        ToWinding: str,
+        FromTransformerEnd: mRID,
+        ToTransformerEnd: mRID,
+        FromWinding: mRID,
+        ToWinding: mRID,
         r: float | Qty | None = None,
         x: float | Qty | None = None,
     ) -> tuple[EL_BAL.PowerTransformer, EL_BAL.TransformerMeshImpedance]:

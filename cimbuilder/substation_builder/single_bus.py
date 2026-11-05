@@ -1,10 +1,6 @@
-from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Type
 
 from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface, get_cim_profile
-import cimgraph.data_profile.cimhub_2023 as cim 
+
 
 from cimbuilder.substation_builder.substation_builder import SubstationBuilder
 import cimbuilder.object_builder as object_builder
@@ -12,13 +8,13 @@ import cimbuilder.utils as utils
 import logging
 _log = logging.getLogger(__name__)
 
-@dataclass
+
 class SingleBusSubstation(SubstationBuilder):
     name:str = field(default='new_single_bus_sub')
     base_voltage:int|cim.BaseVoltage = field(default=115000)
     total_sections:int = field(default = 4)
 
-    def __post_init__(self):                                    
+    def __init__(self):                                    
         self.total_sections = int(self.total_sections)
         cim_profile, cim_module = get_cim_profile()
         self.cim : cim = cim_module

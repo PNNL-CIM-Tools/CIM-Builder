@@ -6,6 +6,7 @@ from cimtables import Qty, connectivity, graph_write
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
 
 class ConnectorBuilder(ObjectBuilder, ABC):
     cim_class_name = "Connector"
@@ -14,9 +15,9 @@ class ConnectorBuilder(ObjectBuilder, ABC):
         self,
         conn: CN.Connector,
         *,
-        node: str,
-        EquipmentContainer: str | None = None,
-        BaseVoltage: str,
+        node: mRID,
+        EquipmentContainer: mRID | None = None,
+        BaseVoltage: mRID,
     ) -> tuple[CN.Connector, CN.Terminal]:
         """
         Adds base connectivity layer of terminals, base voltage, phasing
@@ -72,9 +73,9 @@ class BusbarSectionBuilder(ConnectorBuilder):
         self,
         busbar: CN.BusbarSection,
         *,
-        node: str,
-        EquipmentContainer: str | None = None,
-        BaseVoltage: str,
+        node: mRID,
+        EquipmentContainer: mRID | None = None,
+        BaseVoltage: mRID,
     ) -> tuple[CN.BusbarSection, CN.Terminal]:
         return super().add_connectivity(
             busbar,
@@ -101,9 +102,9 @@ class JuntionBuilder(ConnectorBuilder):
         self,
         conn: CN.Junction,
         *,
-        node: str,
-        EquipmentContainer: str | None = None,
-        BaseVoltage: str,
+        node: mRID,
+        EquipmentContainer: mRID | None = None,
+        BaseVoltage: mRID,
     ) -> tuple[CN.Junction, CN.Terminal]:
         return super().add_connectivity(
             conn,

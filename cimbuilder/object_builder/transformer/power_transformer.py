@@ -6,12 +6,13 @@ from cimtables.units import Qty
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
 
 class PowerTransformerBuilder(ObjectBuilder):
     cim_class_name = "PowerTransformer"
 
     def add_connectivity(
-        self, xfmr: CN.PowerTransformer, *, EquipmentContainer: str | None = None
+        self, xfmr: CN.PowerTransformer, *, EquipmentContainer: mRID | None = None
     ) -> CN.PowerTransformer:
         """
         Adds base connectivity layer of equipment containment. Add nodes using add_power_transformer_end
@@ -43,10 +44,10 @@ class PowerTransformerBuilder(ObjectBuilder):
         self,
         xfmr: CN.PowerTransformer,
         *,
-        node: str,
+        node: mRID,
         endNumber: int,
         connectionKind: str | None = None,
-        BaseVoltage: str,
+        BaseVoltage: mRID,
     ) -> tuple[CN.PowerTransformer, CN.Terminal, CN.PowerTransformerEnd]:
         """
         Adds base connectivity layer of terminals, base voltage, etc
@@ -129,8 +130,8 @@ class PowerTransformerBuilder(ObjectBuilder):
         self,
         xfmr,
         *,
-        FromTransformerEnd: str,
-        ToTransformerEnd: str,
+        FromTransformerEnd: mRID,
+        ToTransformerEnd: mRID,
         r: float | Qty | None = None,
         x: float | Qty | None = None,
     ) -> tuple[EL_BAL.PowerTransformer, EL_BAL.TransformerMeshImpedance]:

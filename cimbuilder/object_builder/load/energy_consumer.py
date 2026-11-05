@@ -5,6 +5,7 @@ from cimtables import Qty, connectivity, graph_write
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
 
 class EnergyConsumerBuilder(ObjectBuilder):
     cim_class_name = "EnergyConsumer"
@@ -13,14 +14,14 @@ class EnergyConsumerBuilder(ObjectBuilder):
         self,
         load: CN.EnergyConsumer,
         *,
-        node: str,
+        node: mRID,
         phaseConnection: str | None = None,
         phases: str | None = None,
         grounded: bool | None = None,
         customerCount: int | None = None,
         aggregate: bool | None = None,
-        EquipmentContainer: str | None = None,
-        BaseVoltage: str,
+        EquipmentContainer: mRID | None = None,
+        BaseVoltage: mRID,
     ) -> tuple[CN.EnergyConsumer, CN.Terminal, list[CN.EnergyConsumerPhase]]:
         """
         Adds base connectivity layer of terminals, base voltage, phasing
@@ -91,7 +92,7 @@ class EnergyConsumerBuilder(ObjectBuilder):
         qfixed: float | Qty | None = None,
         pfixedPct: float | None = None,
         qfixedPct: float | None = None,
-        LoadResponse: str | None = None,
+        LoadResponse: mRID | None = None,
     ) -> EL_BAL.EnergyConsumer:
         """Adds electrical_balanced.EnergyConsumer's fixed-load parameters.
         * minP: minimum power demand, float in watts or Qty('kW')

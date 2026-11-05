@@ -5,6 +5,8 @@ from cimtables import Qty, graph_write
 
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
+mRID = str
+
 
 class EnergyConsumerPhaseBuilder(ObjectBuilder):
     cim_class_name = "EnergyConsumerPhase"
@@ -13,7 +15,7 @@ class EnergyConsumerPhaseBuilder(ObjectBuilder):
         self,
         load_phs: CN.EnergyConsumerPhase,
         phase: str,
-        EnergyConsumer: str,
+        EnergyConsumer: mRID,
     ) -> CN.EnergyConsumerPhase:
         """
         Add connectivity and phasing information
@@ -41,30 +43,17 @@ class EnergyConsumerPhaseBuilder(ObjectBuilder):
         qfixed: float | Qty | None = None,
         pfixedPct: float | None = None,
         qfixedPct: float | None = None,
-        LoadResponse: str | None = None,
     ) -> EL_UNBAL.EnergyConsumerPhase:
         """Adds electrical_balanced.EnergyConsumer's fixed-load parameters.
         * pfixed: active power of the load that is a fixed quantity and does not vary as load group value varies
         * qfixed: reactive power of the load that is a fixed quantity and does not vary as load group value varies
         * pfixedPct: percentage of load group fixed active power. Used to represent the time-varying component
         * qfixedPct: percentage of load group fixed reactive power. Used to represent the time-varying component.
-        * LoadResponse: mRID string of the LoadResponseCharacteristic ZIP fraction
         """
-        el_bal: EL_UNBAL = self.cim  # type: ignore
         graph_write.set_attr(load_phs, EL_UNBAL, "pfixed", pfixed)
         graph_write.set_attr(load_phs, EL_UNBAL, "qfixed", qfixed)
         graph_write.set_attr(load_phs, EL_UNBAL, "pfixedPct", pfixedPct)
         graph_write.set_attr(load_phs, EL_UNBAL, "qfixedPct", qfixedPct)
-
-        if LoadResponse is not None:
-            graph_write.set_assc_from_mrid(
-                network=self.network,
-                source_object=load_phs,
-                profile_part=EL_UNBAL,
-                association_name="LoadResponse",
-                target_class=el_bal.LoadResponseCharacteristic,
-                target_mRID=LoadResponse,
-            )
         return load_phs
 
     def add_ssh(
