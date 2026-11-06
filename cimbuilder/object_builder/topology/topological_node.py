@@ -28,6 +28,6 @@ class TopologicalNodeBuilder(ObjectBuilder):
         # TODO: implement better name logic
         marker = tp.BusNameMarker(mRID=BusNameMarker)
         graph_write.set_attr(marker, TP, "priority", priority)
-        graph_write.set_assc(marker, TP, "ToplogicalNode", node)
+        graph_write.set_assc(marker, TP, "TopologicalNode", node)
         graph_write.add_to_graph(self.network, marker)
         return node, marker

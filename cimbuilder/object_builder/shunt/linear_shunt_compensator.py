@@ -142,8 +142,8 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
             * bPerSection: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu')
             * gPerSection: zero sequence shunt conductance, float in siemens or Qty('S'|'pu')
             """
-            graph_write.set_attr(shunt, SC, "bPerSection", b0PerSection, system_base=self.network.base_power)
-            graph_write.set_attr(shunt, SC, "gPerSection", g0PerSection, system_base=self.network.base_power)
+            graph_write.set_attr(shunt, SC, "b0PerSection", b0PerSection, system_base=self.network.base_power)
+            graph_write.set_attr(shunt, SC, "g0PerSection", g0PerSection, system_base=self.network.base_power)
     
             return shunt
 

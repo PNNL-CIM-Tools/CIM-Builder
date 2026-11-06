@@ -7,24 +7,42 @@ from cimbuilder.object_builder.object_builder import ObjectBuilder
 class BaseVoltageBuilder(ObjectBuilder):
     cim_class_name = "BaseVoltage"
 
-    def add_connectivity(
-        self, base_volt: CN.BaseVoltage, *, nominalVoltage: float | Qty
+    def create(
+        self,
+        *,
+        mRID: str | None = None,
+        name: str | None = None,
+        identifier: str | None = None,
+        description: str | None = None,
+        nominalVoltage: float | Qty,
     ) -> CN.BaseVoltage:
-
+        base_volt: CN.BaseVoltage = super().create(
+            mRID=mRID, name=name, identifier=identifier, description=description
+        )  # type:ignore
         graph_write.set_attr(base_volt, CN, "nominalVoltage", nominalVoltage)
 
         return base_volt
 
+
 class BaseFrequencyBuilder(ObjectBuilder):
     cim_class_name = "BaseFrequency"
 
-    def add_connectivity(
-        self, base_freq: CN.BaseFrequency, *, frequency: float | Qty = 60
+    def create(
+        self,
+        *,
+        mRID: str | None = None,
+        name: str | None = None,
+        identifier: str | None = None,
+        description: str | None = None,
+        frequency: float | Qty = 60,
     ) -> CN.BaseFrequency:
-
+        base_freq: CN.BaseFrequency = super().create(
+            mRID=mRID, name=name, identifier=identifier, description=description
+        )  # type:ignore
         graph_write.set_attr(base_freq, CN, "frequency", frequency)
 
         return base_freq
+
 
 class BasePowerBuilder(ObjectBuilder):
     cim_class_name = "BasePower"

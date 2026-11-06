@@ -159,7 +159,6 @@ class PowerTransformerBuilder(ObjectBuilder):
         x0: float | Qty | None = None,
         b0: float | Qty | None = None,
         g0: float | Qty | None = None,
-        base_code_key: int = 3,
     ) -> None:
         """
         Adds star model positive sequence balanced impedance.
@@ -170,10 +169,9 @@ class PowerTransformerBuilder(ObjectBuilder):
         * x0: zero sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent')
         * b0: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu'|'percent')
         * g0: zero sequence shunt conductance, float in siemens or Qty('S'|'pu'|'percent')
-        * base_code_key: 1 = winding MVA base, 2 = system MVA base, 3 = ohms, matches PSSE RAW CW
         """
 
-        graph_write.set_attr(xfmr_end, EL_BAL, "r", r0, system_base=self.network.base_power)
-        graph_write.set_attr(xfmr_end, EL_BAL, "x", x0, system_base=self.network.base_power)
-        graph_write.set_attr(xfmr_end, EL_BAL, "b", b0, system_base=self.network.base_power)
-        graph_write.set_attr(xfmr_end, EL_BAL, "g", g0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "r0", r0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "x0", x0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "b0", b0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, EL_BAL, "g0", g0, system_base=self.network.base_power)

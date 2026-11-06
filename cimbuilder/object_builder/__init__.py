@@ -31,6 +31,10 @@ from cimbuilder.object_builder.load import (
     EnergyConsumerBuilder,
     EnergyConsumerPhaseBuilder,
 )
+from cimbuilder.object_builder.transformer import (
+    PowerTransformerBuilder,
+    TransformerBankBuilder
+)
 from cimbuilder.object_builder.shunt import (
     LinearShuntCompensatorBuilder,
     LinearShuntCompensatorPhaseBuilder,
@@ -89,6 +93,7 @@ __all__ = [
     "PowerElectronicsConnectionPhaseBuilder",
     "PowerElectronicsUnitBuilder",
     "PowerElectronicsWindUnitBuilder",
+    "PowerTransformerBuilder",
     "ProtectedSwitchBuilder",
     "RecloserBuilder",
     "RotatingMachineBuilder",
@@ -98,6 +103,7 @@ __all__ = [
     "SwitchPhaseBuilder",
     "SynchronousMachineBuilder",
     "TopologicalNodeBuilder",
+    "TransformerBankBuilder",
     "WireConfigurationBuilder",
     "XYSpacingBuilder",
 ]

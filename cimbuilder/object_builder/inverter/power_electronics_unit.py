@@ -43,7 +43,6 @@ class PowerElectronicsUnitBuilder(ObjectBuilder):
         unit: SSH.PowerElectronicsUnit,
         *,
         p: float | Qty | None = None,
-        q: float | Qty | None = None,
         inService: bool | None = None,
     ) -> SSH.PowerElectronicsUnit:
         """
@@ -54,7 +53,6 @@ class PowerElectronicsUnitBuilder(ObjectBuilder):
         * inService: boolean, unit is de-energized if false
         """
         graph_write.set_attr(unit, SSH, "p", p)
-        graph_write.set_attr(unit, SSH, "q", q)
         graph_write.set_attr(unit, SSH, "inService", inService)
         return unit
 
@@ -83,7 +81,6 @@ class BatteryUnitBuilder(PowerElectronicsUnitBuilder):
         ratedE: float | Qty | None = None,
         minimumE: float | Qty | None = None,
         idlingP: float | Qty | None = None,
-        idlingQ: float | Qty | None = None,
         chargingEfficiency: float | Qty | None = None,
         dischargingEfficiency: float | Qty | None = None,
         aggregate: bool | None = None,
@@ -101,7 +98,6 @@ class BatteryUnitBuilder(PowerElectronicsUnitBuilder):
         graph_write.set_attr(unit, EL_BAL, "ratedE", ratedE)
         graph_write.set_attr(unit, EL_BAL, "minimumE", minimumE)
         graph_write.set_attr(unit, EL_BAL, "idlingP", idlingP)
-        graph_write.set_attr(unit, EL_BAL, "idlingQ", idlingQ)
         graph_write.set_attr(unit, EL_BAL, "chargingEfficiency", chargingEfficiency)
         graph_write.set_attr(
             unit, EL_BAL, "dischargingEfficiency", dischargingEfficiency
@@ -114,12 +110,11 @@ class BatteryUnitBuilder(PowerElectronicsUnitBuilder):
         unit: SSH.BatteryUnit,
         *,
         p: float | Qty | None = None,
-        q: float | Qty | None = None,
         storedE: float | Qty | None = None,
         batteryState: float | Qty | None = None,
         inService: bool | None = None,
     ) -> SSH.BatteryUnit:
-        super().add_ssh(unit, p=p, q=q, inService=inService)
+        super().add_ssh(unit, p=p, inService=inService)
         graph_write.set_attr(unit, SSH, "storedE", storedE)
         graph_write.set_attr(unit, SSH, "batteryState", batteryState)
         return unit

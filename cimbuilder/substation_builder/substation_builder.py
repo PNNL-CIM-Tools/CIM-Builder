@@ -4,7 +4,8 @@ import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 from cimgraph.models import GraphModel
 from cimtables import Qty, connectivity, graph_write
 
-mRID = str 
+mRID = str
+
 
 class SubstationBuilder(ABC):
     def __init__(self, network: GraphModel):
@@ -27,7 +28,7 @@ class SubstationBuilder(ABC):
         * description: free form comment text to describe object
         Returns the new, unadded object."""
 
-        cn:CN = self.cim #type:ignore
+        cn: CN = self.cim  # type:ignore
 
         substation = cn.Substation(name=name, mRID=mRID, description=description)
         graph_write.set_assc_from_mrid(
@@ -43,12 +44,34 @@ class SubstationBuilder(ABC):
         return substation
 
     def add_voltage_level(
-            self,
-            substation:CN.Substation,
-            *,
-            BaseVoltage: mRID
+        self,
+        substation: CN.Substation,
+        *,
+        BaseVoltage: mRID,
+        mRID: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> tuple[CN.Substation, CN.VoltageLevel]:
 
-    )
+        cn: CN = self.cim  # type:ignore
+        level = cn.VoltageLevel()
+
+        return substation, level
+
+    def add_bay(
+        self,
+        substation: CN.Substation,
+        *,
+        BaseVoltage: mRID,
+        mRID: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> tuple[CN.Substation, CN.Bay]:
+
+        cn: CN = self.cim  # type:ignore
+        level = cn.Bay()
+
+        return substation, level
 
     @abstractmethod
     def new_branch(self):

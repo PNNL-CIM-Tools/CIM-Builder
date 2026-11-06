@@ -78,7 +78,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         percentImpdance: float | None = None,
         percentMagnetizingCurrent: float | None = None,
         TankConfiguration: mRID | None = None,
-    ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerTank]:
+    ) -> tuple[CONSTR.PowerTransformer, EL_UNBAL.TransformerTank]:
         """
         Adds a per-phase TransformerTank to the PowerTransformer
         * TransformerTank: mRID of the tank to be added
@@ -88,24 +88,24 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         * percentMagnetizingCurrent: Magnetizing current expressed as percentage of base current, float
         * TankConfiguration: mRID of tank configuation template (equivalent to OpenDSS XfmrCode)
         """
-        constr: CONSTR = self.cim  # type:ignore
+        el_unbal: EL_UNBAL = self.cim  # type:ignore
         tank = self.network.find_by_mRID(mRID=TransformerTank)
-        if tank is not None and not isinstance(tank, constr.TransformerTank):
+        if tank is not None and not isinstance(tank, el_unbal.TransformerTank):
             raise ValueError(
                 f"{TransformerTank} is another object that is not a TransformerTank"
             )
         if not tank:
-            tank = constr.TransformerTank(mRID=TransformerTank)
+            tank = el_unbal.TransformerTank(mRID=TransformerTank)
 
-        graph_write.set_assc(tank, CONSTR, "PowerTransformer", xfmr)
+        graph_write.set_assc(tank, CN, "PowerTransformer", xfmr)
         graph_write.set_assc(
             tank, CONSTR, "EquipmentContainer", xfmr.EquipmentContainer
         )
-        graph_write.set_attr(tank, CONSTR, "loadLoss", loadLoss)
-        graph_write.set_attr(tank, CONSTR, "noLoadLoss", noLoadLoss)
-        graph_write.set_attr(tank, CONSTR, "percentImpedance", percentImpdance)
+        graph_write.set_attr(tank, EL_UNBAL, "loadLoss", loadLoss)
+        graph_write.set_attr(tank, EL_UNBAL, "noLoadLoss", noLoadLoss)
+        graph_write.set_attr(tank, EL_UNBAL, "percentImpedance", percentImpdance)
         graph_write.set_attr(
-            tank, CONSTR, "percentMagnetizingCurrent", percentMagnetizingCurrent
+            tank, EL_UNBAL, "percentMagnetizingCurrent", percentMagnetizingCurrent
         )
 
         graph_write.set_assc_from_mrid(
@@ -113,7 +113,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
             source_object=tank,
             profile_part=CONSTR,
             association_name="TankConfiguration",
-            target_class=constr.TransformerTankConfiguration,
+            target_class=el_unbal.TransformerTankConfiguration,
             target_mRID=TankConfiguration,
         )
         graph_write.add_to_graph(self.network, tank)
@@ -229,8 +229,8 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         graph_write.set_attr(core, EL_UNBAL, "form", form)
         graph_write.set_attr(core, EL_UNBAL, "b", b)
         graph_write.set_attr(core, EL_UNBAL, "g", g)
-        graph_write.set_attr(core, SC, "b", b0)
-        graph_write.set_attr(core, SC, "g", g0)
+        graph_write.set_attr(core, SC, "b0", b0)
+        graph_write.set_attr(core, SC, "g0", g0)
         graph_write.add_to_graph(self.network, core)
         return xfmr, core
 
@@ -291,7 +291,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         * r: positive sequence resistance, float in ohm or Qty('ohm'|'pu'|'percent')
         * x: positive sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent')
         """
-        constr: CONSTR = self.cim  # type:ignore
+        el_bal: EL_BAL = self.cim  # type:ignore
         xfmr, mesh = super().add_mesh_impedance(
             xfmr=xfmr,
             FromTransformerEnd=FromTransformerEnd,
@@ -302,17 +302,17 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         graph_write.set_assc_from_mrid(
             network=self.network,
             source_object=mesh,
-            profile_part=CONSTR,
+            profile_part=EL_BAL,
             association_name="FromWinding",
-            target_class=constr.TransformerWinding,
+            target_class=el_bal.TransformerWinding,
             target_mRID=FromWinding,
         )
         graph_write.set_assc_from_mrid(
             network=self.network,
             source_object=mesh,
-            profile_part=CONSTR,
+            profile_part=EL_BAL,
             association_name="ToWinding",
-            target_class=constr.TransformerWinding,
+            target_class=el_bal.TransformerWinding,
             target_mRID=ToWinding,
         )
         return xfmr, mesh

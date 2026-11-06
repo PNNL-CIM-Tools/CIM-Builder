@@ -22,7 +22,7 @@ class ACLineSegmentPhaseBuilder(ObjectBuilder):
         * phase: Single phase kind, A|B|C|N|s1|s2|X|Y
         """
         cn: CN = self.cim  # type: ignore
-        graph_write.set_attr(line_phs, CN, "sequnceNumber", sequenceNumber)
+        graph_write.set_attr(line_phs, CN, "sequenceNumber", sequenceNumber)
         graph_write.set_attr(line_phs, CN, "phase", phase)
         if ACLineSegment is not None:
             graph_write.set_assc_from_mrid(
