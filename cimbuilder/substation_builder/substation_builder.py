@@ -1,57 +1,86 @@
-from __future__ import annotations
-
-import json
-import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from uuid import UUID
-from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.data_profile.identity import Identity
-from cimgraph.databases import ConnectionInterface
-from cimgraph import utils as cim_utils
 
-_log = logging.getLogger(__name__)
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+from cimgraph.models import GraphModel
+from cimtables import Qty, connectivity, graph_write
 
-jsonld = dict['@id':str(UUID),'@type':str(type)]
-Graph = dict[type, dict[UUID, object]]
+mRID = str
 
-@dataclass
+
 class SubstationBuilder(ABC):
-    connection:ConnectionInterface
-    network:GraphModel = field(default=None)
+    def __init__(self, network: GraphModel):
+        self.network = network
+        self.cim = network.cim
+
+    def create(
+        self,
+        *,
+        mRID: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        Region: mRID | None = None,
+    ) -> CN.Substation:
+        """
+        Add a new object to the network graph
+        * mRID: string identifier, unique to the local model
+        * name: human-readable name of substation
+        * identifier: seed string for persistent UUIDs for classes without name/mRID.
+        * description: free form comment text to describe object
+        Returns the new, unadded object."""
+
+        cn: CN = self.cim  # type:ignore
+
+        substation = cn.Substation(name=name, mRID=mRID, description=description)
+        graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=substation,
+            profile_part=CN,
+            association_name="Region",
+            target_class=cn.SubGeographicalRegion,
+            target_mRID=Region,
+        )
+        graph_write.add_to_graph(self.network, substation)
+
+        return substation
+
+    def add_voltage_level(
+        self,
+        substation: CN.Substation,
+        *,
+        BaseVoltage: mRID,
+        mRID: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> tuple[CN.Substation, CN.VoltageLevel]:
+
+        cn: CN = self.cim  # type:ignore
+        level = cn.VoltageLevel()
+
+        return substation, level
+
+    def add_bay(
+        self,
+        substation: CN.Substation,
+        *,
+        BaseVoltage: mRID,
+        mRID: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> tuple[CN.Substation, CN.Bay]:
+
+        cn: CN = self.cim  # type:ignore
+        level = cn.Bay()
+
+        return substation, level
 
     @abstractmethod
     def new_branch(self):
-        raise RuntimeError('Must have implemented connect in inherited class')
-    
+        raise RuntimeError("Must have implemented connect in inherited class")
+
+    @abstractmethod
+    def new_shunt(self):
+        raise RuntimeError("Must have implemented connect in inherited class")
+
     @abstractmethod
     def new_feeder(self):
-        raise RuntimeError('Must have implemented connect in inherited class')
-    
-    def upload(self):
-        """Upload the network to the database"""
-        if not self.network:
-            raise RuntimeError('Network is not defined')
-        if not self.connection:
-            raise RuntimeError('Connection is not defined')
-        self.network.upload()
-
-    def write_json_ld(self, filename:str):
-        """Write the network to a JSON file"""
-        if not self.network:
-            raise RuntimeError('Network is not defined')
-        cim_utils.write_json_ld(self.network, filename)
-
-    def write_xml(self, filename:str):
-        """Write the network to a XML file"""
-        if not self.network:
-            raise RuntimeError('Network is not defined')
-        cim_utils.write_xml(self.network, filename)
-
-    def pprint(self, cim_class: type, show_empty: bool = False,
-               json_ld: bool = False, use_names: bool = False) -> None:
-        """Pretty print all instances of a CIM class type in the network"""
-        if not self.network:
-            raise RuntimeError('Network is not defined')
-        self.network.pprint(cim_class, show_empty, json_ld, use_names)
-    
+        raise RuntimeError("Must have implemented connect in inherited class")

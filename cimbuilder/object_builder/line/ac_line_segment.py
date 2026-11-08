@@ -1,0 +1,203 @@
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+import cimprofiles.cim18.cim18v17.construction as CONSTR
+import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
+import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL_UNBAL
+import cimprofiles.cim18.cim18v17.short_circuit as SC
+import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
+from cimtables import Qty, connectivity, graph_write, impedance
+
+from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
+from cimbuilder.object_builder.object_builder import ObjectBuilder
+
+
+class ACLineSegmentBuilder(ObjectBuilder):
+    cim_class_name = "ACLineSegment"
+
+    def add_connectivity(
+        self,
+        line: CN.ACLineSegment,
+        *,
+        node1: str,
+        node2: str,
+        phases: str | None = None,
+        length: float | Qty | None = None,
+        EquipmentContainer: str | None = None,
+        BaseVoltage: str,
+    ) -> tuple[CN.ACLineSegment, list[CN.Terminal], list[CN.ACLineSegmentPhase]]:
+        """
+        Adds base connectivity layer of terminals, base voltage, phasing
+        * node1: mRID of the "from" ConnectivityNode or TopologicalNode
+        * node2: mRID of the "to" ConnectivityNode or Topological Node
+        * phases: phase-code string in conductor order (e.g. CABN). None sets no ACLineSegmentPhase objects
+        * length: physical length, float in meters or Qty('mi'|'ft'|etc)
+        * EquipmentContainer: mRID of the Line or Feeder containing the line. New mRID will create a new Line container
+        * BaseVoltage: mRID string of the BaseVoltage
+        """
+        cn: CN = self.cim  # type: ignore
+
+        graph_write.set_attr(line, CN, "length", length)
+        
+        if EquipmentContainer is not None:
+            if not self.network.find_by_mRID(EquipmentContainer):
+                container = cn.Line(mRID=EquipmentContainer)
+                self.network.add_to_graph(container)
+
+            graph_write.set_assc_from_mrid(
+                network=self.network,
+                source_object=line,
+                profile_part=CN,
+                association_name="EquipmentContainer",
+                target_class=cn.EquipmentContainer,
+                target_mRID=EquipmentContainer,
+            )
+        else:
+            graph_write.set_assc_from_mrid(
+                network=self.network,
+                source_object=line,
+                profile_part=CN,
+                association_name="EquipmentContainer",
+                target_class=cn.EquipmentContainer,
+                target_mRID=self.container.mRID,
+            )
+        if len(line.Terminals) != 2:
+            terminals = connectivity.add_connectivity(
+                network=self.network,
+                equipment=line,
+                node_cols={"node1": node1, "node2": node2},
+                equipment_container=line.EquipmentContainer,
+            )
+        else:
+            terminals = sort_terminals_by_sequence(line)
+
+        if phases is not None:
+            line_phs: list[CN.ACLineSegmentPhase] = connectivity.add_phase_children(
+                self.network, line, terminals, phases=phases
+            )  # type:ignore
+        else:
+            line_phs = []
+
+        if BaseVoltage is not None:
+            graph_write.set_assc_from_mrid(
+                network=self.network,
+                source_object=line,
+                profile_part=CN,
+                association_name="BaseVoltage",
+                target_class=cn.BaseVoltage,
+                target_mRID=BaseVoltage,
+            )
+        return line, terminals, line_phs
+
+    def add_electrical(
+        self,
+        line: EL_BAL.ACLineSegment,
+        *,
+        r: float | Qty | None = None,
+        x: float | Qty | None = None,
+        bch: float | Qty | None = None,
+        gch: float | Qty | None = None,
+    ) -> EL_BAL.ACLineSegment:
+        """
+        Adds positive sequence three-phase balanced impedance values:
+        * r: positive sequence resistance, float in ohm or Qty('ohm'|'pu')
+        * x: positive sequence reactance, float in ohm or Qty('ohm'|'pu')
+        * bch: positive sequence shunt susceptance, float in siemens or Qty('S'|'pu')
+        * gch: positive sequence shunt conductance, float in siemens or Qty('S'|'pu')
+        """
+
+        graph_write.set_attr(line, EL_BAL, "r", r, system_base=self.network.base_power)
+        graph_write.set_attr(line, EL_BAL, "x", x, system_base=self.network.base_power)
+        graph_write.set_attr(line, EL_BAL, "bch", bch, system_base=self.network.base_power)
+        graph_write.set_attr(line, EL_BAL, "gch", gch, system_base=self.network.base_power)
+        return line
+
+    def add_short_circuit(
+        self,
+        line: SC.ACLineSegment,
+        *,
+        r0: float | Qty | None = None,
+        x0: float | Qty | None = None,
+        b0ch: float | Qty | None = None,
+        g0ch: float | Qty | None = None,
+    ) -> SC.ACLineSegment:
+        """
+        Adds zero-sequence short-circuit impedances to the line
+        * r0: zero sequence resistance, float in ohm or Qty('ohm'|'pu')
+        * x0: zero sequence reactance, float in ohm or Qty('ohm'|'pu')
+        * b0ch: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu')
+        * g0ch: zero sequence shunt conductance, float in siemens or Qty('S'|'pu')
+        """
+
+        graph_write.set_attr(line, SC, "r0", r0, system_base=self.network.base_power)
+        graph_write.set_attr(line, SC, "x0", x0, system_base=self.network.base_power)
+        graph_write.set_attr(line, SC, "b0ch", b0ch, system_base=self.network.base_power)
+        graph_write.set_attr(line, SC, "g0ch", g0ch, system_base=self.network.base_power)
+        return line
+
+    def add_per_length_impedance(
+        self, line, *, PerLengthImpedance: str
+    ) -> EL_UNBAL.ACLineSegment:
+        """
+        Associates `line` with a PerLengthSequenceImpedance or PerLengthPhaseImpedance
+        specfic to this line. Reusable linecode style impedances use WireConfiguration
+        * PerLengthImpedance: mRID string of target impedance class
+        """
+        el_unbal: EL_UNBAL = self.cim  # type: ignore
+        graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=line,
+            profile_part=EL_UNBAL,
+            association_name="PerLengthImpedance",
+            target_class=el_unbal.PerLengthImpedance,
+            target_mRID=PerLengthImpedance,
+        )
+        return line
+
+    def add_wire_configuration(
+        self, line: CONSTR.ACLineSegment, *, WireConfiguration: str
+    ) -> CONSTR.ACLineSegment:
+        """
+        Associates `line` with an existing WireConfiguration template
+        * WireConfiguration: mRID string of the target WireConfiguration
+        """
+        cnst: CONSTR = self.cim  # type: ignore
+        graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=line,
+            profile_part=CONSTR,
+            association_name="WireConfiguration",
+            target_class=cnst.WireConfiguration,
+            target_mRID=WireConfiguration,
+        )
+        return line
+
+    def add_multi_circuit_group(
+        self, line:CN.ACLineSegment, *, circuitNumber:int, MultiCircuitGroup:str
+    ) -> CN.ACLineSegment:
+        """
+        * circuitNumber: integer denotes adjacent lines, default None
+        """
+        cn: CN = self.cim  # type: ignore
+        graph_write.set_attr(line, CN, "circuitNumber", circuitNumber)
+        graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=line,
+            profile_part=CN,
+            association_name="MultiCircuitGroup",
+            target_class=cn.MultiCircuitGroup,
+            target_mRID=MultiCircuitGroup,
+        )
+        return line
+
+
+def add_ssh(
+    self,
+    line: SSH.ACLineSegment,
+    *,
+    inService: bool | None = None,
+) -> SSH.ACLineSegment:
+    """
+    Adds real-time values from measurement or basecase.
+    * inService: boolean, load is de-energized if false
+    """
+    graph_write.set_attr(line, SSH, "inService", inService)
+    return line
