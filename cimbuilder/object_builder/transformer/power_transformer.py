@@ -9,6 +9,18 @@ from cimbuilder.object_builder.object_builder import ObjectBuilder
 mRID = str
 
 class PowerTransformerBuilder(ObjectBuilder):
+    """
+    Builder for balanced power transformers. Builder functions to be called in the following order:
+    * create() - instantiate the PowerTransformer
+    * add_connectivity() - set the EquipmentContainer
+    * add_power_transformer_end() - create each end and its Terminal, highest voltage is end #1
+    * add_electrical() - add star impedance and ratings to each end
+    * add_mesh_impedance() - optional, mesh impedance across pairs of ends
+    * add_short_circuit() - add zero sequence impedance to each end
+    For an LTC, build a RatioTapChanger on the regulated end and its TapChangerControl with
+    RatioTapChangerBuilder and TapChangerControlBuilder
+    """
+
     cim_class_name = "PowerTransformer"
 
     def add_connectivity(
@@ -60,14 +72,8 @@ class PowerTransformerBuilder(ObjectBuilder):
         cn: CN = self.cim  # type:ignore
 
         xfmr_end = cn.PowerTransformerEnd(name=f"{xfmr.mRID}_end_{endNumber}")
-
-        terminals = connectivity.add_connectivity(
-            network=self.network,
-            equipment=xfmr_end,
-            node_cols={"node": node},
-            equipment_container=None,
-        )
         graph_write.set_attr(xfmr_end, CN, "endNumber", endNumber)
+        graph_write.set_assc(xfmr_end, CN, "PowerTransformer", xfmr)
         if connectionKind is not None:
             graph_write.set_attr(
                 xfmr_end, CN, "connectionKind", cn.WindingConnection(connectionKind)
@@ -81,6 +87,13 @@ class PowerTransformerBuilder(ObjectBuilder):
                 target_class=cn.BaseVoltage,
                 target_mRID=BaseVoltage,
             )
+        graph_write.add_to_graph(self.network, xfmr_end)
+        # needs the end's PowerTransformer and endNumber set first
+        terminals = connectivity.add_connectivity(
+            network=self.network,
+            equipment=xfmr_end,
+            node_cols={"node": node},
+        )
 
         return xfmr, terminals[0], xfmr_end
 

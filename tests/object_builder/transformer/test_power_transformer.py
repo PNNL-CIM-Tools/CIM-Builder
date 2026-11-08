@@ -2,7 +2,11 @@ import pytest
 import cimprofiles.cim18.cim18v17 as cim
 from cimtables.units import Qty
 
-from cimbuilder.object_builder.transformer import PowerTransformerBuilder
+from cimbuilder.object_builder.transformer import (
+    PowerTransformerBuilder,
+    RatioTapChangerBuilder,
+    TapChangerControlBuilder,
+)
 
 
 def test_power_transformer_add_connectivity(network, container):
@@ -12,28 +16,82 @@ def test_power_transformer_add_connectivity(network, container):
     assert xfmr.EquipmentContainer is container
 
 
-def test_power_transformer_add_power_transformer_end_broken_without_endNumber_set_first(
-    network, container, base_voltage
-):
-    """add_power_transformer_end creates `xfmr_end = cn.PowerTransformerEnd(...)`
-    and immediately calls connectivity.add_connectivity(equipment=xfmr_end, ...)
-    - but connectivity.add_connectivity's own contract (cimtables/connectivity.py)
-    requires a TransformerEnd's PowerTransformer FK and endNumber to already
-    be set before that call. This method only calls
-    graph_write.set_attr(xfmr_end, CN, "endNumber", endNumber) AFTER
-    add_connectivity, and never sets xfmr_end.PowerTransformer at all - so
-    this raises for every call, independent of connectionKind or any other
-    argument. (connectionKind also isn't wrapped in cn.WindingConnection(...)
-    the way by_template.py's add_phase_end wraps `phase` - a second,
-    unreachable bug behind this one.)"""
+def test_power_transformer_add_power_transformer_end(network, container, base_voltage):
     builder = PowerTransformerBuilder(network=network, container=container)
     xfmr = builder.create(mRID="xfmr1")
     builder.add_connectivity(xfmr)
 
-    with pytest.raises(ValueError, match="PowerTransformer"):
-        builder.add_power_transformer_end(
-            xfmr, node="bus1", endNumber=1, BaseVoltage=base_voltage.mRID
-        )
+    _, terminal, xfmr_end = builder.add_power_transformer_end(
+        xfmr, node="bus1", endNumber=2, connectionKind="Yn", BaseVoltage=base_voltage.mRID
+    )
+    assert xfmr_end.PowerTransformer is xfmr
+    assert xfmr_end.endNumber == 2
+    assert xfmr_end.connectionKind == network.cim.WindingConnection("Yn")
+    assert xfmr_end.BaseVoltage is base_voltage
+    assert xfmr_end.Terminal is terminal
+    assert terminal.mRID == "xfmr1_T2"
+    assert terminal.sequenceNumber == 2
+    assert terminal.ConductingEquipment is xfmr
+    assert network.find_by_mRID(xfmr_end.mRID) is xfmr_end
+
+
+def test_power_transformer_ltc(network, container, base_voltage):
+    """115 / 12.47 kV substation step-down transformer with an LTC on the LV end,
+    +/-10 % in 32 steps of 5/8 %, regulating to 124 V on a 7200/120 PT."""
+    from cimbuilder.object_builder.base import BaseVoltageBuilder
+
+    hv = BaseVoltageBuilder(network=network, container=container).create(
+        mRID="bv_115kV", nominalVoltage=Qty(115, "kV")
+    )
+    builder = PowerTransformerBuilder(network=network, container=container)
+    xfmr = builder.create(mRID="xfmr1")
+    builder.add_connectivity(xfmr)
+    builder.add_power_transformer_end(
+        xfmr, node="hv_bus", endNumber=1, connectionKind="D", BaseVoltage=hv.mRID
+    )
+    _, lv_terminal, lv_end = builder.add_power_transformer_end(
+        xfmr, node="lv_bus", endNumber=2, connectionKind="Yn", BaseVoltage=base_voltage.mRID
+    )
+
+    control_builder = TapChangerControlBuilder(network=network, container=container)
+    control = control_builder.create(mRID="xfmr1_ctrl")
+    control_builder.add_regulating_control(
+        control,
+        Terminal=lv_terminal.mRID,
+        mode="voltage",
+        monitoredPhase="A",
+        targetValue=124 * 60,
+        targetDeadband=2 * 60,
+        discrete=True,
+        enabled=True,
+    )
+    tap_builder = RatioTapChangerBuilder(network=network, container=container)
+    tap_changer = tap_builder.create(mRID="xfmr1_ltc")
+    tap_builder.add_connectivity(tap_changer, TransformerEnd=lv_end.mRID)
+    tap_builder.add_electrical(
+        tap_changer, highStep=16, lowStep=-16, normalStep=0, stepVoltageIncrement=0.625
+    )
+    tap_builder.add_regulating_control(
+        tap_changer,
+        neutralStep=0,
+        neutralU=Qty(12.47, "kV"),
+        TapChangerControl=control.mRID,
+        ltcFlag=True,
+        controlEnabled=True,
+        ptRatio=60,
+        initialDelay=Qty(30, "s"),
+        subsequentDelay=Qty(5, "s"),
+    )
+    tap_builder.add_ssh(tap_changer, step=2)
+
+    assert control.Terminal is lv_terminal
+    assert control.mode == network.cim.RegulatingControlModeKind("voltage")
+    assert tap_changer.TransformerEnd is lv_end
+    assert lv_end.RatioTapChanger is tap_changer
+    assert tap_changer.TapChangerControl is control
+    assert tap_changer.ltcFlag is True
+    assert float(tap_changer.neutralU.to("kV")) == pytest.approx(12.47)
+    assert tap_changer.step == 2
 
 
 def test_power_transformer_add_electrical(network, container):
