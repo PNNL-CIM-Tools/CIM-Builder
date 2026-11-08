@@ -19,8 +19,8 @@ def test_base_frequency_create(network, container):
     assert float(freq.frequency.to("Hz")) == 60
 
 
-def test_base_power_add_connectivity(network, container):
+def test_base_power_create_sets_network_base_power(network, container):
     builder = BasePowerBuilder(network=network, container=container)
-    base_power = builder.create(mRID="base_power_100")
-    builder.add_connectivity(base_power, basePower=Qty(100, "MVA"))
-    assert float(base_power.basePower.to("MVA")) == 100
+    base_power = builder.create(mRID="base_power_10", basePower=Qty(10, "MVA"))
+    assert float(base_power.basePower.to("MVA")) == 10
+    assert float(network.base_power.to("MVA")) == 10

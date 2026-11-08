@@ -76,15 +76,15 @@ def test_add_transformer_winding(network, builder, config):
 
     _, winding = builder.add_transformer_winding(
         config,
-        FromTransformerLug="ct_25kVA_lug_H1_seq_1",
-        ToTransformerLug="ct_25kVA_lug_H2_seq_2",
+        FromTransformerLug="ct_25kVA_lug_h1",
+        ToTransformerLug="ct_25kVA_lug_h2",
         TransformerCore=core.mRID,
         connection="I",
         baseS=Qty(25, "kVA"),
         baseU=Qty(7.2, "kV"),
         r=Qty(1, "percent"),
     )
-    assert winding.mRID == "ct_25kVA_winding_H1_H2"
+    assert winding.mRID == "ct_25kVA_wdg_h1h2"
     assert winding.connection == network.cim.PhaseShuntConnectionKind("I")
     assert winding.FromTransformerLug.designation == "H1"
     assert winding.ToTransformerLug.designation == "H2"
@@ -99,7 +99,7 @@ def test_add_transformer_winding_missing_lug(builder, config):
     with pytest.raises(ValueError, match="not both found"):
         builder.add_transformer_winding(
             config,
-            FromTransformerLug="ct_25kVA_lug_H1_seq_1",
+            FromTransformerLug="ct_25kVA_lug_h1",
             ToTransformerLug="no_such_lug",
             connection="I",
         )
@@ -120,16 +120,16 @@ def test_split_phase_mesh_impedance(builder, config):
         )
     _, primary = builder.add_transformer_winding(
         config,
-        FromTransformerLug="ct_25kVA_lug_H1_seq_1",
-        ToTransformerLug="ct_25kVA_lug_H2_seq_2",
+        FromTransformerLug="ct_25kVA_lug_h1",
+        ToTransformerLug="ct_25kVA_lug_h2",
         connection="I",
         baseS=Qty(25, "kVA"),
         baseU=Qty(7.2, "kV"),
     )
     _, half1 = builder.add_transformer_winding(
         config,
-        FromTransformerLug="ct_25kVA_lug_X1_seq_1",
-        ToTransformerLug="ct_25kVA_lug_X2_seq_2",
+        FromTransformerLug="ct_25kVA_lug_x1",
+        ToTransformerLug="ct_25kVA_lug_x2",
         connection="I",
     )
     _, mesh = builder.add_mesh_impedance(

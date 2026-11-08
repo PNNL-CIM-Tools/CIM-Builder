@@ -188,16 +188,15 @@ class ACLineSegmentBuilder(ObjectBuilder):
         )
         return line
 
-
-def add_ssh(
-    self,
-    line: SSH.ACLineSegment,
-    *,
-    inService: bool | None = None,
-) -> SSH.ACLineSegment:
-    """
-    Adds real-time values from measurement or basecase.
-    * inService: boolean, load is de-energized if false
-    """
-    graph_write.set_attr(line, SSH, "inService", inService)
-    return line
+    def add_ssh(
+        self,
+        line: SSH.ACLineSegment,
+        *,
+        inService: bool | None = None,
+    ) -> SSH.ACLineSegment:
+        """
+        Adds real-time values from measurement or basecase.
+        * inService: boolean, line is de-energized if false
+        """
+        graph_write.set_attr(line, SSH, "inService", inService)
+        return line

@@ -2,6 +2,7 @@ from abc import ABC
 
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 from cimgraph.models import GraphModel
+from cimtables import graph_write
 from cimtables.binder import bind_row
 
 
@@ -26,18 +27,26 @@ class ObjectBuilder(ABC):
         Add a new object to the network graph
         * mRID: string identifier, unique to the local model
         * name: human-readable name, not required to be unique
-        * identifier: seed string for persistent UUIDs for classes without name/mRID.
+        * identifier: seed string for persistent UUIDs, only for classes without name/mRID
         * description: free form comment text to describe object
-        Returns the new, unadded object."""
+        Returns the new object, already added to the graph."""
         cim_cls = getattr(self.network.cim, self.cim_class_name)
 
         if issubclass(cim_cls, self.cim.IdentifiedObject):
+            if identifier is not None:
+                raise ValueError(
+                    f"{self.cim_class_name} is an IdentifiedObject: pass mRID, not identifier"
+                )
             new_object = cim_cls(name=name, mRID=mRID, description=description)
         else:
+            if mRID is not None or name is not None:
+                raise ValueError(
+                    f"{self.cim_class_name} has no mRID or name: pass identifier instead"
+                )
             new_object = cim_cls()
             new_object.uuid(mRID=identifier)
 
-        self.network.add_to_graph(new_object)
+        graph_write.add_to_graph(self.network, new_object)
         return new_object
 
     def from_table(self, row: object) -> object:

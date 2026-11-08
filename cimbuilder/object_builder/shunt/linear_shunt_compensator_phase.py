@@ -1,5 +1,5 @@
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
-import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
+import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL_UNBAL
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 from cimtables import graph_write
 from cimtables.units import Qty
@@ -18,14 +18,9 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
         ShuntCompensator: str
     ) -> CN.LinearShuntCompensatorPhase:
         """
-        Adds base connectivity layer of terminals, base voltage, phasing
-        * node: mRID of the ConnectivityNode or TopologicalNode
-        * compensatorType: string, capacitor|reactor
-        * phase: string, single phase kind
-        * grounded: boolean, shunt_phase is grounded if true
-        * customerCount: the number of metered customers aggregated into the shunt_phase
-        * EquipmentContainer: mRID of the VoltageLevel or Feeder containing the shunt_phase.
-        * BaseVoltage: mRID string of the BaseVoltage
+        Adds the phase and links it to its parent shunt
+        * phase: string, single phase kind A|B|C|N|s1|s2
+        * ShuntCompensator: mRID of the parent LinearShuntCompensator
         """
         cn: CN = self.cim  # type: ignore
 
@@ -44,17 +39,16 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
 
     def add_electrical(
         self,
-        shunt_phase: EL_BAL.LinearShuntCompensator,
+        shunt_phase: EL_UNBAL.LinearShuntCompensatorPhase,
         *,
         nomQ: float | Qty | None = None,
         bPerSection: float | Qty | None = None,
         gPerSection: float | Qty | None = None,
-        normalSections: float | None = 1,
-        maximumSections: float | None = 1,
-    ) -> EL_BAL.LinearShuntCompensator:
-        """Adds electrical_balanced.LinearShuntCompensator's fixed-shunt_phase parameters.
-        * nomU: nominal voltage used to calculate susceptance, within 10% of BaseVoltage.nominalVoltage
-        * nomQ: nominal reactive power, float in VAr or Qty('kVA'|'MVA')
+        normalSections: int | None = 1,
+        maximumSections: int | None = 1,
+    ) -> EL_UNBAL.LinearShuntCompensatorPhase:
+        """Adds the per-phase section values. bPerSection is derived from nomQ and the parent's nomU if not given
+        * nomQ: nominal reactive power of this phase, float in VAr or Qty('kVAr'|'MVAr')
         * bPerSection: shunt_phase susceptance, float in siemens or Qty('S'|'pu')
         * gPerSection: shunt_phase conductance, float in siemens or Qty('S'|'pu')
         * normalSections: number of individual caps within bank normally switched in
@@ -62,9 +56,9 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
         * 
         """
 
-        graph_write.set_attr(shunt_phase, EL_BAL, "nomQ", nomQ)
-        graph_write.set_attr(shunt_phase, EL_BAL, "normalSections", normalSections)
-        graph_write.set_attr(shunt_phase, EL_BAL, "maximumSections", maximumSections)
+        graph_write.set_attr(shunt_phase, EL_UNBAL, "nomQ", nomQ)
+        graph_write.set_attr(shunt_phase, EL_UNBAL, "normalSections", normalSections)
+        graph_write.set_attr(shunt_phase, EL_UNBAL, "maximumSections", maximumSections)
 
         if bPerSection is None:
             if shunt_phase.nomQ is None or not shunt_phase.maximumSections:
@@ -76,25 +70,20 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
             bPerSection = shunt_phase.nomQ.to("VAr") / (
                 shunt_phase.ShuntCompensator.nomU.to("V") ** 2 * shunt_phase.maximumSections #type:ignore
             )  
-        graph_write.set_attr(shunt_phase, EL_BAL, "bPerSection", bPerSection, system_base=self.network.base_power)
-        graph_write.set_attr(shunt_phase, EL_BAL, "gPerSection", gPerSection, system_base=self.network.base_power)
+        graph_write.set_attr(shunt_phase, EL_UNBAL, "bPerSection", bPerSection, system_base=self.network.base_power)
+        graph_write.set_attr(shunt_phase, EL_UNBAL, "gPerSection", gPerSection, system_base=self.network.base_power)
 
         return shunt_phase
 
     def add_ssh(
         self,
-        shunt_phase: SSH.LinearShuntCompensator,
+        shunt_phase: SSH.LinearShuntCompensatorPhase,
         *,
         sections: float,
-        inService: bool | None = None,
-    ) -> SSH.LinearShuntCompensator:
+    ) -> SSH.LinearShuntCompensatorPhase:
         """
         Adds real-time values from measurement or basecase.
-        * sections: total number of cap bank sections switched in
-        * inService: boolean, shunt_phase is de-energized if false
+        * sections: number of sections of this phase switched in
         """
         graph_write.set_attr(shunt_phase, SSH, "sections", sections)
-        graph_write.set_attr(shunt_phase, SSH, "inService", inService)
         return shunt_phase
-
-    

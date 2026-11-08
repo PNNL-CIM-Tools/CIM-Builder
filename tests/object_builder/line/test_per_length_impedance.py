@@ -93,3 +93,24 @@ def test_per_length_phase_impedance_add_electrical_earthing(network, container):
 
     builder.add_electrical_earthing(matrix, rg=Qty(0.05, "ohm/mi"), xg=Qty(0.05, "ohm/mi"))
     assert float(matrix.rg.to("ohm/mi")) == pytest.approx(0.05)
+
+
+def test_per_length_impedances_need_no_calculated_temperature(network, container):
+    seq_builder = PerLengthSequenceImpedanceBuilder(network=network, container=container)
+    seq_builder.add_electrical(seq_builder.create(mRID="lc_seq1"), r=Qty(0.1, "ohm/mi"))
+    phs_builder = PerLengthPhaseImpedanceBuilder(network=network, container=container)
+    phs_builder.add_electrical(phs_builder.create(mRID="lc_601"), conductorCount=3)
+
+
+def test_per_length_phase_impedance_data_row_identifier(network, container):
+    """identifier is <lc>_<row><column>, matching the cimtbl-translate convention"""
+    import cimprofiles.cim18.cim18v17 as cim
+
+    builder = PerLengthPhaseImpedanceBuilder(network=network, container=container)
+    matrix = builder.create(mRID="lc_mtx601")
+    _, data = builder.add_phase_impedance_data_row(matrix, row=2, column=1, r=Qty(0.1, "ohm/mi"))
+
+    expected = cim.PhaseImpedanceData()
+    expected.uuid(mRID="lc_mtx601_21")
+    assert data.identifier == expected.identifier
+    assert data.b is None

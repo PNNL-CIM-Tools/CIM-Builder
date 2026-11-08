@@ -3,6 +3,7 @@ import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 from cimtables import Qty, connectivity, graph_write
 
+from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
 
@@ -72,6 +73,8 @@ class PowerElectronicsConnectionBuilder(ObjectBuilder):
                 node_cols={"node": node},
                 equipment_container=inverter.EquipmentContainer,
             )
+        else:
+            terminals = sort_terminals_by_sequence(inverter)
 
         if phases is not None:
             connectivity.add_phase_children(

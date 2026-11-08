@@ -19,32 +19,23 @@ def test_add_connectivity_phase_wrapped_in_enum(network, container):
     assert phs.phase == network.cim.SinglePhaseKind("A")
 
 
-def test_add_electrical_wrong_profile_part_module(network, container):
-    """add_electrical's type hint says
-    `shunt_phase: EL_BAL.LinearShuntCompensator` (electrical_balanced),
-    but the real runtime object is a LinearShuntCompensatorPhase, and
-    EL_BAL (electrical_balanced) has no LinearShuntCompensatorPhase class
-    at all - only EL_UNBAL (electrical_unbalanced) does, with exactly the
-    fields this method tries to write (nomQ, normalSections,
-    maximumSections, bPerSection, gPerSection). Every set_attr call in
-    this method uses the wrong profile-part module and raises."""
+def test_add_electrical_derives_bPerSection_from_parent_nomU(network, container):
+    cap_builder = LinearShuntCompensatorBuilder(network=network, container=container)
+    shunt = cap_builder.create(mRID="cap_675")
+    cap_builder.add_electrical(shunt, nomU=Qty(4.16, "kV"), nomQ=Qty(600, "kVAr"))
+
     builder = LinearShuntCompensatorPhaseBuilder(network=network, container=container)
-    phs = builder.create(mRID="cap1_A")
+    phs = builder.create(mRID="cap_675_A")
+    builder.add_connectivity(phs, phase="A", ShuntCompensator=shunt.mRID)
+    builder.add_electrical(phs, nomQ=Qty(200, "kVAr"), normalSections=1, maximumSections=1)
 
-    with pytest.raises(ValueError, match="LinearShuntCompensatorPhase"):
-        builder.add_electrical(phs, nomQ=Qty(100, "kVAr"), maximumSections=3)
+    assert phs.maximumSections == 1
+    assert float(phs.bPerSection.to("S")) == pytest.approx(200e3 / 4160**2)
 
 
-def test_add_ssh_inService_field_does_not_exist_on_phase_class(network, container):
-    """add_ssh calls graph_write.set_attr(shunt_phase, SSH, "inService",
-    inService) unconditionally (no `if inService is not None` guard) -
-    SSH.LinearShuntCompensatorPhase has only `sections`, no `inService`
-    field (unlike the parent LinearShuntCompensator class, which does have
-    one - this looks copy-pasted from LinearShuntCompensatorBuilder.add_ssh
-    without checking the Phase class's real fields). Raises for every
-    call regardless of what inService is set to, even its None default."""
+def test_add_ssh(network, container):
     builder = LinearShuntCompensatorPhaseBuilder(network=network, container=container)
-    phs = builder.create(mRID="cap1_A")
+    phs = builder.create(mRID="cap_675_A")
 
-    with pytest.raises(ValueError, match="inService"):
-        builder.add_ssh(phs, sections=3)
+    builder.add_ssh(phs, sections=1)
+    assert phs.sections == 1

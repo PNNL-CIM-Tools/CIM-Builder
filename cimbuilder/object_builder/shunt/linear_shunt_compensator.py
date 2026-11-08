@@ -1,16 +1,28 @@
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.electrical_balanced as EL_BAL
+import cimprofiles.cim18.cim18v17.regulating_control as RC
 import cimprofiles.cim18.cim18v17.short_circuit as SC
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 from cimtables import connectivity, graph_write
 from cimtables.units import Qty
 
+from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
 mRID = str
 
 
 class LinearShuntCompensatorBuilder(ObjectBuilder):
+    """
+    Builder for capacitor and reactor banks. Builder functions to be called in the following order:
+    * create() - instantiate the LinearShuntCompensator
+    * add_connectivity() - Terminal, phases, connection and BaseVoltage
+    * add_electrical() - nominal ratings and susceptance per section
+    * add_short_circuit() - zero sequence susceptance per section
+    * add_regulating_control() - optional, the RegulatingControl that switches the bank
+    * add_ssh() - sections switched in
+    """
+
     cim_class_name = "LinearShuntCompensator"
 
     def add_connectivity(
@@ -74,6 +86,8 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
                 node_cols={"node": node},
                 equipment_container=shunt.EquipmentContainer,
             )
+        else:
+            terminals = sort_terminals_by_sequence(shunt)
 
         if phases is not None:
             shunt_phs: list[CN.LinearShuntCompensatorPhase] = (
@@ -103,8 +117,8 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         nomQ: float | Qty | None = None,
         bPerSection: float | Qty | None = None,
         gPerSection: float | Qty | None = None,
-        normalSections: float | None = 1,
-        maximumSections: float | None = 1,
+        normalSections: int | None = 1,
+        maximumSections: int | None = 1,
     ) -> EL_BAL.LinearShuntCompensator:
         """Adds electrical_balanced.LinearShuntCompensator's fixed-shunt parameters.
         * nomU: nominal voltage used to calculate susceptance, within 10% of BaseVoltage.nominalVoltage
@@ -166,4 +180,32 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         """
         graph_write.set_attr(shunt, SSH, "sections", sections)
         graph_write.set_attr(shunt, SSH, "inService", inService)
+        return shunt
+
+    def add_regulating_control(
+        self,
+        shunt: RC.LinearShuntCompensator,
+        *,
+        RegulatingControl: mRID | None = None,
+        controlEnabled: bool | None = None,
+        aVRDelay: float | Qty | None = None,
+    ) -> RC.LinearShuntCompensator:
+        """
+        Attaches the shunt to the RegulatingControl that switches it. Build the control first with RegulatingControlBuilder
+        * RegulatingControl: mRID of the RegulatingControl, None for a fixed shunt
+        * controlEnabled: boolean, the control may switch the shunt if true
+        * aVRDelay: time delay before switching, float in s or Qty('s')
+        """
+        rc: RC = self.cim  # type: ignore
+        graph_write.set_attr(shunt, RC, "controlEnabled", controlEnabled)
+        graph_write.set_attr(shunt, RC, "aVRDelay", aVRDelay)
+        if RegulatingControl is not None:
+            graph_write.set_assc_from_mrid(
+                network=self.network,
+                source_object=shunt,
+                profile_part=RC,
+                association_name="RegulatingControl",
+                target_class=rc.RegulatingControl,
+                target_mRID=RegulatingControl,
+            )
         return shunt

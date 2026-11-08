@@ -88,7 +88,8 @@ on top of `create()`, each targeting a different **profile part**:
 - `add_ssh` — real-time/basecase state like `sections`, `inService` (profile part `SSH` =
   `steady_state_hypothesis`).
 - Other parts seen across builders: `TP` (`topology`), `LIM` (`operational_limit`), `CONST`/`CONSTR`
-  (`construction`), `AD` (`asset_deployment`).
+  (`construction`), `AD` (`asset_deployment`), `AI` (`asset_info`, wire/cable catalog data),
+  `RC` (`regulating_control`, controls and tap changer settings).
 
 A builder method takes the already-`create()`'d CIM object plus keyword-only params, writes into one
 profile part per call via `cimtables.graph_write.set_attr(...)` (scalar attrs, with automatic unit

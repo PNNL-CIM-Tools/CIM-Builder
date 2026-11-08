@@ -93,9 +93,7 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         * TransformerEnd: mRID of TransformerPhaseEnd this lug is aggregated into. None for floating lugs
         """
         constr: CONSTR = self.cim  # type:ignore
-        lug = constr.TransformerLug(
-            mRID=f"{config.mRID}_lug_{designation}_seq_{sequenceNumber}"
-        )
+        lug = constr.TransformerLug(mRID=f"{config.mRID}_lug_{designation.lower()}")
         graph_write.set_attr(lug, CONSTR, "designation", designation)
         graph_write.set_attr(lug, CONSTR, "sequenceNumber", sequenceNumber)
         graph_write.set_assc(lug, CONSTR, "TankConfiguration", config)
@@ -179,7 +177,7 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
                 f"{FromTransformerLug!r}/{ToTransformerLug!r}, not both found in graph"
             )
         winding = constr.TransformerWinding(
-            mRID=f"{config.mRID}_winding_{from_lug.designation}_{to_lug.designation}"  # type:ignore
+            mRID=f"{config.mRID}_wdg_{from_lug.designation.lower()}{to_lug.designation.lower()}"  # type:ignore
         )
         graph_write.set_assc(winding, CONSTR, "FromTransformerLug", from_lug)
         graph_write.set_assc(winding, CONSTR, "ToTransformerLug", to_lug)

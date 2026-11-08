@@ -1,188 +1,139 @@
 import pytest
-import cimprofiles.cim18.cim18v17 as cim
 from cimtables.units import Qty
 
+from cimbuilder.object_builder.base import BaseVoltageBuilder
 from cimbuilder.object_builder.transformer import TransformerBankBuilder
 
 
-def test_add_connectivity(network, container):
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
+@pytest.fixture
+def builder(network, container):
+    return TransformerBankBuilder(network=network, container=container)
+
+
+@pytest.fixture
+def ob1(network, container, builder):
+    """open-wye open-delta bank xf_ob1 (open_wye_open_delta_example.cimtbl), ends and phase ends only"""
+    bv_builder = BaseVoltageBuilder(network=network, container=container)
+    hv = bv_builder.create(mRID="bv_12_47kv", nominalVoltage=Qty(12.47, "kV"))
+    lv = bv_builder.create(mRID="bv_240v", nominalVoltage=Qty(240, "V"))
+    xfmr = builder.create(mRID="xf_ob1", name="ob1")
     builder.add_connectivity(xfmr)
-    assert xfmr.EquipmentContainer is container
-
-
-def test_add_power_transformer_end_inherits_broken_super_call(network, container, base_voltage):
-    """TransformerBankBuilder.add_power_transformer_end calls
-    super().add_power_transformer_end(...) first - PowerTransformerBuilder's
-    version is unconditionally broken (see
-    test_power_transformer.py::test_power_transformer_add_power_transformer_end_broken_without_endNumber_set_first),
-    so this raises before TransformerBankBuilder's own phases/
-    TankConfiguration handling is ever reached."""
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-    builder.add_connectivity(xfmr)
-
-    with pytest.raises(ValueError, match="PowerTransformer"):
-        builder.add_power_transformer_end(
-            xfmr,
-            node="bus1",
-            endNumber=1,
-            BaseVoltage=base_voltage.mRID,
-            phases=None,
-            TankConfiguration=None,
-        )
-
-
-def test_add_transformer_tank_requires_tank_configuration(network, container):
-    """add_transformer_tank's loadLoss/noLoadLoss/percentImpedance/
-    percentMagnetizingCurrent now correctly resolve on EL_UNBAL.TransformerTank
-    (this used to be a wrong-profile-part-module bug against CONSTR - fixed).
-    But set_assc_from_mrid for TankConfiguration is called unconditionally
-    even though TankConfiguration defaults to None, and set_assc_from_mrid
-    always raises when the resolved target is None - so a TankConfiguration
-    mRID is effectively mandatory despite the type hint saying optional."""
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-
-    with pytest.raises(ValueError, match="TankConfiguration"):
-        builder.add_transformer_tank(xfmr, TransformerTank="tank1", loadLoss=Qty(1, "kW"))
-
-
-def test_add_transformer_tank(network, container):
-    tank_config = network.cim.TransformerTankConfiguration(mRID="tank_config1")
-    network.add_to_graph(tank_config)
-
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-
-    xfmr, tank = builder.add_transformer_tank(
-        xfmr,
-        TransformerTank="tank1",
-        loadLoss=Qty(1, "kW"),
-        noLoadLoss=Qty(0.1, "kW"),
-        percentImpdance=2.7,
-        percentMagnetizingCurrent=0.5,
-        TankConfiguration="tank_config1",
+    builder.add_power_transformer_end(
+        xfmr, node="cn_ob1_pri", endNumber=1, phases="ABN", connectionKind="oY", BaseVoltage=hv.mRID
     )
-    assert float(tank.loadLoss.to("kW")) == 1
-    assert tank.TankConfiguration is tank_config
-
-
-def test_add_transformer_phase_end_wrong_profile_part_module(network, container):
-    """add_transformer_phase_end calls
-    graph_write.set_attr(phase_end, CONSTR, "phase", phase) -
-    CONSTR.TransformerPhaseEnd has no `phase` field (it lives on
-    CN.TransformerPhaseEnd instead); `phase` isn't optional, so this
-    raises for every call. This also means add_power_transformer_end's
-    own internal per-phase loop (when `phases` is given) would hit this
-    too, if it ever got that far."""
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-
-    with pytest.raises(ValueError, match="phase"):
+    builder.add_power_transformer_end(
+        xfmr, node="cn_ob1_sec", endNumber=2, phases="ABCN", connectionKind="oD", BaseVoltage=lv.mRID
+    )
+    for endNumber, sequenceNumber, phase, phaseNeutralU in [
+        (1, 1, "A", Qty(7200, "V")),
+        (1, 2, "B", Qty(7200, "V")),
+        (1, 3, "N", 0),
+        (2, 4, "A", Qty(120, "V")),
+        (2, 5, "B", Qty(120, "V")),
+        (2, 6, "C", Qty(207.8, "V")),
+        (2, 7, "N", 0),
+    ]:
         builder.add_transformer_phase_end(
-            xfmr,
-            endNumber=1,
-            sequenceNumber=1,
-            phase="A",
-            phaseNeutralU=None,
-            TankConfiguration=None,
-            TransformerPhaseEnd=None,
+            xfmr, endNumber=endNumber, sequenceNumber=sequenceNumber, phase=phase, phaseNeutralU=phaseNeutralU
         )
+    return xfmr
 
 
-def test_add_transformer_lug(network, container):
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-    tank = cim.TransformerTank(mRID="tank1")
-    network.add_to_graph(tank)
-    end = cim.TransformerPhaseEnd(mRID="end1")
-    network.add_to_graph(end)
+def test_ends_and_phase_ends(network, ob1):
+    end1, end2 = sorted(ob1.PowerTransformerEnd, key=lambda end: end.endNumber)
+    assert [end1.mRID, end2.mRID] == ["xf_ob1_1", "xf_ob1_2"]
+    assert end1.Terminal.phases == network.cim.PhaseCode("ABN")
+    assert end2.Terminal.sequenceNumber == 2
+    phase_end = network.find_by_mRID("xf_ob1_2_c")
+    assert phase_end.Terminal is end2.Terminal
+    assert phase_end.phase == network.cim.SinglePhaseKind("C")
+    assert float(phase_end.phaseNeutralU.to("V")) == pytest.approx(207.8)
 
-    xfmr, lug = builder.add_transformer_lug(
-        xfmr, designation="H1", TransformerTank="tank1", TransformerEnd="end1"
+
+def test_lighting_tank(builder, ob1, container):
+    """the 50 kVA lighting tank L: H1-H2 primary, X1-X2-X3 center-tapped secondary"""
+    _, tank = builder.add_transformer_tank(
+        ob1,
+        TransformerTank="xf_ob1_tank_l",
+        noLoadLoss=Qty(90, "W"),
+        loadLoss=Qty(540, "W"),
+        percentImpedance=2.0,
     )
-    assert lug.TransformerTank is tank
-    assert lug.TransformerEnd is end
-
-
-def test_add_transformer_core_form_not_wrapped_in_enum(network, container):
-    """add_transformer_core calls
-    graph_write.set_attr(core, EL_UNBAL, "form", form) with the raw
-    string, instead of wrapping it as
-    el_unbal.CoreConstructionKind(form). form is a required (non-optional)
-    CoreConstructionKind-typed parameter, so this raises for every call."""
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-
-    with pytest.raises(TypeError, match="CoreConstructionKind"):
-        builder.add_transformer_core(xfmr, TransformerTank="tank1", form="coreForm")
-
-
-def test_add_transformer_winding_connection_not_wrapped_in_enum(network, container):
-    """add_transformer_winding calls
-    graph_write.set_attr(winding, CONSTR, "connection", connection) with
-    the raw string, instead of wrapping it as
-    constr.PhaseShuntConnectionKind(connection). connection is a required
-    (non-optional) PhaseShuntConnectionKind-typed parameter, so this
-    raises for every call - before the deeper, separately-broken
-    baseS/baseU/ratedS/ratedU/r/rDC writes (which use CONSTR instead of
-    EL_BAL, the profile part that actually has those fields) are ever
-    reached."""
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-    tank = cim.TransformerTank(mRID="tank1")
-    network.add_to_graph(tank)
-    end = cim.TransformerPhaseEnd(mRID="end1")
-    network.add_to_graph(end)
-    xfmr, lug1 = builder.add_transformer_lug(
-        xfmr, designation="H1", TransformerTank="tank1", TransformerEnd="end1"
-    )
-    xfmr, lug2 = builder.add_transformer_lug(
-        xfmr, designation="X1", TransformerTank="tank1", TransformerEnd="end1"
-    )
-
-    with pytest.raises(TypeError, match="PhaseShuntConnectionKind"):
-        builder.add_transformer_winding(
-            xfmr,
-            TransformerTank="tank1",
-            FromTransformerLug="tank1_lug_H1",
-            ToTransformerLug="tank1_lug_X1",
-            connection="Y",
-            baseS=Qty(100, "kVA"),
-            baseU=Qty(12.47, "kV"),
-            ratedS=Qty(100, "kVA"),
-            ratedU=Qty(12.47, "kV"),
-            r=Qty(1, "ohm"),
+    lugs = {}
+    for designation, sequenceNumber, phase_end in [
+        ("H1", 1, "xf_ob1_1_a"),
+        ("H2", 3, "xf_ob1_1_n"),
+        ("X1", 4, "xf_ob1_2_a"),
+        ("X2", 7, "xf_ob1_2_n"),
+        ("X3", 5, "xf_ob1_2_b"),
+    ]:
+        _, lugs[designation] = builder.add_transformer_lug(
+            ob1, TransformerTank=tank.mRID, designation=designation,
+            sequenceNumber=sequenceNumber, TransformerEnd=phase_end,
         )
-
-
-def test_add_mesh_impedance(network, container):
-    """TransformerBankBuilder.add_mesh_impedance's FromWinding/ToWinding
-    set_assc_from_mrid calls now correctly use profile_part=EL_BAL (this
-    used to point at CONSTR, which has no TransformerMeshImpedance class
-    at all - fixed)."""
-    builder = TransformerBankBuilder(network=network, container=container)
-    xfmr = builder.create(mRID="xfmr1")
-    end1 = cim.PowerTransformerEnd(mRID="end1", endNumber=1)
-    end2 = cim.PowerTransformerEnd(mRID="end2", endNumber=2)
-    network.add_to_graph(end1)
-    network.add_to_graph(end2)
-    w1 = cim.TransformerWinding(mRID="w1")
-    w2 = cim.TransformerWinding(mRID="w2")
-    network.add_to_graph(w1)
-    network.add_to_graph(w2)
-
-    xfmr, mesh = builder.add_mesh_impedance(
-        xfmr,
-        FromTransformerEnd="end1",
-        ToTransformerEnd="end2",
-        FromWinding="w1",
-        ToWinding="w2",
-        r=Qty(1, "ohm"),
-        x=Qty(5, "ohm"),
+    _, core = builder.add_transformer_core(ob1, TransformerTank=tank.mRID, form="shellForm")
+    windings = {}
+    for from_lug, to_lug, ratedU, baseU, ratedS in [
+        ("H1", "H2", Qty(12470, "V"), Qty(7200, "V"), Qty(50, "kVA")),
+        ("X1", "X2", Qty(240, "V"), Qty(120, "V"), Qty(25, "kVA")),
+        ("X2", "X3", Qty(240, "V"), Qty(120, "V"), Qty(25, "kVA")),
+    ]:
+        _, windings[from_lug + to_lug] = builder.add_transformer_winding(
+            ob1,
+            TransformerTank=tank.mRID,
+            FromTransformerLug=lugs[from_lug].mRID,
+            ToTransformerLug=lugs[to_lug].mRID,
+            TransformerCore=core.mRID,
+            connection="I",
+            ratedU=ratedU,
+            baseU=baseU,
+            ratedS=ratedS,
+            baseS=Qty(50, "kVA"),
+        )
+    _, mesh = builder.add_mesh_impedance(
+        ob1,
+        FromWinding=windings["H1H2"].mRID,
+        ToWinding=windings["X1X2"].mRID,
+        r=Qty(1.62, "percent"),
+        x=Qty(2.02, "percent"),
     )
-    assert float(mesh.r.to("ohm")) == 1
-    assert mesh.FromWinding is w1
-    assert mesh.ToWinding is w2
+
+    assert tank.PowerTransformer is ob1
+    assert tank.EquipmentContainer is container
+    assert float(tank.loadLoss.to("W")) == 540
+    assert lugs["X2"].mRID == "xf_ob1_tank_l_lug_x2"
+    assert lugs["X2"].TransformerTank is tank
+    assert lugs["X2"].TransformerEnd.mRID == "xf_ob1_2_n"
+    assert core.mRID == "xf_ob1_tank_l_core"
+    assert core.TransformerTank is tank
+    assert core.form.name == "shellForm"
+    winding = windings["X1X2"]
+    assert winding.mRID == "xf_ob1_tank_l_wdg_x1x2"
+    assert winding.FromTransformerLug is lugs["X1"]
+    assert winding.ToTransformerLug is lugs["X2"]
+    assert winding.TransformerTank is tank
+    assert winding.TransformerCore is core
+    # 1.62 % on the H1-H2 winding's 7200 V / 50 kVA base
+    assert float(mesh.r.to("ohm")) == pytest.approx(0.0162 * 7200**2 / 50e3)
+    assert mesh.FromWinding is windings["H1H2"]
+
+
+def test_multi_tank_bank(builder, ob1):
+    _, tank_l = builder.add_transformer_tank(ob1, TransformerTank="xf_ob1_tank_l")
+    _, tank_t = builder.add_transformer_tank(ob1, TransformerTank="xf_ob1_tank_t")
+    assert set(ob1.TransformerTanks) == {tank_l, tank_t}
+
+
+def test_lug_on_another_transformers_tank(builder, ob1):
+    other = builder.create(mRID="xf_other")
+    builder.add_connectivity(other)
+    builder.add_transformer_tank(other)
+    with pytest.raises(ValueError, match="not a tank of this transformer"):
+        builder.add_transformer_lug(ob1, TransformerTank="xf_other_tank", designation="H1")
+
+
+def test_add_transformer_phase_end_needs_its_end(builder):
+    xfmr = builder.create(mRID="xf_1")
+    builder.add_connectivity(xfmr)
+    with pytest.raises(ValueError, match="endNumber 2"):
+        builder.add_transformer_phase_end(xfmr, endNumber=2, sequenceNumber=1, phase="A")

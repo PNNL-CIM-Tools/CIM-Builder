@@ -59,6 +59,7 @@ class PowerTransformerBuilder(ObjectBuilder):
         node: mRID,
         endNumber: int,
         connectionKind: str | None = None,
+        grounded: bool | None = None,
         BaseVoltage: mRID,
     ) -> tuple[CN.PowerTransformer, CN.Terminal, CN.PowerTransformerEnd]:
         """
@@ -66,13 +67,15 @@ class PowerTransformerBuilder(ObjectBuilder):
         * node: mRID of the ConnectivityNode or TopologicalNode for this end
         * endNumber: highest voltage winding is end #1
         * connectionKind: wye/delta connection, Y|Yn|oY|D|Dn|oD|Z|I|A|T
+        * grounded: boolean, the neutral of this end is grounded if true
         * BaseVoltage: mRID string of the BaseVoltage
         """
 
         cn: CN = self.cim  # type:ignore
 
-        xfmr_end = cn.PowerTransformerEnd(name=f"{xfmr.mRID}_end_{endNumber}")
+        xfmr_end = cn.PowerTransformerEnd(mRID=f"{xfmr.mRID}_{endNumber}")
         graph_write.set_attr(xfmr_end, CN, "endNumber", endNumber)
+        graph_write.set_attr(xfmr_end, CN, "grounded", grounded)
         graph_write.set_assc(xfmr_end, CN, "PowerTransformer", xfmr)
         if connectionKind is not None:
             graph_write.set_attr(
@@ -158,7 +161,7 @@ class PowerTransformerBuilder(ObjectBuilder):
                 f"{FromTransformerEnd!r}/{ToTransformerEnd!r}, not both found in graph"
             )
         mesh = el_bal.TransformerMeshImpedance(
-            mRID=f"{xfmr.mRID}_mesh_end_{from_end.endNumber}_{to_end.endNumber}" #type:ignore
+            mRID=f"{xfmr.mRID}_mesh_{from_end.endNumber}_{to_end.endNumber}"  # type:ignore
         )
         graph_write.set_assc(mesh, EL_BAL, "FromTransformerEnd", from_end)
         graph_write.set_assc(mesh, EL_BAL, "ToTransformerEnd", to_end)
@@ -177,17 +180,14 @@ class PowerTransformerBuilder(ObjectBuilder):
         g0: float | Qty | None = None,
     ) -> None:
         """
-        Adds star model positive sequence balanced impedance.
-        For 2-winding transformer, all impedance on end with endNumber=1, no impedance on endNumber=2
-        For 3-winding transformer, star impedance on each end, b and g preferred on end with endNumber=1
-        For transformers with more than 3 ends, r and x should be pairwise mesh, with b and g specfied per end
+        Adds star model zero sequence impedance, split across ends the same way as add_electrical
         * r0: zero sequence resistance, float in ohm or Qty('ohm'|'pu'|'percent')
         * x0: zero sequence reactance, float in ohm or Qty('ohm'|'pu'|'percent')
         * b0: zero sequence shunt susceptance, float in siemens or Qty('S'|'pu'|'percent')
         * g0: zero sequence shunt conductance, float in siemens or Qty('S'|'pu'|'percent')
         """
 
-        graph_write.set_attr(xfmr_end, EL_BAL, "r0", r0, system_base=self.network.base_power)
-        graph_write.set_attr(xfmr_end, EL_BAL, "x0", x0, system_base=self.network.base_power)
-        graph_write.set_attr(xfmr_end, EL_BAL, "b0", b0, system_base=self.network.base_power)
-        graph_write.set_attr(xfmr_end, EL_BAL, "g0", g0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, SC, "r0", r0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, SC, "x0", x0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, SC, "b0", b0, system_base=self.network.base_power)
+        graph_write.set_attr(xfmr_end, SC, "g0", g0, system_base=self.network.base_power)

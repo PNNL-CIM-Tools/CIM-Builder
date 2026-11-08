@@ -24,6 +24,7 @@ def test_power_transformer_add_power_transformer_end(network, container, base_vo
     _, terminal, xfmr_end = builder.add_power_transformer_end(
         xfmr, node="bus1", endNumber=2, connectionKind="Yn", BaseVoltage=base_voltage.mRID
     )
+    assert xfmr_end.mRID == "xfmr1_2"
     assert xfmr_end.PowerTransformer is xfmr
     assert xfmr_end.endNumber == 2
     assert xfmr_end.connectionKind == network.cim.WindingConnection("Yn")
@@ -95,10 +96,6 @@ def test_power_transformer_ltc(network, container, base_voltage):
 
 
 def test_power_transformer_add_electrical(network, container):
-    """add_electrical operates directly on an already-built
-    PowerTransformerEnd - exercised here via a manually constructed end,
-    since add_power_transformer_end (the method meant to build one) is
-    itself broken (see the test above)."""
     builder = PowerTransformerBuilder(network=network, container=container)
     xfmr_end = cim.PowerTransformerEnd(mRID="xfmr1_end1", endNumber=1)
     network.add_to_graph(xfmr_end)
@@ -120,19 +117,28 @@ def test_power_transformer_add_mesh_impedance(network, container):
     xfmr, mesh = builder.add_mesh_impedance(
         xfmr, FromTransformerEnd="end1", ToTransformerEnd="end2", r=Qty(1, "ohm"), x=Qty(5, "ohm")
     )
+    assert mesh.mRID == "xfmr1_mesh_12"
     assert float(mesh.r.to("ohm")) == 1
 
 
-def test_power_transformer_add_short_circuit_wrong_profile_part_module(network, container):
-    """add_short_circuit calls graph_write.set_attr(xfmr_end, EL_BAL, "r0",
-    r0) (and x0/b0/g0) - EL_BAL (electrical_balanced).PowerTransformerEnd
-    has no r0/x0/b0/g0 fields at all (only the positive-sequence r/x/b/g,
-    already written by add_electrical). Those zero-sequence fields exist
-    on SC (short_circuit).PowerTransformerEnd instead - this is the wrong
-    profile-part module for every call, unconditionally."""
+def test_power_transformer_three_winding_meshes_get_unique_mrids(network, container):
+    builder = PowerTransformerBuilder(network=network, container=container)
+    xfmr = builder.create(mRID="xfmr1")
+    for n in (1, 2, 3):
+        network.add_to_graph(cim.PowerTransformerEnd(mRID=f"end{n}", endNumber=n))
+
+    meshes = [
+        builder.add_mesh_impedance(xfmr, FromTransformerEnd=f"end{a}", ToTransformerEnd=f"end{b}")[1]
+        for a, b in [(1, 2), (1, 3), (2, 3)]
+    ]
+    assert [mesh.mRID for mesh in meshes] == ["xfmr1_mesh_12", "xfmr1_mesh_13", "xfmr1_mesh_23"]
+
+
+def test_power_transformer_add_short_circuit(network, container):
     builder = PowerTransformerBuilder(network=network, container=container)
     xfmr_end = cim.PowerTransformerEnd(mRID="xfmr1_end1", endNumber=1)
     network.add_to_graph(xfmr_end)
 
-    with pytest.raises(ValueError, match="r0"):
-        builder.add_short_circuit(xfmr_end, r0=Qty(1, "ohm"), x0=Qty(5, "ohm"))
+    builder.add_short_circuit(xfmr_end, r0=Qty(1, "ohm"), x0=Qty(5, "ohm"))
+    assert float(xfmr_end.r0.to("ohm")) == 1
+    assert float(xfmr_end.x0.to("ohm")) == 5

@@ -74,11 +74,9 @@ def test_ac_line_segment_add_multi_circuit_group_requires_existing_target(
         builder.add_multi_circuit_group(line, circuitNumber=1, MultiCircuitGroup="does_not_exist")
 
 
-def test_ac_line_segment_add_ssh_is_not_a_method(network, container, base_voltage):
-    """add_ssh in ac_line_segment.py is defined at MODULE level (outside
-    the class body, dedented), not as an ACLineSegmentBuilder method -
-    builder.add_ssh does not exist."""
+def test_ac_line_segment_add_ssh(network, container, base_voltage):
     builder = ACLineSegmentBuilder(network=network, container=container)
     line = builder.create(mRID="line1", name="line1")
 
-    assert not hasattr(builder, "add_ssh")
+    builder.add_ssh(line, inService=False)
+    assert line.inService is False
