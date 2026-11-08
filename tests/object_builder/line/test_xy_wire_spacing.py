@@ -3,10 +3,9 @@ from cimtables.units import Qty
 from cimbuilder.object_builder.line import XYSpacingBuilder
 
 
-def test_xy_spacing_add_construction(network, container):
+def test_xy_spacing_create_is_template(network, container):
     builder = XYSpacingBuilder(network=network, container=container)
-    spacing = builder.create(mRID="xy_spacing1", name="xy_spacing1")
-    builder.add_construction(spacing, isTemplate=True)
+    spacing = builder.create(mRID="xy_spacing1", name="xy_spacing1", isTemplate=True)
     assert spacing.isTemplate is True
 
 

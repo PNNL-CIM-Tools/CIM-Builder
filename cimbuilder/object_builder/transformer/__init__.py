@@ -33,6 +33,7 @@ from cimbuilder.object_builder.transformer.tap_changer_control import (
 )
 from cimbuilder.object_builder.transformer.transformer_bank import (
     TransformerBankBuilder,
+    TransformerBankFromConfigurationBuilder,
 )
 from cimbuilder.object_builder.transformer.transformer_tank_configuration import (
     TransformerTankConfigurationBuilder,
@@ -54,6 +55,7 @@ __all__ = [
     "TapChangerBuilder",
     "TapChangerControlBuilder",
     "TransformerBankBuilder",
+    "TransformerBankFromConfigurationBuilder",
     "TransformerTankConfigurationBuilder",
     "VoltageRegulatorBuilder",
 ]

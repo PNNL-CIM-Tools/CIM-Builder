@@ -25,13 +25,12 @@ def test_wire_configuration_add_electrical_earth_resistivity(network, container)
     assert config.PerLengthImpedance is None
 
 
-def test_wire_configuration_add_construction(network, container):
-    builder = WireConfigurationBuilder(network=network, container=container)
-    config = builder.create(mRID="wc1")
+def test_wire_configuration_create_construction(network, container):
     xy_builder = XYSpacingBuilder(network=network, container=container)
     spacing = xy_builder.create(mRID="xy1")
 
-    builder.add_construction(config, numberOfPhases=3, WireSpacing=spacing.mRID)
+    builder = WireConfigurationBuilder(network=network, container=container)
+    config = builder.create(mRID="wc1", numberOfPhases=3, WireSpacing=spacing.mRID)
     assert config.numberOfPhases == 3
     assert config.WireSpacing is spacing
 

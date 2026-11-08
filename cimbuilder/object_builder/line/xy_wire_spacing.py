@@ -12,15 +12,21 @@ class XYSpacingBuilder(ObjectBuilder):
 
     cim_class_name = "XYSpacing"
 
-    def add_construction(
+    def create(
         self,
-        spacing:CONSTR.XYSpacing,
         *,
+        mRID: str | None = None,
+        name: str | None = None,
+        identifier: str | None = None,
+        description: str | None = None,
         isTemplate: bool | None = None,
     ) -> CONSTR.XYSpacing:
         """
         * isTemplate: denotes if used as part of a WireConfiguration template
         """
+        spacing: CONSTR.XYSpacing = super().create(
+            mRID=mRID, name=name, identifier=identifier, description=description
+        )  # type: ignore
         graph_write.set_attr(spacing, CONSTR, "isTemplate", isTemplate)
         return spacing
 

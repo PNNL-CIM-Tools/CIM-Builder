@@ -87,6 +87,7 @@ from cimbuilder.object_builder.transformer import (
     TapChangerBuilder,
     TapChangerControlBuilder,
     TransformerBankBuilder,
+    TransformerBankFromConfigurationBuilder,
     TransformerTankConfigurationBuilder,
     VoltageRegulatorBuilder,
 )
@@ -153,6 +154,7 @@ __all__ = [
     "TapChangerControlBuilder",
     "TopologicalNodeBuilder",
     "TransformerBankBuilder",
+    "TransformerBankFromConfigurationBuilder",
     "TransformerTankConfigurationBuilder",
     "VoltageRegulatorBuilder",
     "WireConfigurationBuilder",

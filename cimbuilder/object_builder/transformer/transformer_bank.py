@@ -1,3 +1,5 @@
+from abc import ABC
+
 import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.construction as CONSTR
 import cimprofiles.cim18.cim18v17.electrical_unbalanced as EL_UNBAL
@@ -12,19 +14,16 @@ from cimbuilder.object_builder.transformer.power_transformer import (
 mRID = str
 
 
-class TransformerBankBuilder(PowerTransformerBuilder):
+class TransformerBankBaseBuilder(PowerTransformerBuilder, ABC):
     """
-    Builder for transformer banks composed of one or more tanks (e.g. open-wye open-delta).
-    Builder functions to be called in the following order:
+    Shared base for transformer banks, use TransformerBankBuilder (tanks described by lug/core/
+    winding/mesh) or TransformerBankFromConfigurationBuilder (tanks from a TransformerTankConfiguration
+    template). Builder functions to be called in the following order:
     * create() - instantiate the PowerTransformer
     * add_connectivity() - set the EquipmentContainer
     * add_power_transformer_end() - create each end with its Terminal and phases, no ratings
-    * add_transformer_tank() - create one tank with %Z, loadloss, etc. for every physical tank
+    * add_transformer_tank() - one per physical tank, shape depends on the subclass
     * add_transformer_phase_end() - one phase end for every conductor the tank lugs land on
-    * add_transformer_lug() - create one lug for every physical connection point, including ungrounded floating lugs
-    * add_transformer_core() - optional, adds the physical core
-    * add_transformer_winding() - create windings across lugs and core, triplex split-phase tanks have 3 windings
-    * add_mesh_impedance() - create mesh impedance across pairs of windings
     """
 
     cim_class_name = "PowerTransformer"
@@ -61,39 +60,6 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         connectivity.add_phase_children(self.network, xfmr_end, [terminal], phases=phases)  # type:ignore
         return xfmr, terminal, xfmr_end
 
-    def add_transformer_tank(
-        self,
-        xfmr: CONSTR.PowerTransformer,
-        *,
-        TransformerTank: mRID | None = None,
-        loadLoss: float | Qty | None = None,
-        noLoadLoss: float | Qty | None = None,
-        percentImpedance: float | None = None,
-        percentMagnetizingCurrent: float | None = None,
-    ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerTank]:
-        """
-        Adds a physical tank with its nameplate data to the PowerTransformer
-        * TransformerTank: mRID of the new tank, default <xfmr>_tank. Give one per tank for multi-tank banks (e.g. <xfmr>_tank_l)
-        * loadLoss: active power thermal loss at rated power, float in W or Qty('kW')
-        * noLoadLoss: active power thermal loss at no load, float in W or Qty('kW')
-        * percentImpedance: %Z or %IZ, float in percentage (e.g. 2.7)
-        * percentMagnetizingCurrent: magnetizing current as percentage of base current, float
-        """
-        constr: CONSTR = self.cim  # type:ignore
-        if TransformerTank is None:
-            TransformerTank = f"{xfmr.mRID}_tank"
-        tank = constr.TransformerTank(mRID=TransformerTank)
-        graph_write.set_assc(tank, CONSTR, "PowerTransformer", xfmr)
-        graph_write.set_assc(tank, CN, "EquipmentContainer", xfmr.EquipmentContainer)
-        graph_write.set_attr(tank, EL_UNBAL, "loadLoss", loadLoss)
-        graph_write.set_attr(tank, EL_UNBAL, "noLoadLoss", noLoadLoss)
-        graph_write.set_attr(tank, EL_UNBAL, "percentImpedance", percentImpedance)
-        graph_write.set_attr(
-            tank, EL_UNBAL, "percentMagnetizingCurrent", percentMagnetizingCurrent
-        )
-        graph_write.add_to_graph(self.network, tank)
-        return xfmr, tank
-
     def add_transformer_phase_end(
         self,
         xfmr: CN.PowerTransformer,
@@ -128,6 +94,65 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         graph_write.set_assc(phase_end, CN, "Terminal", xfmr_ends[0].Terminal)
         graph_write.add_to_graph(self.network, phase_end)
         return xfmr, phase_end
+
+    def _resolve_tank(self, xfmr: CONSTR.PowerTransformer, TransformerTank: mRID) -> CONSTR.TransformerTank:
+        """The tank of xfmr a lug, core or winding belongs to"""
+        constr: CONSTR = self.cim  # type:ignore
+        tank: CONSTR.TransformerTank | None = graph_write.resolve(
+            self.network, constr.TransformerTank, TransformerTank
+        )  # type:ignore
+        if tank is None or tank.PowerTransformer is not xfmr:
+            raise ValueError(f"{xfmr.mRID!r}: {TransformerTank!r} is not a tank of this transformer")
+        return tank
+
+
+class TransformerBankBuilder(TransformerBankBaseBuilder):
+    """
+    Builder for transformer banks whose tanks are described directly (e.g. open-wye open-delta).
+    Builder functions to be called in the following order:
+    * create() - instantiate the PowerTransformer
+    * add_connectivity() - set the EquipmentContainer
+    * add_power_transformer_end() - create each end with its Terminal and phases, no ratings
+    * add_transformer_tank() - create one tank with %Z, loadloss, etc. for every physical tank
+    * add_transformer_phase_end() - one phase end for every conductor the tank lugs land on
+    * add_transformer_lug() - create one lug for every physical connection point, including ungrounded floating lugs
+    * add_transformer_core() - optional, adds the physical core
+    * add_transformer_winding() - create windings across lugs and core, triplex split-phase tanks have 3 windings
+    * add_mesh_impedance() - create mesh impedance across pairs of windings
+    """
+
+    def add_transformer_tank(
+        self,
+        xfmr: CONSTR.PowerTransformer,
+        *,
+        TransformerTank: mRID | None = None,
+        loadLoss: float | Qty | None = None,
+        noLoadLoss: float | Qty | None = None,
+        percentImpedance: float | None = None,
+        percentMagnetizingCurrent: float | None = None,
+    ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerTank]:
+        """
+        Adds a physical tank with its nameplate data to the PowerTransformer
+        * TransformerTank: mRID of the new tank, default <xfmr>_tank. Give one per tank for multi-tank banks (e.g. <xfmr>_tank_l)
+        * loadLoss: active power thermal loss at rated power, float in W or Qty('kW')
+        * noLoadLoss: active power thermal loss at no load, float in W or Qty('kW')
+        * percentImpedance: %Z or %IZ, float in percentage (e.g. 2.7)
+        * percentMagnetizingCurrent: magnetizing current as percentage of base current, float
+        """
+        constr: CONSTR = self.cim  # type:ignore
+        if TransformerTank is None:
+            TransformerTank = f"{xfmr.mRID}_tank"
+        tank = constr.TransformerTank(mRID=TransformerTank)
+        graph_write.set_assc(tank, CONSTR, "PowerTransformer", xfmr)
+        graph_write.set_assc(tank, CN, "EquipmentContainer", xfmr.EquipmentContainer)
+        graph_write.set_attr(tank, EL_UNBAL, "loadLoss", loadLoss)
+        graph_write.set_attr(tank, EL_UNBAL, "noLoadLoss", noLoadLoss)
+        graph_write.set_attr(tank, EL_UNBAL, "percentImpedance", percentImpedance)
+        graph_write.set_attr(
+            tank, EL_UNBAL, "percentMagnetizingCurrent", percentMagnetizingCurrent
+        )
+        graph_write.add_to_graph(self.network, tank)
+        return xfmr, tank
 
     def add_transformer_lug(
         self,
@@ -306,12 +331,45 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         graph_write.add_to_graph(self.network, mesh)
         return xfmr, mesh
 
-    def _resolve_tank(self, xfmr: CONSTR.PowerTransformer, TransformerTank: mRID) -> CONSTR.TransformerTank:
-        """The tank of xfmr a lug, core or winding belongs to"""
+
+class TransformerBankFromConfigurationBuilder(TransformerBankBaseBuilder):
+    """
+    Builder for transformer instances built from TransformerTankConfiguration templates
+    (e.g. padmount_example.cimtbl). Builder functions to be called in the following order:
+    * create() - instantiate the PowerTransformer
+    * add_connectivity() - set the EquipmentContainer
+    * add_power_transformer_end() - create each end with its Terminal and phases, no ratings
+    * add_transformer_tank() - create one tank for every physical tank, pointing at its template
+    * add_transformer_phase_end() - one phase end for every conductor the template's lugs land on
+    Build the template first with TransformerTankConfigurationBuilder. Ratings, impedances, lugs and
+    windings live on the template
+    """
+
+    def add_transformer_tank(
+        self,
+        xfmr: CONSTR.PowerTransformer,
+        *,
+        TankConfiguration: mRID,
+        TransformerTank: mRID | None = None,
+    ) -> tuple[CONSTR.PowerTransformer, CONSTR.TransformerTank]:
+        """
+        Adds a physical tank built from a TransformerTankConfiguration template
+        * TankConfiguration: mRID of the TransformerTankConfiguration template
+        * TransformerTank: mRID of the new tank, default <xfmr>_tank. Give one per tank for multi-tank banks (e.g. <xfmr>_tank_l)
+        """
         constr: CONSTR = self.cim  # type:ignore
-        tank: CONSTR.TransformerTank | None = graph_write.resolve(
-            self.network, constr.TransformerTank, TransformerTank
-        )  # type:ignore
-        if tank is None or tank.PowerTransformer is not xfmr:
-            raise ValueError(f"{xfmr.mRID!r}: {TransformerTank!r} is not a tank of this transformer")
-        return tank
+        if TransformerTank is None:
+            TransformerTank = f"{xfmr.mRID}_tank"
+        tank = constr.TransformerTank(mRID=TransformerTank)
+        graph_write.set_assc(tank, CONSTR, "PowerTransformer", xfmr)
+        graph_write.set_assc(tank, CN, "EquipmentContainer", xfmr.EquipmentContainer)
+        graph_write.set_assc_from_mrid(
+            network=self.network,
+            source_object=tank,
+            profile_part=CONSTR,
+            association_name="TankConfiguration",
+            target_class=constr.TransformerTankConfiguration,
+            target_mRID=TankConfiguration,
+        )
+        graph_write.add_to_graph(self.network, tank)
+        return xfmr, tank

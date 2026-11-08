@@ -11,13 +11,42 @@ mRID = str
 class WireConfigurationBuilder(ObjectBuilder):
     """
     Builder for line geometry templates (equivalent to OpenDSS LineGeometry). Builder functions to be called in the following order:
-    * create() - instantiate the WireConfiguration
-    * add_construction() - number of phases and the WireSpacing, built with XYSpacingBuilder or ConductorDistanceSpacingBuilder
+    * create() - instantiate the WireConfiguration, number of phases and the WireSpacing (built with XYSpacingBuilder or ConductorDistanceSpacingBuilder)
     * add_wire_sequence_configuration() - one wire per conductor, in conductor order
     * add_electrical() - optional, the calculated PerLengthImpedance and the EarthResistivity
     """
 
     cim_class_name = "WireConfiguration"
+
+    def create(
+        self,
+        *,
+        mRID: str | None = None,
+        name: str | None = None,
+        identifier: str | None = None,
+        description: str | None = None,
+        numberOfPhases: int | None = None,
+        WireSpacing: mRID | None = None,
+    ) -> CONST.WireConfiguration:
+        """
+        * numberOfPhases: number of phases within the circuit group
+        * WireSpacing: mRID string of an existing wire spacing
+        """
+        const: CONST = self.cim  # type: ignore
+        config: CONST.WireConfiguration = super().create(
+            mRID=mRID, name=name, identifier=identifier, description=description
+        )  # type: ignore
+        graph_write.set_attr(config, CONST, "numberOfPhases", numberOfPhases)
+        if WireSpacing is not None:
+            graph_write.set_assc_from_mrid(
+                network=self.network,
+                source_object=config,
+                profile_part=CONST,
+                association_name="WireSpacing",
+                target_class=const.WireSpacing,
+                target_mRID=WireSpacing,
+            )
+        return config
 
     def add_electrical(
         self,
@@ -48,30 +77,6 @@ class WireConfigurationBuilder(ObjectBuilder):
                 association_name="EarthResistivity",
                 target_class=el_unbal.EarthResistivity,
                 target_mRID=EarthResistivity,
-            )
-        return config
-
-    def add_construction(
-        self,
-        config: CONST.WireConfiguration,
-        *,
-        numberOfPhases: int | None = None,
-        WireSpacing: mRID | None = None,
-    ) -> CONST.WireConfiguration:
-        """
-        * numberOfPhases: number of phases within the circuit group
-        * WireSpacing: mRID string of an existing wire spacing
-        """
-        const: CONST = self.cim  # type: ignore
-        graph_write.set_attr(config, CONST, "numberOfPhases", numberOfPhases)
-        if WireSpacing is not None:
-            graph_write.set_assc_from_mrid(
-                network=self.network,
-                source_object=config,
-                profile_part=CONST,
-                association_name="WireSpacing",
-                target_class=const.WireSpacing,
-                target_mRID=WireSpacing,
             )
         return config
 
