@@ -111,10 +111,14 @@ class BatteryUnitBuilder(PowerElectronicsUnitBuilder):
         *,
         p: float | Qty | None = None,
         storedE: float | Qty | None = None,
-        batteryState: float | Qty | None = None,
+        batteryState: str | None = None,
         inService: bool | None = None,
     ) -> SSH.BatteryUnit:
+        ssh: SSH = self.cim  # type: ignore
         super().add_ssh(unit, p=p, inService=inService)
         graph_write.set_attr(unit, SSH, "storedE", storedE)
-        graph_write.set_attr(unit, SSH, "batteryState", batteryState)
+        if batteryState is not None:
+            graph_write.set_attr(
+                unit, SSH, "batteryState", ssh.BatteryStateKind(batteryState)
+            )
         return unit

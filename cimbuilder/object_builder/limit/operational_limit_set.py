@@ -36,7 +36,10 @@ class OperationalLimitSetBuilder(ObjectBuilder):
         )
         graph_write.set_attr(lim_type, LIM, "acceptableDuration", acceptableDuration)
         graph_write.set_attr(lim_type, LIM, "isInfiniteDuration", isInfiniteDuration)
-        graph_write.set_attr(lim_type, LIM, "direction", direction)
+        if direction is not None:
+            graph_write.set_attr(
+                lim_type, LIM, "direction", lim.OperationalLimitDirectionKind(direction)
+            )
         graph_write.add_to_graph(self.network, lim_type)
         return lim_type
 

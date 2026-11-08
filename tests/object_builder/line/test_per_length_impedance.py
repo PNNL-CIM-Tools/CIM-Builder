@@ -65,30 +65,26 @@ def test_per_length_phase_impedance_add_electrical(network, container):
     assert matrix.conductorCount == 3
 
 
-def test_per_length_phase_impedance_add_phase_impedance_data_row_phase_not_wrapped_in_enum(
+def test_per_length_phase_impedance_add_phase_impedance_data_row_phase_wrapped_in_enum(
     network, container
 ):
-    """add_phase_impedance_data_row calls
-    graph_write.set_attr(data, EL_UNBAL, "fromPhase", fromPhase) and
-    "toPhase" with the raw strings, instead of wrapping them as
-    cn.SinglePhaseKind(...). Both fields are SinglePhaseKind-typed and
-    neither is optional, so this raises for every call - same recurring
-    bug pattern as ac_line_segment_phase.py's add_connectivity."""
     builder = PerLengthPhaseImpedanceBuilder(network=network, container=container)
     matrix = builder.create(mRID="plp1")
 
-    with pytest.raises(TypeError, match="SinglePhaseKind"):
-        builder.add_phase_impedance_data_row(
-            matrix,
-            row=1,
-            column=1,
-            r=Qty(0.1, "ohm/mi"),
-            x=Qty(0.2, "ohm/mi"),
-            b=None,
-            g=None,
-            fromPhase="A",
-            toPhase="A",
-        )
+    _, data = builder.add_phase_impedance_data_row(
+        matrix,
+        row=1,
+        column=1,
+        r=Qty(0.1, "ohm/mi"),
+        x=Qty(0.2, "ohm/mi"),
+        b=None,
+        g=None,
+        fromPhase="A",
+        toPhase="B",
+    )
+
+    assert data.fromPhase == network.cim.SinglePhaseKind("A")
+    assert data.toPhase == network.cim.SinglePhaseKind("B")
 
 
 def test_per_length_phase_impedance_add_electrical_earthing(network, container):

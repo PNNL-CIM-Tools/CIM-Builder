@@ -23,7 +23,7 @@ class EnergyConsumerPhaseBuilder(ObjectBuilder):
         """
         cn: CN = self.cim  # type: ignore
 
-        graph_write.set_attr(load_phs, CN, "phase", phase)
+        graph_write.set_attr(load_phs, CN, "phase", cn.SinglePhaseKind(phase))
         if EnergyConsumer is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,

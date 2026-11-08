@@ -18,19 +18,12 @@ from cimbuilder.object_builder.switch import BreakerBuilder
 # systemic bug affecting every association write in this file.
 
 
-def test_add_limit_type_direction_not_wrapped_in_enum(network, container):
-    """add_limit_type calls
-    graph_write.set_attr(lim_type, LIM, "direction", direction) with the
-    raw `direction` string, instead of wrapping it as
-    lim.OperationalLimitDirectionKind(direction) the way e.g. switch.py's
-    add_connectivity does for topologicalUsage. direction is an enum-typed
-    field, so set_attr's type check rejects the plain str - this fires
-    whenever direction is passed a non-None value (it's optional, so a
-    None direction still works, exercised in the other tests below)."""
+def test_add_limit_type_direction_wrapped_in_enum(network, container):
     builder = OperationalLimitSetBuilder(network=network, container=container)
 
-    with pytest.raises(TypeError, match="OperationalLimitDirectionKind"):
-        builder.add_limit_type(mRID="normal_limit", name="normal", direction="high")
+    lim_type = builder.add_limit_type(mRID="normal_limit", name="normal", direction="high")
+
+    assert lim_type.direction == network.cim.OperationalLimitDirectionKind("high")
 
 
 def test_add_limit_type_without_direction(network, container):

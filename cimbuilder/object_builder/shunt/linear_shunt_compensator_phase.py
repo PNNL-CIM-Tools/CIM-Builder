@@ -29,7 +29,7 @@ class LinearShuntCompensatorPhaseBuilder(ObjectBuilder):
         """
         cn: CN = self.cim  # type: ignore
 
-        graph_write.set_attr(shunt_phs, CN, "phase", phase)
+        graph_write.set_attr(shunt_phs, CN, "phase", cn.SinglePhaseKind(phase))
         if ShuntCompensator is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,

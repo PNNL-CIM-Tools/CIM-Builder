@@ -4,20 +4,15 @@ from cimtables.units import Qty
 from cimbuilder.object_builder.shunt import LinearShuntCompensatorBuilder
 
 
-def test_add_connectivity_compensatorType_not_wrapped_in_enum(network, container, base_voltage):
-    """add_connectivity calls
-    graph_write.set_attr(shunt, CN, "compensatorType", compensatorType)
-    with the raw string, instead of wrapping it as
-    cn.CompensatorKind(compensatorType). compensatorType is a required
-    (non-optional) CompensatorKind-typed parameter, so this raises for
-    every call regardless of other arguments."""
+def test_add_connectivity_compensatorType_wrapped_in_enum(network, container, base_voltage):
     builder = LinearShuntCompensatorBuilder(network=network, container=container)
     shunt = builder.create(mRID="cap1")
 
-    with pytest.raises(TypeError, match="CompensatorKind"):
-        builder.add_connectivity(
-            shunt, node="bus1", compensatorType="capacitor", BaseVoltage=base_voltage.mRID
-        )
+    builder.add_connectivity(
+        shunt, node="bus1", compensatorType="capacitor", BaseVoltage=base_voltage.mRID
+    )
+
+    assert shunt.compensatorType == network.cim.CompensatorKind("capacitor")
 
 
 def test_add_electrical_with_explicit_bPerSection(network, container):

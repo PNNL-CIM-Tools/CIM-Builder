@@ -4,21 +4,17 @@ from cimtables.units import Qty
 from cimbuilder.object_builder.inverter import PowerElectronicsConnectionBuilder
 
 
-def test_power_electronics_connection_add_connectivity_phaseConnection_not_enum_wrapped(
+def test_power_electronics_connection_add_connectivity_phaseConnection_wrapped_in_enum(
     network, container, base_voltage
 ):
-    """CN.PowerElectronicsConnection.phaseConnection is now a real field
-    (the cimprofiles sibling repo added it) typed as PhaseShuntConnectionKind,
-    but add_connectivity passes the raw `phaseConnection` string straight to
-    set_attr without wrapping it in that enum first - raises TypeError for
-    every call where phaseConnection is given a value."""
     builder = PowerElectronicsConnectionBuilder(network=network, container=container)
     inverter = builder.create(mRID="pec1", name="pec1")
 
-    with pytest.raises(TypeError, match="phaseConnection"):
-        builder.add_connectivity(
-            inverter, node="pec1_bus", phaseConnection="Y", BaseVoltage=base_voltage.mRID
-        )
+    builder.add_connectivity(
+        inverter, node="pec1_bus", phaseConnection="Y", BaseVoltage=base_voltage.mRID
+    )
+
+    assert inverter.phaseConnection == network.cim.PhaseShuntConnectionKind("Y")
 
 
 def test_power_electronics_connection_add_connectivity(network, container, base_voltage):

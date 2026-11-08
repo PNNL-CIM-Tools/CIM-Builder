@@ -11,15 +11,21 @@ class ConductorDistanceSpacingBuilder(ObjectBuilder):
 
     cim_class_name = "ConductorDistanceSpacing"
 
-    def add_construction(
+    def create(
         self,
-        spacing: CONSTR.ConductorDistanceSpacing,
         *,
+        mRID: str | None = None,
+        name: str | None = None,
+        identifier: str | None = None,
+        description: str | None = None,
         isTemplate: bool | None = None,
     ) -> CONSTR.ConductorDistanceSpacing:
         """
         * isTemplate: denotes if used as part of a WireConfiguration template
         """
+        spacing: CONSTR.ConductorDistanceSpacing = super().create(
+            mRID=mRID, name=name, identifier=identifier, description=description
+        )  # type: ignore
         graph_write.set_attr(spacing, CONSTR, "isTemplate", isTemplate)
         return spacing
 

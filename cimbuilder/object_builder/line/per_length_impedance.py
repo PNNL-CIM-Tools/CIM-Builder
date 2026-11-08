@@ -164,7 +164,8 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         * toPhase: single phase letter for "to" phase
         """
 
-        data = self.cim.PhaseImpedanceData()  # no mRID on this class
+        el_unbal: EL_UNBAL = self.cim  # type: ignore
+        data = el_unbal.PhaseImpedanceData()  # no mRID on this class
         data.uuid(mRID=f"{matrix.mRID}_{row}_{column}")
         graph_write.set_attr(data, EL_UNBAL, "row", row)
         graph_write.set_attr(data, EL_UNBAL, "column", column)
@@ -172,8 +173,10 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         graph_write.set_attr(data, EL_UNBAL, "x", x)
         graph_write.set_attr(data, EL_UNBAL, "b", b)
         graph_write.set_attr(data, EL_UNBAL, "g", g)
-        graph_write.set_attr(data, EL_UNBAL, "fromPhase", fromPhase)
-        graph_write.set_attr(data, EL_UNBAL, "toPhase", toPhase)
+        graph_write.set_attr(
+            data, EL_UNBAL, "fromPhase", el_unbal.SinglePhaseKind(fromPhase)
+        )
+        graph_write.set_attr(data, EL_UNBAL, "toPhase", el_unbal.SinglePhaseKind(toPhase))
         graph_write.set_assc(data, EL_UNBAL, "PhaseImpedance", matrix)
         graph_write.add_to_graph(self.network, data)
         return matrix, data

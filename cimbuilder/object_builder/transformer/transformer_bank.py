@@ -42,7 +42,6 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         connectionKind: str | None = None,
         BaseVoltage: mRID,
         phases: str | None,
-        TankConfiguration: mRID | None,
     ) -> tuple[CN.PowerTransformer, CN.Terminal, CN.PowerTransformerEnd]:
         xfmr, terminal, xfmr_end = super().add_power_transformer_end(
             xfmr,
@@ -52,8 +51,9 @@ class TransformerBankBuilder(PowerTransformerBuilder):
             BaseVoltage=BaseVoltage,
         )
 
+        cn: CN = self.cim  # type:ignore
         if phases is not None:
-            graph_write.set_attr(terminal, CN, "phases", phases)
+            graph_write.set_attr(terminal, CN, "phases", cn.PhaseCode(phases))
 
             for sequenceNumber, phase in enumerate(phases):
                 self.add_transformer_phase_end(
@@ -62,7 +62,6 @@ class TransformerBankBuilder(PowerTransformerBuilder):
                     sequenceNumber=sequenceNumber + 1,  # start with 1
                     phase=phase,
                     phaseNeutralU=None,
-                    TankConfiguration=TankConfiguration,
                     TransformerPhaseEnd=None,
                 )
 
@@ -76,8 +75,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         loadLoss: float | Qty | None = None,
         noLoadLoss: float | Qty | None = None,
         percentImpdance: float | None = None,
-        percentMagnetizingCurrent: float | None = None,
-        TankConfiguration: mRID | None = None,
+        percentMagnetizingCurrent: float | None = None
     ) -> tuple[CONSTR.PowerTransformer, EL_UNBAL.TransformerTank]:
         """
         Adds a per-phase TransformerTank to the PowerTransformer
@@ -86,7 +84,6 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         * noLoadLoss: active power thermal loss at no load, float in W or Qty('kW')
         * percentImpedance: %Z or %IZ, float in percentage (e.g. 2.7)
         * percentMagnetizingCurrent: Magnetizing current expressed as percentage of base current, float
-        * TankConfiguration: mRID of tank configuation template (equivalent to OpenDSS XfmrCode)
         """
         el_unbal: EL_UNBAL = self.cim  # type:ignore
         tank = self.network.find_by_mRID(mRID=TransformerTank)
@@ -108,30 +105,21 @@ class TransformerBankBuilder(PowerTransformerBuilder):
             tank, EL_UNBAL, "percentMagnetizingCurrent", percentMagnetizingCurrent
         )
 
-        graph_write.set_assc_from_mrid(
-            network=self.network,
-            source_object=tank,
-            profile_part=CONSTR,
-            association_name="TankConfiguration",
-            target_class=el_unbal.TransformerTankConfiguration,
-            target_mRID=TankConfiguration,
-        )
         graph_write.add_to_graph(self.network, tank)
         return xfmr, tank
 
     def add_transformer_phase_end(
         self,
-        xfmr: CONSTR.PowerTransformer | None,
+        xfmr: CONSTR.PowerTransformer,
         *,
         endNumber: int,
         sequenceNumber: int,
         phase: str,
         phaseNeutralU: float | Qty | None,
-        TankConfiguration: mRID | None,
         TransformerPhaseEnd: mRID | None,
     ) -> tuple[CONSTR.PowerTransformer | None, CONSTR.TransformerPhaseEnd]:
         """
-        Adds a single phase end for a transformer or configuration
+        Adds a single phase end for a transformer
         * endNumber: integer, must match the PowerTransformerEnd
         * sequenceNumber: integer, incrementing to match PhaseCode
         *
@@ -139,12 +127,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
 
         constr: CONSTR = self.cim  # type:ignore
         if TransformerPhaseEnd is None:
-            if TankConfiguration is not None:
-                mRID = f"{TankConfiguration}_end_{endNumber}_seq_{sequenceNumber}"
-            elif xfmr is not None:
-                mRID = f"{xfmr.mRID}_end_{endNumber}_seq_{sequenceNumber}"
-            else:
-                raise ValueError("Either xfmr or TankConfiguration must be specified")
+            mRID = f"{xfmr.mRID}_end_{endNumber}_seq_{sequenceNumber}"
             phase_end = constr.TransformerPhaseEnd(mRID=mRID)
             graph_write.add_to_graph(self.network, phase_end)
         else:
@@ -152,16 +135,8 @@ class TransformerBankBuilder(PowerTransformerBuilder):
                 self.network, constr.TransformerPhaseEnd, TransformerPhaseEnd
             )  # type:ignore
 
-        graph_write.set_attr(phase_end, CONSTR, "phase", phase)
+        graph_write.set_attr(phase_end, CONSTR, "phase", constr.SinglePhaseKind(phase))
         graph_write.set_attr(phase_end, CONSTR, "phaseNeutralU", phaseNeutralU)
-        graph_write.set_assc_from_mrid(
-            network=self.network,
-            source_object=phase_end,
-            profile_part=CONSTR,
-            association_name="TankConfiguration",
-            target_class=constr.TransformerTankConfiguration,
-            target_mRID=TankConfiguration,
-        )
 
         return xfmr, phase_end
 
@@ -226,7 +201,7 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         constr: CONSTR = self.cim  # type:ignore
         mRID = f"{TransformerTank}_core"
         core = constr.TransformerCore(mRID=mRID)
-        graph_write.set_attr(core, EL_UNBAL, "form", form)
+        graph_write.set_attr(core, EL_UNBAL, "form", constr.CoreConstructionKind(form))
         graph_write.set_attr(core, EL_UNBAL, "b", b)
         graph_write.set_attr(core, EL_UNBAL, "g", g)
         graph_write.set_attr(core, SC, "b0", b0)
@@ -262,7 +237,9 @@ class TransformerBankBuilder(PowerTransformerBuilder):
         mRID = f"{TransformerTank}_winding_{from_lug.designation}_{to_lug.designation}"
         winding = constr.TransformerWinding(mRID=mRID)
 
-        graph_write.set_attr(winding, CONSTR, "connection", connection)
+        graph_write.set_attr(
+            winding, CONSTR, "connection", constr.PhaseShuntConnectionKind(connection)
+        )
         graph_write.set_attr(winding, CONSTR, "baseS", baseS)
         graph_write.set_attr(winding, CONSTR, "baseU", baseU)
         graph_write.set_attr(winding, CONSTR, "ratedS", ratedS)

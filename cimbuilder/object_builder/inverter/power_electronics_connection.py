@@ -37,7 +37,13 @@ class PowerElectronicsConnectionBuilder(ObjectBuilder):
         cn: CN = self.cim  # type: ignore
 
         # graph_write.set_attr(inverter, CN, "grounded", grounded)
-        graph_write.set_attr(inverter, CN, "phaseConnection", phaseConnection)
+        if phaseConnection is not None:
+            graph_write.set_attr(
+                inverter,
+                CN,
+                "phaseConnection",
+                cn.PhaseShuntConnectionKind(phaseConnection),
+            )
         graph_write.set_attr(inverter, CN, "aggregate", aggregate)
 
         if EquipmentContainer is not None:

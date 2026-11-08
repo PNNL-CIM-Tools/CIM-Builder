@@ -68,7 +68,10 @@ class PowerTransformerBuilder(ObjectBuilder):
             equipment_container=None,
         )
         graph_write.set_attr(xfmr_end, CN, "endNumber", endNumber)
-        graph_write.set_attr(xfmr_end, CN, "connectionKind", connectionKind)
+        if connectionKind is not None:
+            graph_write.set_attr(
+                xfmr_end, CN, "connectionKind", cn.WindingConnection(connectionKind)
+            )
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,

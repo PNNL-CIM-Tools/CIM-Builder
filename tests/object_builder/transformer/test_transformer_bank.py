@@ -34,18 +34,39 @@ def test_add_power_transformer_end_inherits_broken_super_call(network, container
         )
 
 
-def test_add_transformer_tank_wrong_profile_part_module(network, container):
-    """add_transformer_tank calls
-    graph_write.set_attr(tank, CONSTR, "loadLoss", loadLoss) (and
-    noLoadLoss/percentImpedance/percentMagnetizingCurrent) - none of these
-    four fields exist on CONSTR.TransformerTank at all; they exist on
-    CONSTR.TransformerTankConfiguration instead. Unconditional whenever
-    any of these kwargs is passed a non-None value."""
+def test_add_transformer_tank_requires_tank_configuration(network, container):
+    """add_transformer_tank's loadLoss/noLoadLoss/percentImpedance/
+    percentMagnetizingCurrent now correctly resolve on EL_UNBAL.TransformerTank
+    (this used to be a wrong-profile-part-module bug against CONSTR - fixed).
+    But set_assc_from_mrid for TankConfiguration is called unconditionally
+    even though TankConfiguration defaults to None, and set_assc_from_mrid
+    always raises when the resolved target is None - so a TankConfiguration
+    mRID is effectively mandatory despite the type hint saying optional."""
     builder = TransformerBankBuilder(network=network, container=container)
     xfmr = builder.create(mRID="xfmr1")
 
-    with pytest.raises(ValueError, match="loadLoss"):
+    with pytest.raises(ValueError, match="TankConfiguration"):
         builder.add_transformer_tank(xfmr, TransformerTank="tank1", loadLoss=Qty(1, "kW"))
+
+
+def test_add_transformer_tank(network, container):
+    tank_config = network.cim.TransformerTankConfiguration(mRID="tank_config1")
+    network.add_to_graph(tank_config)
+
+    builder = TransformerBankBuilder(network=network, container=container)
+    xfmr = builder.create(mRID="xfmr1")
+
+    xfmr, tank = builder.add_transformer_tank(
+        xfmr,
+        TransformerTank="tank1",
+        loadLoss=Qty(1, "kW"),
+        noLoadLoss=Qty(0.1, "kW"),
+        percentImpdance=2.7,
+        percentMagnetizingCurrent=0.5,
+        TankConfiguration="tank_config1",
+    )
+    assert float(tank.loadLoss.to("kW")) == 1
+    assert tank.TankConfiguration is tank_config
 
 
 def test_add_transformer_phase_end_wrong_profile_part_module(network, container):
@@ -137,17 +158,11 @@ def test_add_transformer_winding_connection_not_wrapped_in_enum(network, contain
         )
 
 
-def test_add_mesh_impedance_construction_module_has_no_mesh_class(network, container):
-    """TransformerBankBuilder.add_mesh_impedance calls
-    super().add_mesh_impedance(...) first (which succeeds, same as
-    PowerTransformerBuilder's standalone test), then calls
-    graph_write.set_assc_from_mrid(..., profile_part=CONSTR,
-    association_name="FromWinding", target_class=constr.TransformerWinding, ...)
-    - but CONSTR (construction) has no TransformerMeshImpedance class at
-    all, so _part_field's getattr(part, cls_name, None) returns None and
-    raises ValueError naming the wrong module, for every call. Should be
-    EL_BAL (electrical_balanced), which does have TransformerMeshImpedance
-    with FromWinding/ToWinding fields."""
+def test_add_mesh_impedance(network, container):
+    """TransformerBankBuilder.add_mesh_impedance's FromWinding/ToWinding
+    set_assc_from_mrid calls now correctly use profile_part=EL_BAL (this
+    used to point at CONSTR, which has no TransformerMeshImpedance class
+    at all - fixed)."""
     builder = TransformerBankBuilder(network=network, container=container)
     xfmr = builder.create(mRID="xfmr1")
     end1 = cim.PowerTransformerEnd(mRID="end1", endNumber=1)
@@ -159,13 +174,15 @@ def test_add_mesh_impedance_construction_module_has_no_mesh_class(network, conta
     network.add_to_graph(w1)
     network.add_to_graph(w2)
 
-    with pytest.raises(ValueError, match="TransformerMeshImpedance"):
-        builder.add_mesh_impedance(
-            xfmr,
-            FromTransformerEnd="end1",
-            ToTransformerEnd="end2",
-            FromWinding="w1",
-            ToWinding="w2",
-            r=Qty(1, "ohm"),
-            x=Qty(5, "ohm"),
-        )
+    xfmr, mesh = builder.add_mesh_impedance(
+        xfmr,
+        FromTransformerEnd="end1",
+        ToTransformerEnd="end2",
+        FromWinding="w1",
+        ToWinding="w2",
+        r=Qty(1, "ohm"),
+        x=Qty(5, "ohm"),
+    )
+    assert float(mesh.r.to("ohm")) == 1
+    assert mesh.FromWinding is w1
+    assert mesh.ToWinding is w2

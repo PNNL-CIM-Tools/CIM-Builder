@@ -40,9 +40,14 @@ class LinearShuntCompensatorBuilder(ObjectBuilder):
         """
         cn: CN = self.cim  # type: ignore
 
-        graph_write.set_attr(shunt, CN, "compensatorType", compensatorType)
+        graph_write.set_attr(
+            shunt, CN, "compensatorType", cn.CompensatorKind(compensatorType)
+        )
         graph_write.set_attr(shunt, CN, "grounded", grounded)
-        graph_write.set_attr(shunt, CN, "phaseConnection", phaseConnection)
+        if phaseConnection is not None:
+            graph_write.set_attr(
+                shunt, CN, "phaseConnection", cn.PhaseShuntConnectionKind(phaseConnection)
+            )
 
         if EquipmentContainer is not None:
             graph_write.set_assc_from_mrid(

@@ -7,21 +7,16 @@ from cimbuilder.object_builder.shunt import (
 )
 
 
-def test_add_connectivity_phase_not_wrapped_in_enum(network, container):
-    """add_connectivity calls
-    graph_write.set_attr(shunt_phs, CN, "phase", phase) with the raw
-    string, instead of wrapping it as cn.SinglePhaseKind(phase). Same
-    recurring bug as ac_line_segment_phase.py/
-    power_electronics_connection_phase.py/energy_consumer_phase.py -
-    raises for every call since phase isn't optional."""
+def test_add_connectivity_phase_wrapped_in_enum(network, container):
     cap_builder = LinearShuntCompensatorBuilder(network=network, container=container)
     shunt = cap_builder.create(mRID="cap1")
 
     builder = LinearShuntCompensatorPhaseBuilder(network=network, container=container)
     phs = builder.create(mRID="cap1_A")
 
-    with pytest.raises(TypeError, match="SinglePhaseKind"):
-        builder.add_connectivity(phs, phase="A", ShuntCompensator=shunt.mRID)
+    builder.add_connectivity(phs, phase="A", ShuntCompensator=shunt.mRID)
+
+    assert phs.phase == network.cim.SinglePhaseKind("A")
 
 
 def test_add_electrical_wrong_profile_part_module(network, container):

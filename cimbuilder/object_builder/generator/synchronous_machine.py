@@ -39,8 +39,15 @@ class SynchronousMachineBuilder(RotatingMachineBuilder):
         operatingMode: str|None=None,
         inService: bool | None = None,
     ) -> SSH.RotatingMachine:
+        ssh: SSH = self.cim  # type: ignore
         super().add_ssh(machine, p=p, q=q, inService=inService)
-        graph_write.set_attr(machine, SSH, "operatingMode", operatingMode)
+        if operatingMode is not None:
+            graph_write.set_attr(
+                machine,
+                SSH,
+                "operatingMode",
+                ssh.SynchronousMachineOperatingMode(operatingMode),
+            )
 
         return machine
 

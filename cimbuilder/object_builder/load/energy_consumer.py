@@ -38,7 +38,10 @@ class EnergyConsumerBuilder(ObjectBuilder):
 
         graph_write.set_attr(load, CN, "customerCount", customerCount)
         graph_write.set_attr(load, CN, "grounded", grounded)
-        graph_write.set_attr(load, CN, "phaseConnection", phaseConnection)
+        if phaseConnection is not None:
+            graph_write.set_attr(
+                load, CN, "phaseConnection", cn.PhaseShuntConnectionKind(phaseConnection)
+            )
         graph_write.set_attr(load, CN, "aggregate", aggregate)
 
         if EquipmentContainer is not None:

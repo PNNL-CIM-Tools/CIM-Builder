@@ -20,22 +20,17 @@ def test_energy_consumer_add_connectivity(network, container, base_voltage):
     assert len(phases) == 3
 
 
-def test_energy_consumer_add_connectivity_phaseConnection_not_wrapped_in_enum(
+def test_energy_consumer_add_connectivity_phaseConnection_wrapped_in_enum(
     network, container, base_voltage
 ):
-    """add_connectivity calls
-    graph_write.set_attr(load, CN, "phaseConnection", phaseConnection) with
-    the raw string, instead of wrapping it as
-    cn.PhaseShuntConnectionKind(phaseConnection). CN.EnergyConsumer.phaseConnection
-    is PhaseShuntConnectionKind-typed - raises when a non-None value is
-    passed (it's optional, so the happy-path test above avoids it)."""
     builder = EnergyConsumerBuilder(network=network, container=container)
     load = builder.create(mRID="load1", name="load1")
 
-    with pytest.raises(TypeError, match="PhaseShuntConnectionKind"):
-        builder.add_connectivity(
-            load, node="bus1", phaseConnection="Y", BaseVoltage=base_voltage.mRID
-        )
+    builder.add_connectivity(
+        load, node="bus1", phaseConnection="Y", BaseVoltage=base_voltage.mRID
+    )
+
+    assert load.phaseConnection == network.cim.PhaseShuntConnectionKind("Y")
 
 
 def test_energy_consumer_add_electrical(network, container):

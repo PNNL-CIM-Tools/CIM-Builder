@@ -20,7 +20,7 @@ class PowerElectronicsConnectionPhaseBuilder(ObjectBuilder):
         """
         cn: CN = self.cim  # type: ignore
 
-        graph_write.set_attr(inverter_phs, CN, "phase", phase)
+        graph_write.set_attr(inverter_phs, CN, "phase", cn.SinglePhaseKind(phase))
         if PowerElectronicsConnection is not None:
             graph_write.set_assc_from_mrid(
                 network=self.network,
