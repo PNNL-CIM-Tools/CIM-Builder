@@ -145,7 +145,7 @@ class PowerTransformerBuilder(ObjectBuilder):
                 f"{FromTransformerEnd!r}/{ToTransformerEnd!r}, not both found in graph"
             )
         mesh = el_bal.TransformerMeshImpedance(
-            mRID=f"{xfmr.mRID}_mesh_end_{from_end.endNumber}_{from_end.endNumber}" #type:ignore
+            mRID=f"{xfmr.mRID}_mesh_end_{from_end.endNumber}_{to_end.endNumber}" #type:ignore
         )
         graph_write.set_assc(mesh, EL_BAL, "FromTransformerEnd", from_end)
         graph_write.set_assc(mesh, EL_BAL, "ToTransformerEnd", to_end)
