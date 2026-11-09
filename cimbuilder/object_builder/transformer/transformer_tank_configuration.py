@@ -234,7 +234,9 @@ class TransformerTankConfigurationBuilder(ObjectBuilder):
         * x: reactance, float in ohm or Qty('ohm'|'pu'|'percent')
         """
         el_unbal: EL_UNBAL = self.cim  # type:ignore
-        mesh = el_unbal.TransformerMeshImpedance(mRID=f"{FromWinding}_mesh_{ToWinding}")
+        from_suffix = FromWinding.removeprefix(f"{config.mRID}_wdg_")
+        to_suffix = ToWinding.removeprefix(f"{config.mRID}_wdg_")
+        mesh = el_unbal.TransformerMeshImpedance(mRID=f"{config.mRID}_mesh_{from_suffix}{to_suffix}")
         associations = {
             "FromTransformerEnd": (el_unbal.TransformerEnd, FromTransformerEnd),
             "ToTransformerEnd": (el_unbal.TransformerEnd, ToTransformerEnd),

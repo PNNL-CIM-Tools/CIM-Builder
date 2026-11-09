@@ -1,5 +1,6 @@
 """Transformer builders."""
 
+from cimbuilder.object_builder.transformer.cooling_info import CoolingInfoBuilder
 from cimbuilder.object_builder.transformer.phase_tap_changer import (
     PhaseTapChangerBuilder,
 )
@@ -27,10 +28,14 @@ from cimbuilder.object_builder.transformer.power_transformer import (
 from cimbuilder.object_builder.transformer.ratio_tap_changer import (
     RatioTapChangerBuilder,
 )
+from cimbuilder.object_builder.transformer.series_reactor_info import (
+    SeriesReactorInfoBuilder,
+)
 from cimbuilder.object_builder.transformer.tap_changer import TapChangerBuilder
 from cimbuilder.object_builder.transformer.tap_changer_control import (
     TapChangerControlBuilder,
 )
+from cimbuilder.object_builder.transformer.tap_changer_info import TapChangerInfoBuilder
 from cimbuilder.object_builder.transformer.transformer_bank import (
     TransformerBankBuilder,
     TransformerBankFromConfigurationBuilder,
@@ -43,6 +48,7 @@ from cimbuilder.object_builder.transformer.voltage_regulator import (
 )
 
 __all__ = [
+    "CoolingInfoBuilder",
     "PhaseTapChangerAsymmetricalBuilder",
     "PhaseTapChangerBuilder",
     "PhaseTapChangerLinearBuilder",
@@ -52,8 +58,10 @@ __all__ = [
     "PhaseTapChangerTabularBuilder",
     "PowerTransformerBuilder",
     "RatioTapChangerBuilder",
+    "SeriesReactorInfoBuilder",
     "TapChangerBuilder",
     "TapChangerControlBuilder",
+    "TapChangerInfoBuilder",
     "TransformerBankBuilder",
     "TransformerBankFromConfigurationBuilder",
     "TransformerTankConfigurationBuilder",

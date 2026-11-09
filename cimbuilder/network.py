@@ -6,12 +6,27 @@ import cimprofiles.cim18.cim18v17 as cim
 from cimgraph.core import set_model_scope
 from cimgraph.core.env_vars import get_cim_profile
 from cimgraph.models import FeederModel
+from cimprofiles.identity import as_uuid, normalize_identifier, seeded_uuid
 from cimtables import graph_write
 from cimtables.units import Qty
 
 from cimbuilder.object_builder.base import BaseFrequencyBuilder
 
 mRID = str
+
+
+def rehash_mrid(class_name: str, token: str) -> str:
+    """
+    Returns an mRID safe to use verbatim: a source GUID reseeded as a new UUID scoped to the
+    current Authority + Model + class, so the same GUID reused across source objects or models
+    does not collide. A non-GUID token (e.g. a DSS name) is returned unchanged, since Identity
+    seeds its UUID from the mRID anyway.
+    * class_name: the CIM class the mRID is for, e.g. "EnergyConsumer"
+    * token: the source key, e.g. a GDM uuid or any native identifier
+    """
+    if as_uuid(token) is None:
+        return token
+    return str(seeded_uuid(class_name, mRID=normalize_identifier(token)))
 
 
 def new_feeder_model(

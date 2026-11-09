@@ -10,11 +10,13 @@ from cimbuilder.object_builder.switch.switch import (
     DisconnectorBuilder,
     ElbowBuilder,
     FuseBuilder,
+    GroundDisconnectorBuilder,
     HookstickSwitchBuilder,
     SectionaliserBuilder,
     ServiceDisconnectBuilder,
     SwitchBuilder,
 )
+from cimbuilder.object_builder.switch.switch_info import SwitchInfoBuilder
 from cimbuilder.object_builder.switch.switch_phase import SwitchPhaseBuilder
 
 __all__ = [
@@ -23,6 +25,7 @@ __all__ = [
     "DisconnectorBuilder",
     "ElbowBuilder",
     "FuseBuilder",
+    "GroundDisconnectorBuilder",
     "HookstickSwitchBuilder",
     "LoadBreakSwitchBuilder",
     "ProtectedSwitchBuilder",
@@ -30,5 +33,6 @@ __all__ = [
     "SectionaliserBuilder",
     "ServiceDisconnectBuilder",
     "SwitchBuilder",
+    "SwitchInfoBuilder",
     "SwitchPhaseBuilder",
 ]

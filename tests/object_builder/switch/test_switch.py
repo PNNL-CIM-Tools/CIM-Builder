@@ -5,6 +5,7 @@ from cimbuilder.object_builder.switch import (
     DisconnectorBuilder,
     ElbowBuilder,
     FuseBuilder,
+    GroundDisconnectorBuilder,
     HookstickSwitchBuilder,
     SectionaliserBuilder,
     ServiceDisconnectBuilder,
@@ -87,3 +88,9 @@ def test_hookstick_switch_builder_create(network, container):
     builder = HookstickSwitchBuilder(network=network, container=container)
     sw = builder.create(mRID="hook1")
     assert sw.mRID == "hook1"
+
+
+def test_ground_disconnector_builder_create(network, container):
+    builder = GroundDisconnectorBuilder(network=network, container=container)
+    sw = builder.create(mRID="gnd1")
+    assert sw.mRID == "gnd1"

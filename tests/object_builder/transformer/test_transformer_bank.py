@@ -116,6 +116,7 @@ def test_lighting_tank(builder, ob1, container):
     # 1.62 % on the H1-H2 winding's 7200 V / 50 kVA base
     assert float(mesh.r.to("ohm")) == pytest.approx(0.0162 * 7200**2 / 50e3)
     assert mesh.FromWinding is windings["H1H2"]
+    assert mesh.mRID == "xf_ob1_tank_l_mesh_h1h2x1x2"
 
 
 def test_multi_tank_bank(builder, ob1):

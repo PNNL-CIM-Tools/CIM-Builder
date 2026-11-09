@@ -1,10 +1,11 @@
 import pytest
 from cimgraph.core import set_model_scope
 from cimgraph.core.env_vars import get_model_authority, get_model_name
+from cimprofiles.identity import seeded_uuid
 from cimtables.units import Qty
 
 from cimbuilder import object_builder as OB
-from cimbuilder.network import new_feeder_model
+from cimbuilder.network import new_feeder_model, rehash_mrid
 
 
 @pytest.fixture
@@ -61,3 +62,19 @@ def test_two_feeder_system(scoped):
     assert source.EquipmentContainer is fdr_b
     assert load.EquipmentContainer is fdr_b
     assert {f.mRID for f in network.find_by_mRID("sub_main").NormalEnergizedFeeder} == {"fdr_a", "fdr_b"}
+
+
+def test_rehash_mrid_reseeds_a_guid(scoped):
+    """B18: a source GUID used verbatim as an mRID collides across models/classes"""
+    set_model_scope("https://example.org/gdm", "rehash_probe")
+    token = "2fa1a1b0-1b7a-4b3e-9b1a-6f2e9b1a6f2e"
+    reseeded = rehash_mrid("EnergyConsumer", token)
+    assert reseeded != token
+    assert reseeded == str(seeded_uuid("EnergyConsumer", mRID=token))
+    # a different class seeded from the same token gives a different mRID
+    assert reseeded != rehash_mrid("LoadBreakSwitch", token)
+
+
+def test_rehash_mrid_leaves_free_text_unchanged(scoped):
+    """a DSS-style name is not a GUID, Identity seeds it from the mRID anyway"""
+    assert rehash_mrid("EnergyConsumer", "ld_671") == "ld_671"

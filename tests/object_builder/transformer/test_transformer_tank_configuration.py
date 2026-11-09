@@ -147,6 +147,7 @@ def test_split_phase_mesh_impedance(builder, config):
     assert mesh.ToWinding is half1
     assert mesh.FromTransformerEnd is h_end
     assert mesh in primary.FromMeshImpedance
+    assert mesh.mRID == f"{config.mRID}_mesh_h1h2x1x2"
     # pu base comes from the From winding
     z_base = 7200**2 / 25e3
     assert float(mesh.r.to("ohm")) == pytest.approx(0.01 * z_base)

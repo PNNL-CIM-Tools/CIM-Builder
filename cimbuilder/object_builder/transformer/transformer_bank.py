@@ -314,8 +314,19 @@ class TransformerBankBuilder(TransformerBankBaseBuilder):
         * r: resistance, float in ohm or Qty('ohm'|'pu'|'percent')
         * x: reactance, float in ohm or Qty('ohm'|'pu'|'percent')
         """
+        constr: CONSTR = self.cim  # type:ignore
         el_unbal: EL_UNBAL = self.cim  # type:ignore
-        mesh = el_unbal.TransformerMeshImpedance(mRID=f"{FromWinding}_mesh_{ToWinding}")
+        from_winding = graph_write.resolve(self.network, constr.TransformerWinding, FromWinding)
+        to_winding = graph_write.resolve(self.network, constr.TransformerWinding, ToWinding)
+        if from_winding is None or to_winding is None:
+            raise ValueError(
+                f"{xfmr.mRID!r}: mesh impedance references windings "
+                f"{FromWinding!r}/{ToWinding!r}, not both found in graph"
+            )
+        tank = from_winding.TransformerTank
+        from_suffix = FromWinding.removeprefix(f"{tank.mRID}_wdg_")
+        to_suffix = ToWinding.removeprefix(f"{tank.mRID}_wdg_")
+        mesh = el_unbal.TransformerMeshImpedance(mRID=f"{tank.mRID}_mesh_{from_suffix}{to_suffix}")
         for association_name, target_mRID in (("FromWinding", FromWinding), ("ToWinding", ToWinding)):
             graph_write.set_assc_from_mrid(
                 network=self.network,
