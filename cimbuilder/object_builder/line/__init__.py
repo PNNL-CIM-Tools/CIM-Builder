@@ -15,6 +15,7 @@ from cimbuilder.object_builder.line.per_length_impedance import (
     PerLengthSequenceImpedanceBuilder,
 )
 from cimbuilder.object_builder.line.overhead_wire_info import OverheadWireInfoBuilder
+from cimbuilder.object_builder.line.series_compensator import SeriesCompensatorBuilder
 from cimbuilder.object_builder.line.wire_configuration import WireConfigurationBuilder
 from cimbuilder.object_builder.line.wire_info import WireInfoBuilder
 from cimbuilder.object_builder.line.xy_wire_spacing import XYSpacingBuilder
@@ -28,6 +29,7 @@ __all__ = [
     "OverheadWireInfoBuilder",
     "PerLengthPhaseImpedanceBuilder",
     "PerLengthSequenceImpedanceBuilder",
+    "SeriesCompensatorBuilder",
     "WireConfigurationBuilder",
     "WireInfoBuilder",
     "XYSpacingBuilder",
