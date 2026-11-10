@@ -1,133 +1,71 @@
-from __future__ import annotations
-from dataclasses import dataclass, field
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 
-from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import ConnectionInterface, get_cim_profile
-import cimgraph.data_profile.cimhub_2023 as cim #TODO: cleaner typing import
-
+from cimbuilder.object_builder.switch import BreakerBuilder, DisconnectorBuilder
 from cimbuilder.substation_builder.substation_builder import SubstationBuilder
-import cimbuilder.object_builder as object_builder
-import cimbuilder.utils as utils
 
-import logging
-_log = logging.getLogger(__name__)
-
-@dataclass
-class DoubleBusSingleBreakerSubstation(SubstationBuilder):
-    name:str = field(default='new_main_transfer_sub')
-    base_voltage:int|cim.BaseVoltage = field(default=115000)
-    
-    def __post_init__(self):
-        
-        cim_profile, cim_module = get_cim_profile()
-        self.cim:cim = cim_module
-
-        # Create new substation class
-        self.substation = self.cim.Substation(name=self.name)
-        
-        # If no network defined, create substation as a DistributedArea
-        if not self.network:
-            self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
-        self.network.add_to_graph(self.substation)
-        # If base voltage not defined, create a new BaseVoltage object
-        self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
-
-        # north bus
-        self.north_bus = self.cim.ConnectivityNode(name=f'{self.name}_north_bus')
-        self.north_bus.ConnectivityNodeContainer = self.substation
-        self.network.add_to_graph(self.north_bus)
-        object_builder.new_bus_bar_section(self.network, self.north_bus)
-
-        # south bus
-        self.south_bus = self.cim.ConnectivityNode(name=f'{self.name}_south_bus')
-        self.south_bus.ConnectivityNodeContainer = self.substation
-        self.network.add_to_graph(self.south_bus)
-        object_builder.new_bus_bar_section(self.network, self.south_bus)
-
-        # create bus_tie
-        self.new_bus_tie()
-
-        return self.network
-
-    def new_bus_tie(self):
-
-        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_bt_j1', ConnectivityNodeContainer=self.substation)
-        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_bt_j2', ConnectivityNodeContainer=self.substation)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_bt1', node1 = self.north_bus, node2 = junction1)
-        airgap1.BaseVoltage = self.base_voltage
-        bus_tie = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_bus_tie', node1 = junction1, node2 = junction2)
-        bus_tie.BaseVoltage = self.base_voltage
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_bt1', node1 = junction2, node2 = self.south_bus)
-        airgap2.BaseVoltage = self.base_voltage
-        self.network.add_to_graph(junction1)
-        self.network.add_to_graph(junction2)
-        
-    def new_branch(self, breaker_number:int, branch_equipment:cim.ConductingEquipment, branch_terminal:cim.Terminal|int) -> None:
+mRID = str
 
 
-        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j1', ConnectivityNodeContainer=self.substation)
-        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j2', ConnectivityNodeContainer=self.substation)
-        junction3 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j3', ConnectivityNodeContainer=self.substation)
+class DoubleBusSingleBreakerSubstationBuilder(SubstationBuilder):
+    """
+    Double bus single breaker layout: buses <vl>_bus_1 and <vl>_bus_2 joined by a bus tie breaker
+    bay. Each branch has one breaker, fed from either bus through a pair of bus selector
+    disconnectors, only one of them normally closed.
+    See SubstationBuilder for the call order.
+    """
 
-        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{breaker_number}', node1 = junction1, node2 = junction2)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+1}', node1 = self.north_bus, node2 = junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+2}', node1 = junction2, node2 = junction3)
-        airgap3 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+3}', node1 = junction3, node2 = self.south_bus)
+    def add_buses(
+        self, voltage_level: CN.VoltageLevel
+    ) -> tuple[CN.VoltageLevel, list[CN.BusbarSection], list[CN.Switch]]:
+        """Adds the two buses and the bus tie. Returns the voltage level, its busbars and its bus
+        tie switches"""
+        bus1 = self._bus_node(voltage_level, 1)
+        bus2 = self._bus_node(voltage_level, 2)
+        busbars = [self._add_busbar(voltage_level, bus1), self._add_busbar(voltage_level, bus2)]
+        switches = self._add_breaker_bay(
+            voltage_level, prefix=f"{voltage_level.mRID}_tie", node1=bus1, node2=bus2
+        )
+        return voltage_level, busbars, switches
 
-        breaker.BaseVoltage = self.base_voltage
-        airgap1.BaseVoltage = self.base_voltage
-        airgap2.BaseVoltage = self.base_voltage
-        airgap3.BaseVoltage = self.base_voltage
-
-        if type(branch_terminal) == cim.Terminal:
-            branch_terminal.ConnectivityNode = junction3
-        
-        self.network.add_to_graph(junction1)
-        self.network.add_to_graph(junction2)
-        self.network.add_to_graph(junction3)
-
-        
-    def new_feeder(self, breaker_number:int, feeder_network:GraphModel, feeder:cim.Feeder, 
-                            sourcebus:cim.ConnectivityNode=None) -> None:
-        
-
-        feeder_network.get_all_edges(cim.Feeder)
-
-        # If sourcebus of feeder not specified, look for something named sourcebus
-        if not sourcebus: 
-            found = False
-            feeder_network.get_all_edges(self.cim.EnergySource)
-            feeder_network.get_all_edges(self.cim.Terminal)
-            feeder_network.get_all_edges(self.cim.ConnectivityNode)
-            for source in feeder_network.graph[cim.EnergySource].values():
-                if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
-                    sourcebus = source.Terminals[0].ConnectivityNode
-                    found = True
-            if not found:
-                _log.error(f'Could not find sourcebus for {feeder.name}')
-
-        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{breaker_number}_j1', ConnectivityNodeContainer=self.substation)
-        
-        breaker = object_builder.new_breaker(self.network, self.substation, name = f'{self.substation.name}_{breaker_number}', node1 = junction1, node2 = sourcebus)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+1}', node1 = self.north_bus, node2 = junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation, name = f'{self.substation.name}_{breaker_number+2}', node1 = junction1, node2 = self.south_bus)
-                
-        breaker.BaseVoltage = self.base_voltage
-        airgap1.BaseVoltage = self.base_voltage
-        airgap2.BaseVoltage = self.base_voltage
-        if breaker_number % 2 == 0:
-            airgap1.open = True
-            airgap1.normalOpen = True
-        else:
-            airgap2.open = True
-            airgap2.normalOpen = True
-       
-        feeder.NormalEnergizingSubstation = self.substation
-        sourcebus.AdditionalEquipmentContainer = self.substation
-        self.substation.NormalEnergizedFeeder.append(feeder)
-
-
-        self.network.add_to_graph(junction1)
-        self.network.add_to_graph(sourcebus)
-        self.network.add_to_graph(feeder)
-        feeder_network.add_to_graph(self.substation)
+    def add_branch(
+        self, voltage_level: CN.VoltageLevel, *, number: int, node: mRID, bus: int = 1
+    ) -> tuple[CN.VoltageLevel, list[CN.Switch]]:
+        """
+        Connects node through bus selectors <vl>_<number>_sel_1 / _sel_2 - <vl>_<number>_j1 -
+        breaker - <vl>_<number>_j2 - line disconnector - node
+        * number: bay number, unique within the voltage level, prefixes the bay mRIDs <vl>_<number>
+        * node: mRID of the branch ConnectivityNode (e.g. a feeder head node), created if missing
+        * bus: 1 or 2, the bus whose selector is normally closed, the other is normally open
+        """
+        if bus not in (1, 2):
+            raise ValueError(f"bus must be 1 or 2, got {bus}")
+        bus1 = self._require_node(self._bus_node(voltage_level, 1))
+        bus2 = self._require_node(self._bus_node(voltage_level, 2))
+        prefix = f"{voltage_level.mRID}_{number}"
+        junction1 = f"{prefix}_j1"
+        junction2 = f"{prefix}_j2"
+        switches = [
+            self._add_switch(
+                DisconnectorBuilder,
+                voltage_level,
+                mRID=f"{prefix}_sel_1",
+                node1=bus1,
+                node2=junction1,
+                normalOpen=bus != 1,
+            ),
+            self._add_switch(
+                DisconnectorBuilder,
+                voltage_level,
+                mRID=f"{prefix}_sel_2",
+                node1=bus2,
+                node2=junction1,
+                normalOpen=bus != 2,
+            ),
+            self._add_switch(
+                BreakerBuilder, voltage_level, mRID=f"{prefix}_brk", node1=junction1, node2=junction2
+            ),
+            self._add_switch(
+                DisconnectorBuilder, voltage_level, mRID=f"{prefix}_d", node1=junction2, node2=node
+            ),
+        ]
+        return voltage_level, switches

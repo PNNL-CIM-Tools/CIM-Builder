@@ -1,8 +1,11 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, cast
 
+if TYPE_CHECKING:
+    from cimprofiles.cim18 import cim18v17 as cim
 from cimgraph.models import GraphModel, DistributedArea
 from cimgraph.databases import get_cim_profile
-import cimgraph.data_profile.cimhub_2023 as cim  
+
 
 import logging
 _log = logging.getLogger(__name__)
@@ -10,7 +13,7 @@ _log = logging.getLogger(__name__)
 def get_source_bus(feeder_network: GraphModel, feeder: cim.Feeder,) -> cim.ConnectivityNode:
     
     cim_profile, cim_module = get_cim_profile()
-    cim: cim = cim_module
+    cim = cast(cim, cim_module)
     sourcebus = None
     if not sourcebus:
         found = False
@@ -19,7 +22,7 @@ def get_source_bus(feeder_network: GraphModel, feeder: cim.Feeder,) -> cim.Conne
         feeder_network.get_all_edges(cim.ConnectivityNode)
         # Check if the feeder network has a source bus
         if feeder.NormalHeadTerminal is not None:
-            sourcebus = feeder.NormalHeadTerminal.ConnectivityNode
+            sourcebus = feeder.NormalHeadTerminal[0].ConnectivityNode
             found = True
         
         else:

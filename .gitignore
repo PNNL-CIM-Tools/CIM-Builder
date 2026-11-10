@@ -1,11 +1,14 @@
 # local
 /local/
 
+# XML written by the docs notebooks
+docs/03_substation_builder/output/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+.vscode/
 # C extensions
 *.so
 
