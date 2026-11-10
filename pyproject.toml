@@ -1,6 +1,6 @@
 [project]
 name = "cim-builder"
-version = "0.0.1a0"
+version = "0.1.0"
 description = "Simplified Dictionaries of CIM data"
 authors = [
     {name = "A. Anderson", email = "19935503+AAndersn@users.noreply.github.com"}
@@ -11,7 +11,7 @@ dependencies = [
     "cim-tables>=0.1.a0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=8.3.5",
     "pre-commit>=2.17.0",

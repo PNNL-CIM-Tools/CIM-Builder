@@ -1,0 +1,125 @@
+---
+# Publishes cim-builder (import name cimbuilder) to PyPI (the same chain as CIM-Profiles).
+#   develop -> alpha pre-release (0.1.0a1, 0.1.0a2, ...)
+#   main    -> full release      (0.1.0)
+#
+# pyproject.toml holds the next release target (X.Y.Z). The published version
+# is derived from PyPI at build time and never committed, so nothing pushes to
+# the protected branches: alphas take the next free aN, and once the target is
+# released both branches move on to the next patch. Bump the target in a PR
+# for minor/major releases.
+#
+# cim-tables, cim-graph and cim-profiles come from PyPI here: [tool.uv.sources] points at
+# sibling checkouts for local development only, so every uv call that resolves
+# takes --no-sources, and `uv version` writes with --frozen (it would re-lock
+# against those missing paths). The lockfile is the sibling one, so it is not
+# used (--locked) in CI.
+#
+# Uses PyPI Trusted Publishing (OIDC); no API token is stored. One-time setup:
+#   1. PyPI -> Publishing -> add a pending GitHub publisher for project cim-builder:
+#      owner PNNL-CIM-Tools, repo CIM-Builder, workflow release.yml, environment pypi
+#   2. GitHub repo -> Settings -> Environments -> create "pypi"
+name: Release
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "cimbuilder/**"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    if: github.ref_name == 'main' || github.ref_name == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          python-version: "3.10"
+
+      - name: Set version
+        id: bump
+        run: |
+          TARGET=$(uv version --short)
+          if [[ ! "$TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::pyproject.toml version must be the next release target X.Y.Z, got $TARGET"
+            exit 1
+          fi
+          PUBLISHED=$(curl -sf https://pypi.org/pypi/cim-builder/json | jq -r '.releases | keys[]')
+          while grep -qxF "$TARGET" <<< "$PUBLISHED"; do
+            TARGET=$(uv version --bump patch --frozen --short)
+          done
+          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            VERSION="$TARGET"
+          else
+            LAST_ALPHA=$(grep -E "^${TARGET//./\\.}a[0-9]+$" <<< "$PUBLISHED" | sed 's/.*a//' | sort -n | tail -1 || true)
+            VERSION="${TARGET}a$(( ${LAST_ALPHA:-0} + 1 ))"
+          fi
+          uv version "$VERSION" --frozen
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        run: uv run --no-sources pytest
+
+      - name: Build
+        run: uv build --no-sources
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/cim-builder/${{ needs.build.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      # Tags the built commit through the API; tags aren't covered by the branch rulesets
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          PRERELEASE_FLAG=""
+          if [[ "$GITHUB_REF_NAME" == "develop" ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create "v$VERSION" dist/* --target "$GITHUB_SHA" --generate-notes $PRERELEASE_FLAG
