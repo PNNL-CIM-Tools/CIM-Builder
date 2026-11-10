@@ -5,8 +5,10 @@ from cimbuilder.object_builder.base import (
 )
 from cimbuilder.object_builder.conducting_asset_info import ConductingAssetInfoBuilder
 from cimbuilder.object_builder.container import (
+    BayBuilder,
     FeederBuilder,
     SubstationBuilder,
+    VoltageLevelBuilder,
 )
 from cimbuilder.object_builder.control import (
     RegulatingControlBuilder,
@@ -114,6 +116,7 @@ __all__ = [
     "BaseVoltageBuilder",
     "BatteryInfoBuilder",
     "BatteryUnitBuilder",
+    "BayBuilder",
     "BreakerBuilder",
     "BusbarSectionBuilder",
     "CableInfoBuilder",
@@ -180,6 +183,7 @@ __all__ = [
     "TransformerBankBuilder",
     "TransformerBankFromConfigurationBuilder",
     "TransformerTankConfigurationBuilder",
+    "VoltageLevelBuilder",
     "VoltageRegulatorBuilder",
     "WireConfigurationBuilder",
     "WireInfoBuilder",

@@ -1,126 +1,58 @@
-from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Type
-from cimgraph.models import GraphModel, DistributedArea
-from cimgraph.databases import get_cim_profile
-import cimgraph.data_profile.cimhub_2023 as cim  
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
+
+from cimbuilder.object_builder.switch import DisconnectorBuilder
 from cimbuilder.substation_builder.substation_builder import SubstationBuilder
-import cimbuilder.object_builder as object_builder
-import cimbuilder.utils as utils
 
-import logging
-
-_log = logging.getLogger(__name__)
+mRID = str
 
 
-@dataclass
-class RingBusSubstation(SubstationBuilder):
-    name: str = field(default='new_ring_bus_sub')
-    base_voltage: int | cim.BaseVoltage = field(default=115000)
-    total_sections: int = field(default=4)
+class RingBusSubstationBuilder(SubstationBuilder):
+    """
+    Ring bus layout: buses <vl>_bus_1 .. <vl>_bus_<n> closed in a ring by a breaker bay between each
+    adjacent pair, each branch through a single disconnector to one bus.
+    See SubstationBuilder for the call order.
+    """
 
-    def __post_init__(self):
-        cim_profile, cim_module = get_cim_profile()
-        self.cim:cim = cim_module
+    def add_buses(
+        self, voltage_level: CN.VoltageLevel, *, sections: int = 4
+    ) -> tuple[CN.VoltageLevel, list[CN.BusbarSection], list[CN.Switch]]:
+        """
+        Adds the ring buses and the breaker bays between them. Returns the voltage level, its
+        busbars and its ring switches
+        * sections: number of buses in the ring, at least 3
+        """
+        if sections < 3:
+            raise ValueError(f"a ring bus needs at least 3 sections, got {sections}")
 
-        self.total_sections = int(self.total_sections)
+        busbars = []
+        for section in range(1, sections + 1):
+            busbars.append(self._add_busbar(voltage_level, self._bus_node(voltage_level, section)))
 
-        # Create new substation class
-        self.substation = self.cim.Substation(name=self.name)
+        switches = []
+        for section in range(1, sections + 1):
+            next_section = section % sections + 1
+            switches += self._add_breaker_bay(
+                voltage_level,
+                prefix=f"{voltage_level.mRID}_ring_{section}",
+                node1=self._bus_node(voltage_level, section),
+                node2=self._bus_node(voltage_level, next_section),
+            )
+        return voltage_level, busbars, switches
 
-        # If no network defined, create substation as a DistributedArea
-        if not self.network:
-            self.network = DistributedArea(connection=self.connection, container=self.substation, distributed=False)
-        self.network.add_to_graph(self.substation)
-        # If base voltage not defined, create a new BaseVoltage object
-        self.base_voltage = utils.get_base_voltage(self.network, self.base_voltage)
-
-        # Create bus sections
-        for section in range(self.total_sections):
-            bus = self.cim.ConnectivityNode(name=f'{self.name}_bus_{section + 1}')
-            bus.ConnectivityNodeContainer = self.substation
-            self.network.add_to_graph(bus)
-            object_builder.new_bus_bar_section(self.network, bus)
-
-        for section in range(self.total_sections):
-            from_bus = f'{self.name}_bus_{section + 1}'
-            if section + 1 < self.total_sections:
-                to_bus = f'{self.name}_bus_{section + 2}'
-            else:
-                to_bus = f'{self.name}_bus_1'
-            series_number = (section + 1) * 10
-            self.new_bus_tie(from_bus, to_bus, series_number)
-
-        return self.network
-
-    def new_bus_tie(self, from_bus, to_bus, series_number):
-
-        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j1',
-                                         ConnectivityNodeContainer=self.substation)
-        junction2 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{series_number}_j2',
-                                         ConnectivityNodeContainer=self.substation)
-
-        bus_tie = object_builder.new_breaker(self.network, self.substation, name=f'{self.name}_{series_number}',
-                                             node1=junction1, node2=junction2)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.name}_{series_number + 1}',
-                                                  node1=from_bus, node2=junction1)
-        airgap2 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.name}_{series_number + 2}',
-                                                  node1=junction2, node2=to_bus)
-
-        bus_tie.BaseVoltage = self.base_voltage
-        airgap1.BaseVoltage = self.base_voltage
-        airgap2.BaseVoltage = self.base_voltage
-
-        self.network.add_to_graph(junction1)
-        self.network.add_to_graph(junction2)
-
-    def new_branch(self, bus_number, branch_equipment: cim.ConductingEquipment,
-                            branch_terminal: cim.Terminal | int) -> None:
-
-        bus_name = f'{self.name}_bus_{bus_number}'
-
-        junction1 = self.cim.ConnectivityNode(name=f'{self.substation.name}_{bus_number}_j1', 
-                                         ConnectivityNodeContainer=self.substation)
-        airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_d{bus_number}', node1=bus_name,
-                                                  node2=junction1)
-        airgap1.BaseVoltage = self.base_voltage
-
-        branch_terminal.ConnectivityNode = junction1
-
-        self.network.add_to_graph(junction1)
-
-    def new_feeder(self, bus_number: int, feeder_network: GraphModel, feeder: cim.Feeder,
-                            sourcebus: cim.ConnectivityNode = None) -> None:
-
-        feeder_network.get_all_edges(self.cim.Feeder)
-
-        # If sourcebus of feeder not specified, look for something named sourcebus
-        if not sourcebus:
-            found = False
-            feeder_network.get_all_edges(self.cim.EnergySource)
-            feeder_network.get_all_edges(self.cim.Terminal)
-            feeder_network.get_all_edges(self.cim.ConnectivityNode)
-            for source in feeder_network.graph[self.cim.EnergySource].values():
-                if source.Terminals[0].ConnectivityNode.name == 'sourcebus':
-                    sourcebus = source.Terminals[0].ConnectivityNode
-                    found = True
-            if not found:
-                _log.error(f'Could not find sourcebus for {feeder.name}')
-
-        bus_name = f'{self.name}_bus_{bus_number}'
-
-        airgap1 = object_builder.new_disconnector(self.network, self.substation,
-                                                  name=f'{self.substation.name}_d{bus_number}', node1=bus_name,
-                                                  node2=sourcebus)
-        airgap1.BaseVoltage = self.base_voltage
-
-        feeder.NormalEnergizingSubstation = self.substation
-        self.substation.NormalEnergizedFeeder.append(feeder)
-
-
-        self.network.add_to_graph(sourcebus)
-        self.network.add_to_graph(feeder)
-        feeder_network.add_to_graph(self.substation)
+    def add_branch(
+        self, voltage_level: CN.VoltageLevel, *, section: int, node: mRID
+    ) -> tuple[CN.VoltageLevel, list[CN.Switch]]:
+        """
+        Connects node to one ring bus through a disconnector <vl>_<section>_d
+        * section: ring bus number, 1 .. sections
+        * node: mRID of the branch ConnectivityNode (e.g. a feeder head node), created if missing
+        """
+        bus = self._require_node(self._bus_node(voltage_level, section))
+        disconnector = self._add_switch(
+            DisconnectorBuilder,
+            voltage_level,
+            mRID=f"{voltage_level.mRID}_{section}_d",
+            node1=bus,
+            node2=node,
+        )
+        return voltage_level, [disconnector]
