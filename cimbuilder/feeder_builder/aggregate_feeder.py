@@ -1,180 +1,182 @@
-from __future__ import annotations
-import logging
+"""
+An aggregate feeder: one breaker, one aggregate load and aggregate behind-the-meter (BTM) and
+front-of-the-meter (FTM) inverters standing in for a whole distribution feeder in a transmission
+model, with the feeder-head measurements a UFLS study reads.
+"""
 
+import cimprofiles.cim18.cim18v17 as cim
+import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 from cimgraph.models import GraphModel
-from cimgraph.databases import get_cim_profile
-import cimgraph.data_profile.cimhub_ufls as cim #TODO: cleaner typying import
+from cimtables.units import Qty
 
-import cimbuilder.object_builder as builder
-import cimbuilder.utils as utils
+from cimbuilder.object_builder import (
+    AnalogBuilder,
+    BreakerBuilder,
+    ConnectivityNodeBuilder,
+    DiscreteBuilder,
+    EnergyConsumerBuilder,
+    FeederBuilder,
+    PhotoVoltaicUnitBuilder,
+    PowerElectronicsConnectionBuilder,
+    PowerElectronicsWindUnitBuilder,
+)
+from cimbuilder.object_builder.measurement.analog import THREE_PHASE_ACTIVE_POWER
+from cimbuilder.object_builder.measurement.discrete import switch_position
+from cimbuilder.object_builder.measurement.measurement import (
+    MeasurementBuilder,
+    MeasurementKind,
+)
 
-_log = logging.getLogger(__name__)
-
-
-def new_aggregate_feeder(network:GraphModel, feeder_name:str, breaker_name:str, substation:cim.Substation, 
-                         node:cim.ConnectivityNode|str, base_voltage:cim.BaseVoltage|float,
-                         total_load_kw:float=0, total_load_kvar:float=0, total_btm_pv_kw:float=0, total_ftm_pv_kw:float=0,
-                         total_btm_wind_kw:float=0, total_ftm_wind_kw:float=0, distributed = True) -> tuple[cim.Feeder, cim.EnergyConsumer, cim.Breaker]:
-    cim_profile, cim_module = get_cim_profile()
-    cim:cim = cim_module
-    # get base voltage
-    if base_voltage.__class__ == float or base_voltage.__class__ == int:
-        # If numeric value given, search graph for a matching BaseVoltage object
-        found = False
-        if cim.BaseVoltage in network.graph:
-            for bv in network.graph[cim.BaseVoltage].values(): 
-                if bv.nominalVoltage == base_voltage or bv.nominalVoltage == base_voltage*1000 :
-                    found = True
-                    base_voltage_obj = bv
-        if not found: # If not found, create a new BaseVoltage object
-            _log.warning(f'Could not find a BaseVoltage with nominalVoltage {base_voltage}. Creating new object')
-            base_voltage_obj = cim.BaseVoltage()
-            base_voltage_obj.uuid(name = f'BaseV_{base_voltage}')
-            base_voltage_obj.nominalVoltage = base_voltage
-            network.add_to_graph(base_voltage_obj)
-    else:
-        base_voltage_obj = base_voltage
-
-    
-    # create feeder container
-    feeder = cim.Feeder()
-    feeder.uuid(name = feeder_name)
-    feeder.NormalEnergizingSubstation = substation
-    network.add_to_graph(feeder)
-
-    
-
-    # create aggregate Node
-    feeder_node = cim.ConnectivityNode()
-    feeder_node.uuid(name=f'{feeder_name}_node_1')
-    feeder_node.ConnectivityNodeContainer = feeder
-    network.add_to_graph(feeder_node)
-
-    # create breaker
-    breaker = builder.new_two_terminal_object(network, container=feeder, class_type=cim.Breaker, 
-                                              name=breaker_name, node1 = node, node2 = feeder_node)
-    
-    # breaker.AdditionalEquipmentContainer = substation
-    breaker.BaseVoltage = base_voltage_obj
-
-    feeder.NormalHeadTerminal = breaker.Terminals[1]
-
-    if distributed:
-        feeder_area = cim.FeederArea()
-        feeder_area.uuid(name = 'feeder_area_'+ feeder.name)
-        feeder_area.Feeder = feeder
-        feeder_area.BoundaryTerminals.append(breaker.Terminals[1])
-
-        feeder.FeederArea = feeder_area
-        breaker.Terminals[1].BoundedSchedulingArea = feeder_area
-        breaker.SubSchedulingArea = feeder_area
-        network.add_to_graph(feeder_area)
+mRID = str
 
 
-    builder.new_discrete(network, equipment=breaker, measurementType='Pos', 
-                         terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC)
+def new_aggregate_feeder(
+    network: GraphModel,
+    *,
+    mRID: str,
+    name: str | None = None,
+    breaker_name: str | None = None,
+    NormalEnergizingSubstation: mRID,
+    node: mRID,
+    BaseVoltage: mRID,
+    load_p: float | Qty = 0.0,
+    load_q: float | Qty = 0.0,
+    btm_pv_p: float | Qty = 0.0,
+    btm_wind_p: float | Qty = 0.0,
+    ftm_pv_p: float | Qty = 0.0,
+    ftm_wind_p: float | Qty = 0.0,
+) -> tuple[CN.Feeder, CN.EnergyConsumer, CN.Breaker]:
+    """
+    Adds an aggregate feeder below node, returning the Feeder, its aggregate load and head breaker.
+    Child mRIDs are prefixed by the feeder mRID, e.g. <mRID>_brk, <mRID>_load.
+    * mRID: string identifier of the Feeder
+    * name: human-readable name of the Feeder, used as prefix of the measurement names; default mRID
+    * breaker_name: human-readable name of the head breaker; default <name>_brk
+    * NormalEnergizingSubstation: mRID of the Substation feeding this feeder
+    * node: mRID of the existing substation ConnectivityNode the head breaker connects to
+    * BaseVoltage: mRID string of the BaseVoltage of the feeder
+    * load_p, load_q: total load, float in W/VAr or Qty('MW')/Qty('MVAr')
+    * btm_pv_p, btm_wind_p: total behind-the-meter PV and wind, float in W or Qty('MW')
+    * ftm_pv_p, ftm_wind_p: total front-of-the-meter PV and wind, float in W or Qty('MW')
+    """
+    name = name or mRID
 
-    meas1 = builder.new_analog(network, equipment=breaker, measurementType='VA',
-                              terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC,
-                              name = f'NetLoad(MW)_{feeder_name}', check_duplicate=False)
+    feeder_builder = FeederBuilder(network, network.container)
+    feeder: CN.Feeder = feeder_builder.create(mRID=mRID, name=name)  # type: ignore
 
-    meas2 = builder.new_analog(network, equipment=breaker, measurementType='VA', 
-                              terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC,
-                              name = f'ExcessGeneration(MW)_{feeder_name}', check_duplicate=False)
+    node_builder = ConnectivityNodeBuilder(network, feeder)
+    feeder_node = node_builder.create(mRID=f"{mRID}_node_1", name=f"{name}_node_1")
+    node_builder.add_connectivity(feeder_node, BaseVoltage=BaseVoltage)  # type: ignore
 
-    meas3 = builder.new_analog(network, equipment=breaker, measurementType='VA',
-                              terminal=breaker.Terminals[1], phase=cim.PhaseCode.ABC,
-                              name = f'TotalGeneration(MW)_{feeder_name}', check_duplicate=False)
+    breaker_builder = BreakerBuilder(network, feeder)
+    breaker: CN.Breaker = breaker_builder.create(
+        mRID=f"{mRID}_brk", name=breaker_name or f"{name}_brk"
+    )  # type: ignore
+    _, breaker_terminals, _ = breaker_builder.add_connectivity(
+        breaker, node1=node, node2=feeder_node.mRID, BaseVoltage=BaseVoltage  # type: ignore
+    )
+    head_terminal = breaker_terminals[1]
+    feeder_builder.add_connectivity(
+        feeder,
+        NormalEnergizingSubstation=NormalEnergizingSubstation,
+        NormalHeadTerminal=head_terminal.mRID,
+    )
 
-    # create energy consumer
-    load = builder.new_one_terminal_object(network, container=feeder, class_type=cim.EnergyConsumer,
-                                           name=f'{feeder_name}_aggr_load', node=feeder_node)                          
-    load.p = total_load_kw*1000
-    load.q = total_load_kvar*1000
-    load.BaseVoltage = base_voltage_obj
-    if distributed:
-            load.SubSchedulingArea = feeder_area
+    load_builder = EnergyConsumerBuilder(network, feeder)
+    load: CN.EnergyConsumer = load_builder.create(mRID=f"{mRID}_load", name=f"{name}_aggr_load")  # type: ignore
+    _, load_terminal, _ = load_builder.add_connectivity(
+        load, node=feeder_node.mRID, aggregate=True, BaseVoltage=BaseVoltage  # type: ignore
+    )
+    load_builder.add_ssh(load, p=load_p, q=load_q)
 
-    meas4 = builder.new_analog(network, equipment=load, measurementType='VA', 
-                              terminal=load.Terminals[0], phase=cim.PhaseCode.ABC,
-                              name = f'GrossLoad(MW)_{feeder_name}', check_duplicate=False)
+    btm_inverter, btm_terminal = _add_aggregate_inverter(
+        network, feeder, mRID=f"{mRID}_btm", name=f"{name}_aggr_btm", node=feeder_node.mRID,
+        BaseVoltage=BaseVoltage, pv_p=btm_pv_p, wind_p=btm_wind_p,
+    )
+    ftm_inverter, ftm_terminal = _add_aggregate_inverter(
+        network, feeder, mRID=f"{mRID}_ftm", name=f"{name}_aggr_ftm", node=feeder_node.mRID,
+        BaseVoltage=BaseVoltage, pv_p=ftm_pv_p, wind_p=ftm_wind_p,
+    )
 
-    # create BTM PV objects
-    
-    btm_inverter = builder.new_one_terminal_object(network, container=feeder, class_type=cim.PowerElectronicsConnection,
-                                               name=f'{feeder_name}_aggr_btm_pv', node = feeder_node)
-    btm_inverter.p = total_btm_pv_kw*1000 + total_btm_wind_kw*1000
-    btm_inverter.q = 0
-    btm_inverter.BaseVoltage = base_voltage_obj
-    if distributed:
-        btm_inverter.SubSchedulingArea = feeder_area
-    network.add_to_graph(btm_inverter)
-    pv_unit = cim.PhotovoltaicUnit()
-    pv_unit.uuid(name=f'{feeder_name}_aggr_btm_pv')
-    pv_unit.minP = 0.0
-    pv_unit.maxP = total_btm_pv_kw*1000
-    pv_unit.PowerElectronicsConnection = btm_inverter
-    if distributed:
-        pv_unit.SubSchedulingArea = feeder_area
-    btm_inverter.PowerElectronicsUnit.append(pv_unit)
-    network.add_to_graph(pv_unit)
-    
-    if total_btm_wind_kw:
-        wind_unit = cim.PowerElectronicsWindUnit()
-        wind_unit.uuid(name=f'{feeder_name}_aggr_btm_wind')
-        wind_unit.minP = 0.0
-        wind_unit.maxP = total_btm_wind_kw*1000
-        wind_unit.PowerElectronicsConnection = btm_inverter
-        if distributed:
-            wind_unit.SubSchedulingArea = feeder_area
-        btm_inverter.PowerElectronicsUnit.append(wind_unit)
-        network.add_to_graph(wind_unit)
-
-    meas5 = builder.new_analog(network, equipment=btm_inverter, measurementType='VA',
-                              terminal=btm_inverter.Terminals[0], phase=cim.PhaseCode.ABC,
-                              check_duplicate=False)
-    meas5.name = f'BTMGeneration(MW)_{feeder_name}'
-    network.add_to_graph(meas5)
-
-    # create FTM PV objects
-    ftm_inverter = builder.new_one_terminal_object(network, container=feeder, class_type=cim.PowerElectronicsConnection,
-                                               name=f'{feeder_name}_aggr_ftm_pv', node = feeder_node)
-    ftm_inverter.p = total_ftm_pv_kw*1000 + total_ftm_wind_kw*1000
-    ftm_inverter.q = 0
-    ftm_inverter.BaseVoltage = base_voltage_obj
-    if distributed:
-        ftm_inverter.SubSchedulingArea = feeder_area
-    pv_unit = cim.PhotovoltaicUnit()
-    pv_unit.uuid(name=f'{feeder_name}_aggr_ftm_pv')
-    pv_unit.minP = 0.0
-    pv_unit.maxP = ftm_inverter.p
-    pv_unit.PowerElectronicsConnection = ftm_inverter
-    if distributed:
-        pv_unit.SubSchedulingArea = feeder_area
-    network.add_to_graph(pv_unit)
-    ftm_inverter.PowerElectronicsUnit.append(pv_unit)
-    if total_ftm_wind_kw:
-        wind_unit = cim.PowerElectronicsWindUnit()
-        wind_unit.uuid(name=f'{feeder_name}_aggr_ftm_wind')
-        wind_unit.minP = 0.0
-        wind_unit.maxP = total_ftm_wind_kw*1000
-        wind_unit.PowerElectronicsConnection = ftm_inverter
-        if distributed:
-            wind_unit.SubSchedulingArea = feeder_area
-        ftm_inverter.PowerElectronicsUnit.append(wind_unit)
-        network.add_to_graph(wind_unit)
-
-    meas6 = builder.new_analog(network, equipment=ftm_inverter, measurementType='VA',
-                              terminal=ftm_inverter.Terminals[0], phase=cim.PhaseCode.ABC,
-                              check_duplicate=False)
-    meas6.name = f'FTMGeneration(MW)_{feeder_name}'
-    network.add_to_graph(meas6)
-
-    
-
-
-        
+    # Feeder-head measurements, named as the GridAPPS-D UFLS application expects
+    discrete_builder = DiscreteBuilder(network, feeder)
+    analog_builder = AnalogBuilder(network, feeder)
+    _add_measurement(
+        discrete_builder, switch_position("XCBR"), mRID=f"{mRID}_brk_pos",
+        name=f"Pos_{name}", resource=breaker, terminal=head_terminal,
+    )
+    for suffix, label, resource, terminal in [
+        ("net_load", "NetLoad(MW)", breaker, head_terminal),
+        ("excess_generation", "ExcessGeneration(MW)", breaker, head_terminal),
+        ("total_generation", "TotalGeneration(MW)", breaker, head_terminal),
+        ("gross_load", "GrossLoad(MW)", load, load_terminal),
+        ("btm_generation", "BTMGeneration(MW)", btm_inverter, btm_terminal),
+        ("ftm_generation", "FTMGeneration(MW)", ftm_inverter, ftm_terminal),
+    ]:
+        _add_measurement(
+            analog_builder, THREE_PHASE_ACTIVE_POWER, mRID=f"{mRID}_{suffix}",
+            name=f"{label}_{name}", resource=resource, terminal=terminal,
+        )
 
     return feeder, load, breaker
 
 
+def _add_aggregate_inverter(
+    network: GraphModel,
+    feeder: CN.Feeder,
+    *,
+    mRID: str,
+    name: str,
+    node: mRID,
+    BaseVoltage: mRID,
+    pv_p: float | Qty,
+    wind_p: float | Qty,
+) -> tuple[CN.PowerElectronicsConnection, CN.Terminal]:
+    """An aggregate inverter with a PV unit, and a wind unit if wind_p is not zero"""
+    inverter_builder = PowerElectronicsConnectionBuilder(network, feeder)
+    inverter: CN.PowerElectronicsConnection = inverter_builder.create(mRID=mRID, name=name)  # type: ignore
+    _, terminal, _ = inverter_builder.add_connectivity(
+        inverter, node=node, aggregate=True, BaseVoltage=BaseVoltage
+    )
+    inverter_builder.add_ssh(inverter, p=_watts(pv_p) + _watts(wind_p), q=0.0)
+
+    pv_builder = PhotoVoltaicUnitBuilder(network, feeder)
+    pv_unit = pv_builder.create(mRID=f"{mRID}_pv", name=f"{name}_pv")
+    pv_builder.add_electrical(
+        pv_unit, minP=0.0, maxP=pv_p, aggregate=True, PowerElectronicsConnection=mRID  # type: ignore
+    )
+    if _watts(wind_p) != 0:
+        wind_builder = PowerElectronicsWindUnitBuilder(network, feeder)
+        wind_unit = wind_builder.create(mRID=f"{mRID}_wind", name=f"{name}_wind")
+        wind_builder.add_electrical(
+            wind_unit, minP=0.0, maxP=wind_p, aggregate=True, PowerElectronicsConnection=mRID  # type: ignore
+        )
+    return inverter, terminal
+
+
+def _add_measurement(
+    builder: MeasurementBuilder,
+    kind: MeasurementKind,
+    *,
+    mRID: str,
+    name: str,
+    resource: CN.PowerSystemResource,
+    terminal: CN.Terminal,
+) -> None:
+    """One three-phase (ABC) measurement of kind, with the IEC 61850 name as description"""
+    measurement = builder.create(mRID=mRID, name=name, description=kind.iec61850_name(None))
+    builder.add_measurement(
+        measurement,  # type: ignore
+        measurementType=kind.measurementType,
+        PowerSystemResource=resource.mRID,
+        Terminal=terminal.mRID,
+        phases="ABC",
+        unitSymbol=kind.unitSymbol,
+    )
+
+
+def _watts(power: float | Qty) -> float:
+    """power in W, a float is already W"""
+    if isinstance(power, Qty):
+        return float(cim.ActivePower(power.value, power.unit).to("W"))
+    return float(power)

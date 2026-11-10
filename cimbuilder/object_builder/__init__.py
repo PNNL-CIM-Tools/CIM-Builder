@@ -5,8 +5,10 @@ from cimbuilder.object_builder.base import (
 )
 from cimbuilder.object_builder.conducting_asset_info import ConductingAssetInfoBuilder
 from cimbuilder.object_builder.container import (
+    BayBuilder,
     FeederBuilder,
     SubstationBuilder,
+    VoltageLevelBuilder,
 )
 from cimbuilder.object_builder.control import (
     RegulatingControlBuilder,
@@ -47,10 +49,18 @@ from cimbuilder.object_builder.line import (
     WireInfoBuilder,
     XYSpacingBuilder,
 )
+from cimbuilder.object_builder.measurement import (
+    AnalogBuilder,
+    DiscreteBuilder,
+    MeasurementBuilder,
+)
 from cimbuilder.object_builder.load import (
     EnergyConsumerBuilder,
     EnergyConsumerPhaseBuilder,
     LoadResponseCharacteristicBuilder,
+)
+from cimbuilder.object_builder.protection import (
+    UnderFrequencyProtectionFunctionBlockBuilder,
 )
 from cimbuilder.object_builder.shunt import (
     LinearShuntCompensatorBuilder,
@@ -108,12 +118,14 @@ __all__ = [
     "ACLineSegmentBuilder",
     "ACLineSegmentPhaseBuilder",
     "AirBreakSwitchBuilder",
+    "AnalogBuilder",
     "AsynchronousMachineBuilder",
     "BaseFrequencyBuilder",
     "BasePowerBuilder",
     "BaseVoltageBuilder",
     "BatteryInfoBuilder",
     "BatteryUnitBuilder",
+    "BayBuilder",
     "BreakerBuilder",
     "BusbarSectionBuilder",
     "CableInfoBuilder",
@@ -125,6 +137,7 @@ __all__ = [
     "ConnectorBuilder",
     "CoolingInfoBuilder",
     "DisconnectorBuilder",
+    "DiscreteBuilder",
     "ElbowBuilder",
     "EnergyConsumerBuilder",
     "EnergyConsumerPhaseBuilder",
@@ -140,6 +153,7 @@ __all__ = [
     "LinearShuntCompensatorPhaseBuilder",
     "LoadBreakSwitchBuilder",
     "LoadResponseCharacteristicBuilder",
+    "MeasurementBuilder",
     "OperationalLimitSetBuilder",
     "OverheadWireInfoBuilder",
     "PerLengthPhaseImpedanceBuilder",
@@ -180,6 +194,8 @@ __all__ = [
     "TransformerBankBuilder",
     "TransformerBankFromConfigurationBuilder",
     "TransformerTankConfigurationBuilder",
+    "UnderFrequencyProtectionFunctionBlockBuilder",
+    "VoltageLevelBuilder",
     "VoltageRegulatorBuilder",
     "WireConfigurationBuilder",
     "WireInfoBuilder",

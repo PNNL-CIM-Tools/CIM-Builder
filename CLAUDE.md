@@ -14,10 +14,11 @@ CIM-Builder is a Python library (PNNL, Grid Atlas / MAPLE LEAF projects) for con
 
 **The repo is mid-rewrite** (branch `cimtbl_rewrite`). `cimbuilder/object_builder/` is the active,
 current pattern — one builder class per CIM class, following `ObjectBuilder` in
-`cimbuilder/object_builder/object_builder.py`. `cimbuilder/substation_builder/` is legacy code from
-before a revert (`5b47fd6 Revert "rewrite substation builder as functions"`) and does not match the
-current API (references undefined `field()`/module globals, calls `utils.get_base_voltage` with the
-old signature) — treat it as not yet ported rather than as a pattern to copy. Likewise
+`cimbuilder/object_builder/object_builder.py`. `cimbuilder/substation_builder/` holds composite
+node-breaker layout builders (single bus, ring bus, breaker-and-a-half, ...): a `SubstationBuilder`
+base (subclass of the container `SubstationBuilder`) with `add_voltage_level`/`add_bay`, and one
+subclass per layout with `add_buses(voltage_level)` / `add_branch(voltage_level, *, ..., node)` built
+entirely from the switch/topology object builders. Likewise
 `tests/test_single_bus_integration.py` imports `new_single_bus_substation`/`add_feeder_to_single_bus`
 from `cimbuilder/__init__.py`, which no longer exports them — that test predates the rewrite.
 
