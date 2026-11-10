@@ -49,6 +49,11 @@ from cimbuilder.object_builder.line import (
     WireInfoBuilder,
     XYSpacingBuilder,
 )
+from cimbuilder.object_builder.measurement import (
+    AnalogBuilder,
+    DiscreteBuilder,
+    MeasurementBuilder,
+)
 from cimbuilder.object_builder.load import (
     EnergyConsumerBuilder,
     EnergyConsumerPhaseBuilder,
@@ -110,6 +115,7 @@ __all__ = [
     "ACLineSegmentBuilder",
     "ACLineSegmentPhaseBuilder",
     "AirBreakSwitchBuilder",
+    "AnalogBuilder",
     "AsynchronousMachineBuilder",
     "BaseFrequencyBuilder",
     "BasePowerBuilder",
@@ -128,6 +134,7 @@ __all__ = [
     "ConnectorBuilder",
     "CoolingInfoBuilder",
     "DisconnectorBuilder",
+    "DiscreteBuilder",
     "ElbowBuilder",
     "EnergyConsumerBuilder",
     "EnergyConsumerPhaseBuilder",
@@ -143,6 +150,7 @@ __all__ = [
     "LinearShuntCompensatorPhaseBuilder",
     "LoadBreakSwitchBuilder",
     "LoadResponseCharacteristicBuilder",
+    "MeasurementBuilder",
     "OperationalLimitSetBuilder",
     "OverheadWireInfoBuilder",
     "PerLengthPhaseImpedanceBuilder",
