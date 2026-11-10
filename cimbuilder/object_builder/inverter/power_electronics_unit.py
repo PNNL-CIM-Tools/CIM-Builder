@@ -18,8 +18,9 @@ class PowerElectronicsUnitBuilder(ObjectBuilder):
         PowerElectronicsConnection: str,
     ) -> EL_BAL.PowerElectronicsUnit:
         """Adds electrical_balanced.PowerElectronicsUnit's fixed-unit parameters.
-        * minP: minimum nameplate unit, float in watts or Qty("kW"|"MW")
-        * minP: minimum nameplate unit, float in watts or Qty("kW"|"MW")
+        * minP: minimum active power of the unit, float in watts or Qty("kW"|"MW")
+        * maxP: maximum active power of the unit, float in watts or Qty("kW"|"MW")
+        * aggregate: indicates the unit is an aggregate of multiple units
         * PowerElectronicsConnection: mRID of the inverter this unit is connected to
         """
 
@@ -32,7 +33,7 @@ class PowerElectronicsUnitBuilder(ObjectBuilder):
             source_object=unit,
             profile_part=EL_BAL,
             association_name="PowerElectronicsConnection",
-            target_class=el_bal,
+            target_class=el_bal.PowerElectronicsConnection,
             target_mRID=PowerElectronicsConnection,
         )
 

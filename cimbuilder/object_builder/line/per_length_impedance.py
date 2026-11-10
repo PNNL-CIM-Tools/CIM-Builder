@@ -24,7 +24,7 @@ class PerLengthSequenceImpedanceBuilder(ObjectBuilder):
         gch: float | Qty | None = None,
         isTemplate: bool | None = None,
         calculatedFrequency: float | Qty | None = None,
-        calculatedTemperature: float | Qty | None,
+        calculatedTemperature: float | Qty | None = None,
     ) -> EL_BAL.PerLengthSequenceImpedance:
         """
         Positive-sequence per-length impedance. Per-unit not supported for these attributes
@@ -121,7 +121,7 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         conductorCount: int | None = None,
         isTemplate: bool | None = None,
         calculatedFrequency: float | Qty | None = None,
-        calculatedTemperature: float | Qty | None,
+        calculatedTemperature: float | Qty | None = None,
     ) -> EL_UNBAL.PerLengthPhaseImpedance:
         """
         * isTemplate: denotes if used as part of a LineCode or other template
@@ -145,12 +145,12 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         *,
         row: int,
         column: int,
-        r: float | Qty | None,
-        x: float | Qty | None,
-        b: float | Qty | None,
-        g: float | Qty | None,
-        fromPhase: str,
-        toPhase: str,
+        r: float | Qty | None = None,
+        x: float | Qty | None = None,
+        b: float | Qty | None = None,
+        g: float | Qty | None = None,
+        fromPhase: str | None = None,
+        toPhase: str | None = None,
     ) -> tuple[EL_UNBAL.PerLengthPhaseImpedance, EL_UNBAL.PhaseImpedanceData]:
         """
         Adds a single row of lower triangular phase impedance matrix
@@ -158,25 +158,27 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         * column: integer, matrix column index
         * r: resistance, float in ohm/m or Qty('ohm/length')
         * x: reactance, float in ohm/m or Qty('ohm/length')
-        * bch: shunt susceptance, float in siemens/m or Qty('S/length')
-        * gch: shunt conductance, float in siemens/m or Qty('S/length')
+        * b: shunt susceptance, float in siemens/m or Qty('S/length')
+        * g: shunt conductance, float in siemens/m or Qty('S/length')
         * fromPhase: single phase letter for "from" phase
         * toPhase: single phase letter for "to" phase
         """
 
         el_unbal: EL_UNBAL = self.cim  # type: ignore
         data = el_unbal.PhaseImpedanceData()  # no mRID on this class
-        data.uuid(mRID=f"{matrix.mRID}_{row}_{column}")
+        data.uuid(mRID=f"{matrix.mRID}_{row}{column}")
         graph_write.set_attr(data, EL_UNBAL, "row", row)
         graph_write.set_attr(data, EL_UNBAL, "column", column)
         graph_write.set_attr(data, EL_UNBAL, "r", r)
         graph_write.set_attr(data, EL_UNBAL, "x", x)
         graph_write.set_attr(data, EL_UNBAL, "b", b)
         graph_write.set_attr(data, EL_UNBAL, "g", g)
-        graph_write.set_attr(
-            data, EL_UNBAL, "fromPhase", el_unbal.SinglePhaseKind(fromPhase)
-        )
-        graph_write.set_attr(data, EL_UNBAL, "toPhase", el_unbal.SinglePhaseKind(toPhase))
+        if fromPhase is not None:
+            graph_write.set_attr(
+                data, EL_UNBAL, "fromPhase", el_unbal.SinglePhaseKind(fromPhase)
+            )
+        if toPhase is not None:
+            graph_write.set_attr(data, EL_UNBAL, "toPhase", el_unbal.SinglePhaseKind(toPhase))
         graph_write.set_assc(data, EL_UNBAL, "PhaseImpedance", matrix)
         graph_write.add_to_graph(self.network, data)
         return matrix, data
@@ -189,7 +191,9 @@ class PerLengthPhaseImpedanceBuilder(ObjectBuilder):
         xg: float | Qty | None = None,
     ) -> None:
         """
-        Adds eart
+        Add earth return resistance and reactance
+        * rg: earth return resistance, float in ohm or Qty('ohm'|'pu')
+        * xg: earth return reactance, float in ohm or Qty('ohm'|'pu')
         """
 
         graph_write.set_attr(matrix, EL_UNBAL, "rg", rg)

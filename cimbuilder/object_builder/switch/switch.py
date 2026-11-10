@@ -155,6 +155,10 @@ class SectionaliserBuilder(SwitchBuilder):
     cim_class_name = "Sectionaliser"
 
 
+class GroundDisconnectorBuilder(SwitchBuilder):
+    cim_class_name = "GroundDisconnector"
+
+
 class DisconnectorBuilder(SwitchBuilder):
     cim_class_name = "Disconnector"
 

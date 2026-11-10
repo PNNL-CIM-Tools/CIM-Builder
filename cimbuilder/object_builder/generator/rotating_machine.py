@@ -6,6 +6,7 @@ import cimprofiles.cim18.cim18v17.short_circuit as SC
 import cimprofiles.cim18.cim18v17.steady_state_hypothesis as SSH
 from cimtables import Qty, connectivity, graph_write
 
+from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
 
@@ -54,6 +55,8 @@ class RotatingMachineBuilder(ObjectBuilder, ABC):
                 node_cols={"node": node},
                 equipment_container=machine.EquipmentContainer,
             )
+        else:
+            terminals = sort_terminals_by_sequence(machine)
 
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(

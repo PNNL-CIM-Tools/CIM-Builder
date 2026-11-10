@@ -4,6 +4,7 @@ import cimprofiles.cim18.cim18v17.connectivity_unbalanced as CN
 import cimprofiles.cim18.cim18v17.short_circuit as SC
 from cimtables import Qty, connectivity, graph_write
 
+from cimbuilder.core.sort_terminals import sort_terminals_by_sequence
 from cimbuilder.object_builder.object_builder import ObjectBuilder
 
 mRID = str
@@ -53,6 +54,8 @@ class ConnectorBuilder(ObjectBuilder, ABC):
                 node_cols={"node": node},
                 equipment_container=conn.EquipmentContainer,
             )
+        else:
+            terminals = sort_terminals_by_sequence(conn)
 
         if BaseVoltage is not None:
             graph_write.set_assc_from_mrid(

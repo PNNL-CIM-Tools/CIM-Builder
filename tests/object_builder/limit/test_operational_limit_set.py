@@ -4,20 +4,6 @@ from cimtables.units import Qty
 from cimbuilder.object_builder.limit import OperationalLimitSetBuilder
 from cimbuilder.object_builder.switch import BreakerBuilder
 
-# cimbuilder.object_builder.limit.operational_limit_set imports the
-# operational_limit profile-part submodule as LIM and uses it (not
-# self.cim) as `target_class` in every set_assc_from_mrid call below.
-# Every builder elsewhere in this codebase resolves associations using
-# self.cim.<ClassName> (e.g. ac_line_segment.py's `cn.BaseVoltage` where
-# `cn = self.cim`), matching the class objects are actually created with
-# (ObjectBuilder.create() always instantiates via self.network.cim).
-# LIM.<ClassName> is a structurally-identical but DISTINCT runtime class
-# from self.cim.<ClassName> (same name, no shared base beyond
-# Identity/object), so resolve()'s isinstance(obj, target_class) check
-# always fails here, regardless of which real mRID is passed - this is a
-# systemic bug affecting every association write in this file.
-
-
 def test_add_limit_type_direction_wrapped_in_enum(network, container):
     builder = OperationalLimitSetBuilder(network=network, container=container)
 
@@ -37,104 +23,83 @@ def test_add_limit_type_without_direction(network, container):
     assert limit_type.isInfiniteDuration is True
 
 
-def test_add_equipment_wrong_target_class_for_resolve(network, container, base_voltage):
-    """add_equipment's Equipment resolution uses
-    target_class=LIM.Equipment (the literal submodule class) instead of
-    self.cim.Equipment - raises ValueError for any real Equipment mRID,
-    since the Breaker object was actually created via self.cim.Breaker."""
+@pytest.fixture
+def breaker(network, container, base_voltage):
     switch_builder = BreakerBuilder(network=network, container=container)
-    switch = switch_builder.create(mRID="brk1")
-    switch_builder.add_connectivity(
-        switch, node1="bus1", node2="bus2", BaseVoltage=base_voltage.mRID
+    switch = switch_builder.create(mRID="sw_brk1")
+    switch_builder.add_connectivity(switch, node1="bus1", node2="bus2", BaseVoltage=base_voltage.mRID)
+    return switch
+
+
+@pytest.fixture
+def builder(network, container):
+    return OperationalLimitSetBuilder(network=network, container=container)
+
+
+@pytest.mark.parametrize(
+    "selector, expected_terminal",
+    [
+        ({}, None),
+        ({"Terminal": "sw_brk1_T2"}, "sw_brk1_T2"),
+        ({"terminal_sequence_number": 1}, "sw_brk1_T1"),
+        ({"node_side_reference": "bus2"}, "sw_brk1_T2"),
+    ],
+)
+def test_add_equipment(builder, breaker, selector, expected_terminal):
+    limit_set = builder.create(mRID="sw_brk1_limits")
+    builder.add_equipment(limit_set, Equipment=breaker.mRID, **selector)
+    assert limit_set.Equipment is breaker
+    assert getattr(limit_set.Terminal, "mRID", None) == expected_terminal
+
+
+def test_add_equipment_two_selectors(builder, breaker):
+    limit_set = builder.create(mRID="sw_brk1_limits")
+    with pytest.raises(ValueError, match="give one of"):
+        builder.add_equipment(
+            limit_set, Equipment=breaker.mRID, Terminal="sw_brk1_T1", terminal_sequence_number=1
+        )
+
+
+def test_line_ampacity_limits(builder, breaker):
+    """B13: normal and emergency ampacity on one set"""
+    normal = builder.add_limit_type(mRID="olt_normal", isInfiniteDuration=True, direction="absoluteValue")
+    emergency = builder.add_limit_type(
+        mRID="olt_emergency", acceptableDuration=Qty(4, "hour"), direction="absoluteValue"
+    )
+    limit_set = builder.create(mRID="sw_brk1_limits")
+    builder.add_equipment(limit_set, Equipment=breaker.mRID)
+    _, normal_limit = builder.add_current_limit(
+        limit_set, mRID="sw_brk1_normal", value=Qty(400, "A"), OperationalLimitType=normal.mRID
+    )
+    _, emergency_limit = builder.add_current_limit(
+        limit_set, mRID="sw_brk1_emergency", value=Qty(600, "A"), OperationalLimitType=emergency.mRID
     )
 
-    builder = OperationalLimitSetBuilder(network=network, container=container)
-    limit_set = builder.create(mRID="brk1_limits")
-
-    with pytest.raises(ValueError, match="Equipment"):
-        builder.add_equipment(limit_set, Equipment=switch.mRID, terminal_sequence_number=0)
-
-
-def test_add_equipment_by_explicit_terminal_wrong_target_class(
-    network, container, base_voltage
-):
-    """Same systemic LIM.<Class> vs self.cim.<Class> bug as the test above,
-    this time surfacing on the Equipment resolve before the explicit
-    Terminal mRID branch is even reached (add_equipment resolves Equipment
-    unconditionally whenever Equipment is not None, before checking
-    Terminal)."""
-    switch_builder = BreakerBuilder(network=network, container=container)
-    switch = switch_builder.create(mRID="brk2")
-    switch, terminals, _ = switch_builder.add_connectivity(
-        switch, node1="bus3", node2="bus4", BaseVoltage=base_voltage.mRID
-    )
-
-    builder = OperationalLimitSetBuilder(network=network, container=container)
-    limit_set = builder.create(mRID="brk2_limits")
-
-    with pytest.raises(ValueError, match="Equipment"):
-        builder.add_equipment(limit_set, Equipment=switch.mRID, Terminal=terminals[0].mRID)
+    assert normal_limit.OperationalLimitSet is limit_set
+    assert set(limit_set.OperationalLimitValue) == {normal_limit, emergency_limit}
+    assert normal_limit.OperationalLimitType is normal
+    assert emergency_limit.OperationalLimitType is emergency
+    assert float(emergency_limit.value.to("A")) == 600
 
 
-def test_add_voltage_limit_wrong_target_class_for_operational_limit_type(network, container):
-    """add_voltage_limit resolves OperationalLimitType via
-    target_class=LIM.OperationalLimitType instead of
-    self.cim.OperationalLimitType - raises ValueError for any real
-    OperationalLimitType mRID (created via add_limit_type's
-    self.cim-based construction)."""
-    builder = OperationalLimitSetBuilder(network=network, container=container)
-    limit_set = builder.create(mRID="vlimit_set")
-    limit_type = builder.add_limit_type(mRID="alert_high")
+@pytest.mark.parametrize(
+    "method, value, default_mRID",
+    [
+        ("add_voltage_limit", Qty(12.47, "kV"), "set1_voltage_limit_olt_normal"),
+        ("add_current_limit", Qty(400, "A"), "set1_current_limit_olt_normal"),
+        ("add_active_power_limit", Qty(5, "MW"), "set1_active_power_limit_olt_normal"),
+        ("add_apparent_power_limit", Qty(6, "MVA"), "set1_apparent_power_limit_olt_normal"),
+    ],
+)
+def test_limit_default_mrid(builder, method, value, default_mRID):
+    builder.add_limit_type(mRID="olt_normal")
+    limit_set = builder.create(mRID="set1")
+    _, limit = getattr(builder, method)(limit_set, value=value, OperationalLimitType="olt_normal")
+    assert limit.mRID == default_mRID
+    assert limit.OperationalLimitSet is limit_set
 
+
+def test_limit_unknown_type(builder):
+    limit_set = builder.create(mRID="set1")
     with pytest.raises(ValueError, match="OperationalLimitType"):
-        builder.add_voltage_limit(
-            limit_set,
-            normalValue=Qty(13.5, "kV"),
-            value=Qty(14, "kV"),
-            OperationalLimitType=limit_type.mRID,
-        )
-
-
-def test_add_current_limit_wrong_target_class_for_operational_limit_type(network, container):
-    """Same systemic bug as test_add_voltage_limit_wrong_target_class_for_operational_limit_type."""
-    builder = OperationalLimitSetBuilder(network=network, container=container)
-    limit_set = builder.create(mRID="ilimit_set")
-    limit_type = builder.add_limit_type(mRID="emergency_high")
-
-    with pytest.raises(ValueError, match="OperationalLimitType"):
-        builder.add_current_limit(
-            limit_set,
-            normalValue=Qty(400, "A"),
-            value=Qty(600, "A"),
-            OperationalLimitType=limit_type.mRID,
-        )
-
-
-def test_add_active_power_limit_wrong_target_class_for_operational_limit_type(network, container):
-    """Same systemic bug as test_add_voltage_limit_wrong_target_class_for_operational_limit_type."""
-    builder = OperationalLimitSetBuilder(network=network, container=container)
-    limit_set = builder.create(mRID="mwlimit_set")
-    limit_type = builder.add_limit_type(mRID="normal_mw")
-
-    with pytest.raises(ValueError, match="OperationalLimitType"):
-        builder.add_active_power_limit(
-            limit_set,
-            normalValue=Qty(5, "MW"),
-            value=Qty(6, "MW"),
-            OperationalLimitType=limit_type.mRID,
-        )
-
-
-def test_add_apparent_power_limit_wrong_target_class_for_operational_limit_type(network, container):
-    """Same systemic bug as test_add_voltage_limit_wrong_target_class_for_operational_limit_type."""
-    builder = OperationalLimitSetBuilder(network=network, container=container)
-    limit_set = builder.create(mRID="mvalimit_set")
-    limit_type = builder.add_limit_type(mRID="normal_mva")
-
-    with pytest.raises(ValueError, match="OperationalLimitType"):
-        builder.add_apparent_power_limit(
-            limit_set,
-            normalValue=Qty(5, "MVA"),
-            value=Qty(6, "MVA"),
-            OperationalLimitType=limit_type.mRID,
-        )
+        builder.add_current_limit(limit_set, value=Qty(400, "A"), OperationalLimitType="olt_missing")

@@ -3,10 +3,9 @@ from cimtables.units import Qty
 from cimbuilder.object_builder.line import ConductorDistanceSpacingBuilder
 
 
-def test_conductor_distance_spacing_add_construction(network, container):
+def test_conductor_distance_spacing_create_is_template(network, container):
     builder = ConductorDistanceSpacingBuilder(network=network, container=container)
-    spacing = builder.create(mRID="spacing1")
-    builder.add_construction(spacing, isTemplate=True)
+    spacing = builder.create(mRID="spacing1", isTemplate=True)
     assert spacing.isTemplate is True
 
 

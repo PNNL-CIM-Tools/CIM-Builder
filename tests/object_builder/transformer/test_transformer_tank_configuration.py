@@ -76,15 +76,15 @@ def test_add_transformer_winding(network, builder, config):
 
     _, winding = builder.add_transformer_winding(
         config,
-        FromTransformerLug="ct_25kVA_lug_H1_seq_1",
-        ToTransformerLug="ct_25kVA_lug_H2_seq_2",
+        FromTransformerLug="ct_25kVA_lug_h1",
+        ToTransformerLug="ct_25kVA_lug_h2",
         TransformerCore=core.mRID,
         connection="I",
         baseS=Qty(25, "kVA"),
         baseU=Qty(7.2, "kV"),
         r=Qty(1, "percent"),
     )
-    assert winding.mRID == "ct_25kVA_winding_H1_H2"
+    assert winding.mRID == "ct_25kVA_wdg_h1h2"
     assert winding.connection == network.cim.PhaseShuntConnectionKind("I")
     assert winding.FromTransformerLug.designation == "H1"
     assert winding.ToTransformerLug.designation == "H2"
@@ -96,10 +96,10 @@ def test_add_transformer_winding(network, builder, config):
 
 def test_add_transformer_winding_missing_lug(builder, config):
     builder.add_transformer_lug(config, designation="H1", sequenceNumber=1)
-    with pytest.raises(ValueError, match="not both found"):
+    with pytest.raises(ValueError, match="not found in graph"):
         builder.add_transformer_winding(
             config,
-            FromTransformerLug="ct_25kVA_lug_H1_seq_1",
+            FromTransformerLug="ct_25kVA_lug_h1",
             ToTransformerLug="no_such_lug",
             connection="I",
         )
@@ -120,16 +120,16 @@ def test_split_phase_mesh_impedance(builder, config):
         )
     _, primary = builder.add_transformer_winding(
         config,
-        FromTransformerLug="ct_25kVA_lug_H1_seq_1",
-        ToTransformerLug="ct_25kVA_lug_H2_seq_2",
+        FromTransformerLug="ct_25kVA_lug_h1",
+        ToTransformerLug="ct_25kVA_lug_h2",
         connection="I",
         baseS=Qty(25, "kVA"),
         baseU=Qty(7.2, "kV"),
     )
     _, half1 = builder.add_transformer_winding(
         config,
-        FromTransformerLug="ct_25kVA_lug_X1_seq_1",
-        ToTransformerLug="ct_25kVA_lug_X2_seq_2",
+        FromTransformerLug="ct_25kVA_lug_x1",
+        ToTransformerLug="ct_25kVA_lug_x2",
         connection="I",
     )
     _, mesh = builder.add_mesh_impedance(
@@ -147,7 +147,53 @@ def test_split_phase_mesh_impedance(builder, config):
     assert mesh.ToWinding is half1
     assert mesh.FromTransformerEnd is h_end
     assert mesh in primary.FromMeshImpedance
+    assert mesh.mRID == f"{config.mRID}_mesh_h1h2x1x2"
     # pu base comes from the From winding
     z_base = 7200**2 / 25e3
     assert float(mesh.r.to("ohm")) == pytest.approx(0.01 * z_base)
     assert float(mesh.x.to("ohm")) == pytest.approx(0.02 * z_base)
+
+
+def test_add_transformer_tank_end(network, builder, config):
+    _, tank_end = builder.add_transformer_tank_end(config, endNumber=2, connectionKind="Yn", grounded=True)
+    assert tank_end.mRID == "ct_25kVA_end_2"
+    assert tank_end.endNumber == 2
+    assert tank_end.grounded is True
+    assert tank_end.connectionKind == network.cim.WindingConnection("Yn")
+    assert tank_end.TankConfiguration is config
+    assert tank_end in config.TransformerTankEnd
+
+
+def test_windings_and_mesh_by_tank_end(builder, config):
+    """3-phase padmount by tank end (transformer_template.cimtbl): no lugs, no phase ends"""
+    windings = []
+    for end_number, base_u in [(1, Qty(2.4, "kV")), (2, Qty(277, "V"))]:
+        _, tank_end = builder.add_transformer_tank_end(config, endNumber=end_number, connectionKind="Yn")
+        _, winding = builder.add_transformer_winding(
+            config, FromTransformerEnd=tank_end.mRID, baseU=base_u, baseS=Qty(500 / 3, "kVA")
+        )
+        windings.append(winding)
+    _, mesh = builder.add_mesh_impedance(
+        config, FromWinding=windings[0].mRID, ToWinding=windings[1].mRID, x=Qty(2, "percent")
+    )
+    assert [w.mRID for w in windings] == ["ct_25kVA_wdg_1", "ct_25kVA_wdg_2"]
+    assert windings[0].FromTransformerEnd.mRID == "ct_25kVA_end_1"
+    assert windings[0].connection is None
+    assert mesh.mRID == "ct_25kVA_mesh_12"
+    assert mesh.FromTransformerEnd is None
+    assert float(mesh.x.to("ohm")) == pytest.approx(0.02 * 2400**2 / (500e3 / 3))
+
+
+def test_winding_mrid_override(builder, config):
+    builder.add_transformer_lug(config, designation="X1", sequenceNumber=3)
+    builder.add_transformer_lug(config, designation="X2", sequenceNumber=5)
+    _, winding = builder.add_transformer_winding(
+        config, TransformerWinding="ct_25kVA_wdg_2",
+        FromTransformerLug="ct_25kVA_lug_x1", ToTransformerLug="ct_25kVA_lug_x2", connection="I",
+    )
+    assert winding.mRID == "ct_25kVA_wdg_2"
+
+
+def test_winding_needs_an_end_or_a_lug(builder, config):
+    with pytest.raises(ValueError, match="FromTransformerEnd or a FromTransformerLug"):
+        builder.add_transformer_winding(config, connection="I")

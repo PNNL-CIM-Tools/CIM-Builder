@@ -13,21 +13,7 @@ def test_wire_configuration_add_electrical_per_length_impedance(network, contain
     assert config.PerLengthImpedance is pli
 
 
-def test_wire_configuration_add_electrical_earth_resistivity_wrong_association_name(
-    network, container
-):
-    """add_electrical's EarthResistivity branch calls
-    graph_write.set_assc_from_mrid(self.network, config, CONST,
-    'PerLengthImpedance', el_bal.EarthResistivity, EarthResistivity) -
-    the association_name string is hardcoded to 'PerLengthImpedance' in
-    BOTH branches (copy-paste from the PerLengthImpedance branch above),
-    instead of 'EarthResistivity' for this one. Since EarthResistivity
-    happens to also match PerLengthImpedance's target_class check at the
-    resolve() step (an EarthResistivity object trivially isn't rejected
-    because target_class=el_bal.EarthResistivity is correct, only the
-    field name is wrong), this does NOT raise - it silently writes the
-    EarthResistivity object into config.PerLengthImpedance instead of
-    config.EarthResistivity, which is left None."""
+def test_wire_configuration_add_electrical_earth_resistivity(network, container):
     builder = WireConfigurationBuilder(network=network, container=container)
     config = builder.create(mRID="wc1")
     er = cim.EarthResistivity(mRID="er1")
@@ -35,16 +21,28 @@ def test_wire_configuration_add_electrical_earth_resistivity_wrong_association_n
 
     builder.add_electrical(config, EarthResistivity="er1")
 
-    assert config.EarthResistivity is None
-    assert config.PerLengthImpedance is er
+    assert config.EarthResistivity is er
+    assert config.PerLengthImpedance is None
 
 
-def test_wire_configuration_add_construction(network, container):
-    builder = WireConfigurationBuilder(network=network, container=container)
-    config = builder.create(mRID="wc1")
+def test_wire_configuration_create_construction(network, container):
     xy_builder = XYSpacingBuilder(network=network, container=container)
     spacing = xy_builder.create(mRID="xy1")
 
-    builder.add_construction(config, numberOfPhases=3, WireSpacing=spacing.mRID)
+    builder = WireConfigurationBuilder(network=network, container=container)
+    config = builder.create(mRID="wc1", numberOfPhases=3, WireSpacing=spacing.mRID)
     assert config.numberOfPhases == 3
     assert config.WireSpacing is spacing
+
+
+def test_wire_configuration_add_wire_sequence_configuration(network, container):
+    builder = WireConfigurationBuilder(network=network, container=container)
+    config = builder.create(mRID="wc_601")
+    wire = cim.OverheadWireInfo(mRID="wire_556500_26_7")
+    network.add_to_graph(wire)
+
+    _, wire_sequence = builder.add_wire_sequence_configuration(config, sequenceNumber=2, WireInfo=wire.mRID)
+    assert wire_sequence.mRID == "wc_601_2"
+    assert wire_sequence.sequenceNumber == 2
+    assert wire_sequence.WireInfo is wire
+    assert config.WireSequence == [wire_sequence]

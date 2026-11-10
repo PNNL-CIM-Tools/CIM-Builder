@@ -12,15 +12,21 @@ class XYSpacingBuilder(ObjectBuilder):
 
     cim_class_name = "XYSpacing"
 
-    def add_construction(
+    def create(
         self,
-        spacing:CONSTR.XYSpacing,
         *,
+        mRID: str | None = None,
+        name: str | None = None,
+        identifier: str | None = None,
+        description: str | None = None,
         isTemplate: bool | None = None,
     ) -> CONSTR.XYSpacing:
         """
         * isTemplate: denotes if used as part of a WireConfiguration template
         """
+        spacing: CONSTR.XYSpacing = super().create(
+            mRID=mRID, name=name, identifier=identifier, description=description
+        )  # type: ignore
         graph_write.set_attr(spacing, CONSTR, "isTemplate", isTemplate)
         return spacing
 
@@ -33,7 +39,7 @@ class XYSpacingBuilder(ObjectBuilder):
         yCoord: float | Qty,
         circuitNumber: int | None = None,
         kind: str | None = None,
-    ) -> None:
+    ) -> tuple[CONSTR.XYSpacing, CONSTR.XYConductorPosition]:
         """
         Adds XY coordinates of a single conductor relative to origin (e.g. top of pole)
         * sequenceNumber: integer, matches the sequenceNumber of the ACLineSegmentPhase
@@ -44,11 +50,11 @@ class XYSpacingBuilder(ObjectBuilder):
         """
         constr: CONSTR = self.cim  # type: ignore
         if circuitNumber is not None:
-            name = f"{spacing.name}_{sequenceNumber}_{circuitNumber}"
+            mRID = f"{spacing.mRID}_{sequenceNumber}_{circuitNumber}"
         else:
-            name = f"{spacing.name}_{sequenceNumber}"
+            mRID = f"{spacing.mRID}_{sequenceNumber}"
 
-        position = constr.XYConductorPosition(name=name)
+        position = constr.XYConductorPosition(mRID=mRID)
         graph_write.set_attr(position, CONSTR, "sequenceNumber", sequenceNumber)
         graph_write.set_attr(position, CONSTR, "xCoord", xCoord)
         graph_write.set_attr(position, CONSTR, "yCoord", yCoord)
@@ -59,3 +65,4 @@ class XYSpacingBuilder(ObjectBuilder):
             )
         graph_write.set_assc(position, CONSTR, "XYSpacing", spacing)
         graph_write.add_to_graph(self.network, position)
+        return spacing, position

@@ -56,3 +56,46 @@ def test_add_ssh(network, container):
     builder.add_ssh(shunt, sections=3, inService=True)
     assert shunt.sections == 3
     assert shunt.inService is True
+
+
+def test_capacitor_voltage_control(network, container, base_voltage):
+    """B10: a voltage-controlled capacitor watching its own terminal"""
+    from cimbuilder.object_builder.control import RegulatingControlBuilder
+
+    builder = LinearShuntCompensatorBuilder(network=network, container=container)
+    shunt = builder.create(mRID="cap_675")
+    _, terminal, _ = builder.add_connectivity(
+        shunt, node="675", compensatorType="capacitor", phases="ABC", BaseVoltage=base_voltage.mRID
+    )
+    control_builder = RegulatingControlBuilder(network=network, container=container)
+    control = control_builder.create(mRID="cap_675_ctrl")
+    control_builder.add_regulating_control(
+        control,
+        Terminal=terminal.mRID,
+        mode="voltage",
+        targetValue=120.5 * 60,
+        targetDeadband=3 * 60,
+        ptRatio=60,
+        discrete=True,
+        enabled=True,
+    )
+    builder.add_regulating_control(
+        shunt, RegulatingControl=control.mRID, controlEnabled=True, aVRDelay=Qty(30, "s")
+    )
+
+    assert shunt.RegulatingControl is control
+    assert shunt in control.RegulatingCondEq
+    assert control.Terminal is terminal
+    assert control.mode == network.cim.RegulatingControlModeKind("voltage")
+    assert control.monitoredPhase is None
+    assert float(shunt.aVRDelay.to("s")) == 30
+
+
+def test_add_electrical_integer_sections(network, container):
+    """C3: section counts are int in cim18v17"""
+    builder = LinearShuntCompensatorBuilder(network=network, container=container)
+    shunt = builder.create(mRID="cap1")
+    builder.add_electrical(
+        shunt, nomU=Qty(4.16, "kV"), nomQ=Qty(600, "kVAr"), normalSections=2, maximumSections=4
+    )
+    assert shunt.maximumSections == 4

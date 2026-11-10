@@ -47,3 +47,13 @@ def test_energy_consumer_add_ssh(network, container):
 
     builder.add_ssh(load, p=Qty(8, "kW"), q=Qty(2, "kVAr"), inService=True)
     assert load.inService is True
+
+
+def test_energy_consumer_add_connectivity_twice_keeps_its_terminal(network, container, base_voltage):
+    """C5: a second call reuses the existing Terminal instead of raising UnboundLocalError"""
+    builder = EnergyConsumerBuilder(network=network, container=container)
+    load = builder.create(mRID="ld_671")
+    _, terminal, _ = builder.add_connectivity(load, node="671", BaseVoltage=base_voltage.mRID)
+    _, again, _ = builder.add_connectivity(load, node="671", BaseVoltage=base_voltage.mRID)
+    assert again is terminal
+    assert load.Terminals == [terminal]
