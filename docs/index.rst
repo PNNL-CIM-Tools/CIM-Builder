@@ -34,5 +34,10 @@ CIM-Builder is a new python library developed by Pacific Northwest National Labo
 
    03_substation_builder/3_1_single_bus
    03_substation_builder/3_2_sectionalized_bus
+   03_substation_builder/3_3_main_and_transfer
+   03_substation_builder/3_4_double_bus_single_breaker
+   03_substation_builder/3_5_ring_bus
+   03_substation_builder/3_6_breaker_and_half
+   03_substation_builder/deliverable
    
 
