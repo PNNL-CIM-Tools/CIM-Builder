@@ -59,6 +59,9 @@ from cimbuilder.object_builder.load import (
     EnergyConsumerPhaseBuilder,
     LoadResponseCharacteristicBuilder,
 )
+from cimbuilder.object_builder.protection import (
+    UnderFrequencyProtectionFunctionBlockBuilder,
+)
 from cimbuilder.object_builder.shunt import (
     LinearShuntCompensatorBuilder,
     LinearShuntCompensatorPhaseBuilder,
@@ -191,6 +194,7 @@ __all__ = [
     "TransformerBankBuilder",
     "TransformerBankFromConfigurationBuilder",
     "TransformerTankConfigurationBuilder",
+    "UnderFrequencyProtectionFunctionBlockBuilder",
     "VoltageLevelBuilder",
     "VoltageRegulatorBuilder",
     "WireConfigurationBuilder",

@@ -8,8 +8,9 @@ from cimbuilder.object_builder.measurement.measurement import (
     single_phases,
 )
 
-# IEC 62361-102 Tables 14, 18 and 19. The old GridAPPS-D type each replaces is in the comment;
+# IEC 62361-102 Tables 13, 14, 18 and 19. The old GridAPPS-D type each replaces is in the comment;
 # the IEC 61850 data object (description) keeps that name where the two agree.
+THREE_PHASE_ACTIVE_POWER = MeasurementKind("ThreePhaseActivePower", "MMXU", "TotW", "W")  # VA, ABC
 PHASE_VOLTAGE = MeasurementKind("PhaseToNeutralVoltage", "MMXU", "PNV", "V", wye=True)  # PNV
 PHASE_CURRENT = MeasurementKind("PhaseCurrent", "MMXU", "A", "A", wye=True)  # A
 # No per-phase power string is defined (Table 16 ApparentPower is MMXN.VolAmp, non-phase-related);
