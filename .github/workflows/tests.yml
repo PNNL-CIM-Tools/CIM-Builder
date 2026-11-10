@@ -1,0 +1,107 @@
+---
+# Runs tests on every PR, then routes Dependabot PRs into develop by group
+# (the same chain as CIM-Profiles; --no-sources: see release.yml)
+# (see dependabot.yml):
+#   python           lockfile-only minor/patch bumps -> merge, no release
+#   python-security  merge; if a runtime dep is affected, raise its
+#                    minimum in pyproject.toml, publish an alpha and open the
+#                    develop -> main PR for the patch release
+#   actions, majors  left for manual review (workflow changes can't be merged
+#                    with GITHUB_TOKEN, and they touch the release pipeline)
+name: Tests
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          python-version: "3.10"
+
+      - name: Test
+        run: uv run --no-sources pytest
+
+  dependabot:
+    needs: test
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v3
+
+      - uses: actions/checkout@v7
+        if: steps.metadata.outputs.dependency-group == 'python-security'
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: astral-sh/setup-uv@v10.3.2
+        if: steps.metadata.outputs.dependency-group == 'python-security'
+        with:
+          python-version: "3.12"
+
+      - name: Raise minimum versions of runtime deps
+        id: floors
+        if: steps.metadata.outputs.dependency-group == 'python-security'
+        env:
+          UPDATED_DEPENDENCIES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          RAISED=$(uv run --no-project python .github/scripts/raise_security_floors.py)
+          if [[ -z "$RAISED" ]]; then
+            echo "Only dev or transitive deps affected; no release needed"
+            exit 0
+          fi
+          uv lock --no-sources
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Raise minimum versions for security fixes" -m "$RAISED"
+          git push
+          {
+            echo "head=$(git rev-parse HEAD)"
+            echo "raised<<EOF"
+            echo "$RAISED"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # The approval satisfies the ruleset's required review (needs "Allow GitHub
+      # Actions to create and approve pull requests"); tests above are the gate.
+      - name: Approve and merge
+        if: contains(fromJSON('["python", "python-security"]'), steps.metadata.outputs.dependency-group)
+        env:
+          HEAD_SHA: ${{ steps.floors.outputs.head || github.event.pull_request.head.sha }}
+        run: |
+          gh pr review "$PR_NUMBER" --approve --body "Tests passed; auto-merging ${{ steps.metadata.outputs.dependency-group }} update."
+          gh pr merge "$PR_NUMBER" --merge --delete-branch --match-head-commit "$HEAD_SHA"
+
+      # Merges made with GITHUB_TOKEN don't fire push events, so start the release explicitly.
+      - name: Release security fix
+        if: steps.floors.outputs.raised != ''
+        env:
+          RAISED: ${{ steps.floors.outputs.raised }}
+        run: |
+          gh workflow run release.yml --ref develop
+          BODY=$(printf 'Publishes a patch release with raised minimum versions for security fixes:\n\n%s\n\nFrom #%s.' "$RAISED" "$PR_NUMBER")
+          EXISTING=$(gh pr list --base main --head develop --json number -q '.[0].number')
+          if [[ -n "$EXISTING" ]]; then
+            gh pr comment "$EXISTING" --body "$BODY"
+          else
+            gh pr create --base main --head develop --title "Security patch release" --body "$BODY"
+          fi

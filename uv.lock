@@ -147,13 +147,13 @@ wheels = [
 
 [[package]]
 name = "cim-builder"
-version = "0.0.1a0"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "cim-tables" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "graphviz" },
     { name = "ipykernel", version = "7.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -164,14 +164,15 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "cim-tables", editable = "/home/ande188/CIM-Tables" },
-    { name = "graphviz", marker = "extra == 'dev'", specifier = ">=0.19.1" },
-    { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.27.1" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=2.17.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
+requires-dist = [{ name = "cim-tables", editable = "/home/ande188/CIM-Tables" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "graphviz", specifier = ">=0.19.1" },
+    { name = "ipykernel", specifier = ">=6.27.1" },
+    { name = "pre-commit", specifier = ">=2.17.0" },
+    { name = "pytest", specifier = ">=8.3.5" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "cim-graph"
