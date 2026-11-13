@@ -9,6 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "cim-tables>=0.1.a0",
+    "pyarrow>=18",
 ]
 
 [dependency-groups]
