@@ -20,11 +20,6 @@ dev = [
     "ipykernel>=6.27.1",
 ]
 
-[tool.uv.sources]
-cim-tables = { path = "/home/ande188/CIM-Tables", editable = true }
-cim-profiles = { path = "/home/ande188/CIM-Profiles", editable = true }
-cim-graph = { path = "/home/ande188/CIM-Graph", editable = true }
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
