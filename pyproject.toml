@@ -1,6 +1,6 @@
 [project]
 name = "cim-builder"
-version = "0.1.0"
+version = "0.1.1"
 description = "Simplified Dictionaries of CIM data"
 authors = [
     {name = "A. Anderson", email = "19935503+AAndersn@users.noreply.github.com"}
@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "cim-tables>=0.1.a0",
+    "cim-tables>=0.2.a0",
     "pyarrow>=18",
 ]
 
