@@ -62,6 +62,9 @@ from cimbuilder.object_builder.load import (
 from cimbuilder.object_builder.protection import (
     UnderFrequencyProtectionFunctionBlockBuilder,
 )
+from cimbuilder.object_builder.schedule import (
+    EnergyConnectionScheduleBuilder,
+)
 from cimbuilder.object_builder.shunt import (
     LinearShuntCompensatorBuilder,
     LinearShuntCompensatorPhaseBuilder,
@@ -139,6 +142,7 @@ __all__ = [
     "DisconnectorBuilder",
     "DiscreteBuilder",
     "ElbowBuilder",
+    "EnergyConnectionScheduleBuilder",
     "EnergyConsumerBuilder",
     "EnergyConsumerPhaseBuilder",
     "EnergySourceBuilder",

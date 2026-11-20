@@ -61,6 +61,22 @@ class PowerElectronicsUnitBuilder(ObjectBuilder):
 class PhotoVoltaicUnitBuilder(PowerElectronicsUnitBuilder):
     cim_class_name = "PhotoVoltaicUnit"
 
+    def add_ssh(
+        self,
+        unit: SSH.PhotoVoltaicUnit,
+        *,
+        p: float | Qty | None = None,
+        irradiance: float | Qty | None = None,
+        inService: bool | None = None,
+    ) -> SSH.PhotoVoltaicUnit:
+        """
+        Adds the PowerElectronicsUnit values, plus
+        * irradiance: instantaneous irradiance on the array, float in W/m^2 or Qty('kW/m^2')
+        """
+        super().add_ssh(unit, p=p, inService=inService)
+        graph_write.set_attr(unit, SSH, "irradiance", irradiance)
+        return unit
+
 
 class PowerElectronicsWindUnitBuilder(PowerElectronicsUnitBuilder):
     cim_class_name = "PowerElectronicsWindUnit"
