@@ -3,7 +3,7 @@ from cimtables.units import Qty
 from cimbuilder.object_builder.switch import (
     AirBreakSwitchBuilder,
     DisconnectorBuilder,
-    ElbowBuilder,
+    ElbowSwitchBuilder,
     FuseBuilder,
     GroundDisconnectorBuilder,
     HookstickSwitchBuilder,
@@ -73,7 +73,7 @@ def test_service_disconnect_builder_create(network, container):
 
 
 def test_elbow_builder_create(network, container):
-    builder = ElbowBuilder(network=network, container=container)
+    builder = ElbowSwitchBuilder(network=network, container=container)
     sw = builder.create(mRID="elbow1")
     assert sw.mRID == "elbow1"
 

@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "cim-tables>=0.1.1a1",
-    "cim-profiles>=0.2.0a4,<0.3.0",
+    "cim-profiles>=0.2.0a6,<0.3.0",
     "pyarrow>=18",
 ]
 

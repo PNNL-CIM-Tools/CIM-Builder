@@ -167,8 +167,8 @@ class ServiceDisconnectBuilder(DisconnectorBuilder):
     cim_class_name = "ServiceDisconnect"
 
 
-class ElbowBuilder(DisconnectorBuilder):
-    cim_class_name = "Elbow"
+class ElbowSwitchBuilder(DisconnectorBuilder):
+    cim_class_name = "ElbowSwitch"
 
 
 class AirBreakSwitchBuilder(DisconnectorBuilder):
