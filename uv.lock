@@ -150,6 +150,7 @@ name = "cim-builder"
 version = "0.1.1"
 source = { editable = "." }
 dependencies = [
+    { name = "cim-profiles" },
     { name = "cim-tables" },
     { name = "pyarrow", version = "25.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pyarrow", version = "26.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -167,7 +168,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cim-tables", editable = "/home/ande188/CIM-Tables" },
+    { name = "cim-profiles", specifier = ">=0.2.0a4,<0.3.0" },
+    { name = "cim-tables", specifier = ">=0.1.1a1" },
     { name = "pyarrow", specifier = ">=18" },
 ]
 
@@ -181,74 +183,44 @@ dev = [
 
 [[package]]
 name = "cim-graph"
-version = "0.6.1"
-source = { editable = "../CIM-Graph" }
+version = "0.6.1a1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cim-profiles" },
     { name = "defusedxml" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "cim-graph", extras = ["sparql", "neo4j", "mysql", "gridappsd", "rdflib"], marker = "extra == 'all'" },
-    { name = "cim-profiles", specifier = ">=0.2.0a1,<0.3" },
-    { name = "defusedxml", specifier = ">=0.7.1" },
-    { name = "gridappsd-python", marker = "extra == 'gridappsd'", specifier = ">=2026.2.1" },
-    { name = "mysql-connector-python", marker = "extra == 'mysql'", specifier = ">=9.2.0" },
-    { name = "neo4j", marker = "extra == 'neo4j'", specifier = ">=5.10.0" },
-    { name = "oxrdflib", marker = "extra == 'rdflib'", specifier = ">=0.3.6" },
-    { name = "rdflib", marker = "extra == 'rdflib'", specifier = ">=7.0.0" },
-    { name = "sparqlwrapper", marker = "extra == 'sparql'", specifier = ">=2.0.0" },
-]
-provides-extras = ["sparql", "neo4j", "mysql", "gridappsd", "rdflib", "all"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "graphviz", specifier = ">=0.19.1" },
-    { name = "ipykernel", specifier = ">=6.27.1" },
-    { name = "pre-commit", specifier = ">=2.17.0" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "requests", specifier = ">=2.31" },
+sdist = { url = "https://files.pythonhosted.org/packages/85/d5/48aac0333fed02b0921f7dc7b60acab2e1d15a47221ebd873fe9617adcd0/cim_graph-0.6.1a1.tar.gz", hash = "sha256:0ec73ed080e0d9e7921b767f147977c7e860fb99dcda7e6e6d6ba4fc5f663014", size = 86846, upload-time = "2026-11-17T04:57:27.848Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/6b/8dd3f45ad99f62e8a2167ec511be3eab399e1908e9aba7bf974ff7202366/cim_graph-0.6.1a1-py3-none-any.whl", hash = "sha256:ab0071c7e9b7a0d80f34350ed67c060ee7b1145b1a0752f5e9487d7bd7cea799", size = 124074, upload-time = "2026-11-17T04:57:26.744Z" },
 ]
 
 [[package]]
 name = "cim-profiles"
-version = "0.2.0"
-source = { editable = "../CIM-Profiles" }
+version = "0.2.0a4"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pint", version = "0.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pint", version = "0.25.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "pint", version = "0.26.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
-
-[package.metadata]
-requires-dist = [{ name = "pint", specifier = ">=0.24.4" }]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pyyaml", specifier = ">=6.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/06/be/d6a62f37d09c224779674d1a104e19f111c4fc9c29ba312530388c5994b9/cim_profiles-0.2.0a4.tar.gz", hash = "sha256:e4392be9412e6874b433d7808d9e6c8e9320484bbb034ddc1e44ba35c74704cb", size = 3316291, upload-time = "2026-11-15T22:01:31.519Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ae/da/a634f3c409092d7802aded523d72fb9fb7d3c322e286948a18c45d31ab36/cim_profiles-0.2.0a4-py3-none-any.whl", hash = "sha256:143b664b66eb3a5799eab531cc46a83227a9037019a79f607b06c7a5edf71ce9", size = 3425827, upload-time = "2026-11-15T22:01:29.508Z" },
 ]
 
 [[package]]
 name = "cim-tables"
-version = "0.1.0"
-source = { editable = "/home/ande188/CIM-Tables" }
+version = "0.1.1a1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cim-graph" },
     { name = "cim-profiles" },
     { name = "lark" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "cim-graph", editable = "../CIM-Graph" },
-    { name = "cim-profiles", editable = "../CIM-Profiles" },
-    { name = "lark", specifier = ">=1.1.9" },
+sdist = { url = "https://files.pythonhosted.org/packages/b8/ba/10e583dc84ff267e563a86e03dfb93bfd4257b881803fa87d4ec597e7e3d/cim_tables-0.1.1a1.tar.gz", hash = "sha256:837a4a42695aa89b2db1ea427ff6f9d08b69049edac03f6eec1d88300c6488d0", size = 95092, upload-time = "2026-11-20T19:56:48.904Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1b/2b/892696019c3e2416fb3fe0f35591f4e1188b4617da9d149b1701e3d4233e/cim_tables-0.1.1a1-py3-none-any.whl", hash = "sha256:75145ef0e8c0b46b5240570c08b52633f341a2209e43ad2446ec490cbe775203", size = 55834, upload-time = "2026-11-20T19:56:47.718Z" },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.3.5" }]
 
 [[package]]
 name = "colorama"
