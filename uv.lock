@@ -168,7 +168,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cim-profiles", specifier = ">=0.2.0a4,<0.3.0" },
+    { name = "cim-profiles", specifier = ">=0.2.0a6,<0.3.0" },
     { name = "cim-tables", specifier = ">=0.1.1a1" },
     { name = "pyarrow", specifier = ">=18" },
 ]
@@ -196,16 +196,16 @@ wheels = [
 
 [[package]]
 name = "cim-profiles"
-version = "0.2.0a4"
+version = "0.2.0a6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pint", version = "0.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pint", version = "0.25.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "pint", version = "0.26.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/06/be/d6a62f37d09c224779674d1a104e19f111c4fc9c29ba312530388c5994b9/cim_profiles-0.2.0a4.tar.gz", hash = "sha256:e4392be9412e6874b433d7808d9e6c8e9320484bbb034ddc1e44ba35c74704cb", size = 3316291, upload-time = "2026-11-15T22:01:31.519Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/6a/9b4e9e30ff0ee684b76332d61fab2fc4e9cba727421e052c7274adee62de/cim_profiles-0.2.0a6.tar.gz", hash = "sha256:075e2544d4b4312fc5ec0a9d0c42240d7641073d0e070e01261168d3bd67bc3d", size = 3408187, upload-time = "2026-11-20T23:15:30.103Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/da/a634f3c409092d7802aded523d72fb9fb7d3c322e286948a18c45d31ab36/cim_profiles-0.2.0a4-py3-none-any.whl", hash = "sha256:143b664b66eb3a5799eab531cc46a83227a9037019a79f607b06c7a5edf71ce9", size = 3425827, upload-time = "2026-11-15T22:01:29.508Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/b7/53c0fc324293c5a1ea3bcd77c8f2ab8a2f97fa90627ba42e2968475c6498/cim_profiles-0.2.0a6-py3-none-any.whl", hash = "sha256:2e2a54ebcff71e4b481f31ab0010707e1a7e25d06ded637701a71be5fe38daea", size = 3523392, upload-time = "2026-11-20T23:15:28.096Z" },
 ]
 
 [[package]]

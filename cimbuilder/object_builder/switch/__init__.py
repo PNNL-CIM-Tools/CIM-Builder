@@ -8,7 +8,7 @@ from cimbuilder.object_builder.switch.protected_switch import (
 from cimbuilder.object_builder.switch.switch import (
     AirBreakSwitchBuilder,
     DisconnectorBuilder,
-    ElbowBuilder,
+    ElbowSwitchBuilder,
     FuseBuilder,
     GroundDisconnectorBuilder,
     HookstickSwitchBuilder,
@@ -23,7 +23,7 @@ __all__ = [
     "AirBreakSwitchBuilder",
     "BreakerBuilder",
     "DisconnectorBuilder",
-    "ElbowBuilder",
+    "ElbowSwitchBuilder",
     "FuseBuilder",
     "GroundDisconnectorBuilder",
     "HookstickSwitchBuilder",
