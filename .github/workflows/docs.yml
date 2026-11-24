@@ -1,0 +1,56 @@
+# Builds the MkDocs site (mkdocs.yml, docs/) on every PR that touches it, and
+# deploys it to GitHub Pages on a push to develop. The notebooks are stored
+# with their outputs and not executed here, so the package itself (and its
+# cim-tables/cim-graph/cim-profiles dependencies) isn't installed: only the docs group.
+name: Docs
+
+on:
+  push:
+    branches: [develop]
+    paths: ['docs/**', 'mkdocs.yml', '.github/workflows/docs.yml']
+  pull_request:
+    paths: ['docs/**', 'mkdocs.yml', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          python-version: "3.13"  # mkdocs-jupyter needs 3.12+
+
+      - name: Build
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: uv run --no-sources --only-group docs mkdocs build --strict
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

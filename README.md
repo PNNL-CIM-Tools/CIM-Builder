@@ -8,6 +8,8 @@ CIM-Builder is a new python library developed under the Grid Atlas and MAPLE LEA
 
 3) automatic insertion of new aggregate feeder data in existing CIM transmission models.
 
+Documentation, with a walkthrough notebook for each substation layout: https://pnnl-cim-tools.github.io/CIM-Builder/
+
 The library contains a set of classes for each type of common substation, which each contain two methods. The first is `add_feeder`, which automatically adds the specified distribution feeder to the substation and creates the chain of switching equipment between the sourcebus of the feeder and the correct breaker or airgap switch in the substation. The second is `add_branch`, which enables automated addition of transmission branches, transformers, and shunt equipment to the substation bus.
 
 The classes supported within the first version of CIM-Builder are

@@ -1,0 +1,133 @@
+site_name: CIM-Builder
+site_url: https://pnnl-cim-tools.github.io/CIM-Builder/
+site_description: Build CIM power system models from scratch, from single components to full node-breaker substations
+site_author: PNNL CIM Tools
+repo_url: https://github.com/PNNL-CIM-Tools/CIM-Builder
+repo_name: PNNL-CIM-Tools/CIM-Builder
+edit_uri: edit/develop/docs/
+copyright: Copyright &copy; 2026 Battelle Memorial Institute. BSD 3-Clause.
+
+# The look is shared with the CIM-Tables and CIM-Graph sites: keep theme, features
+# and docs/stylesheets/extra.css in step with PNNL-CIM-Tools/CIM-Tables.
+theme:
+  name: material
+  icon:
+    logo: material/transmission-tower
+    repo: fontawesome/brands/github
+  favicon: assets/favicon.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.path
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - content.action.edit
+    - toc.follow
+
+plugins:
+  - search
+  - mkdocs-jupyter:
+      include_source: true
+      execute: false          # outputs are stored in the notebooks (see Developer docs > Building these docs)
+      allow_errors: false
+      ignore_h1_titles: true
+      show_input: true
+      markdown_cell_processor: mkdocs  # resolves .ipynb and image links between pages
+
+# the CIM XML the example notebooks write next to themselves
+exclude_docs: |
+  output/
+
+validation:
+  anchors: warn          # --strict fails on a link to a missing heading
+  unrecognized_links: warn
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.betterem
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/PNNL-CIM-Tools/CIM-Builder
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/cim-builder/
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - User guide:
+      - guide/index.md
+      - Getting started:
+          - Overview: 01_overview/1_1_overview.ipynb
+          - Installation: 01_overview/1_2_installation.ipynb
+      - Substation builder:
+          - Layouts and call order: 02_substation_builder/2_1_substation_builder.ipynb
+          - Single bus: 02_substation_builder/2_2_single_bus.ipynb
+          - Sectionalized bus: 02_substation_builder/2_3_sectionalized_bus.ipynb
+          - Main and transfer: 02_substation_builder/2_4_main_and_transfer.ipynb
+          - Double bus, single breaker: 02_substation_builder/2_5_double_bus_single_breaker.ipynb
+          - Ring bus: 02_substation_builder/2_6_ring_bus.ipynb
+          - Breaker and a half: 02_substation_builder/2_7_breaker_and_half.ipynb
+          - All layouts: 02_substation_builder/2_8_all_layouts.ipynb
+  - Developer docs:
+      - developer/index.md
+      - Contributing: 01_overview/1_3_contributing.ipynb

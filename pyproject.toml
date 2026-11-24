@@ -20,6 +20,13 @@ dev = [
     "graphviz>=0.19.1",
     "ipykernel>=6.27.1",
 ]
+# the GitHub Pages site (mkdocs.yml); mkdocs-jupyter's markdown_cell_processor needs Python 3.12+
+docs = [
+    "mkdocs-material>=9.7",
+    "mkdocs-jupyter>=0.27; python_version >= '3.12'",
+    "ipykernel>=6.29",
+    "nbconvert>=7.16",
+]
 
 [build-system]
 requires = ["hatchling"]
