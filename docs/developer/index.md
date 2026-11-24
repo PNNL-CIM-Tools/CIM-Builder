@@ -57,6 +57,9 @@ Each layout is one subclass in its own module with two methods, `add_buses(volta
 shape: add the module, export the class from `cimbuilder/substation_builder/__init__.py`, add tests under
 `tests/substation_builder/`, and add a notebook to these docs.
 
+A new object builder goes in the [object builder](../03_object_builder/3_1_object_builders.ipynb) page for
+its kind of equipment, with a short example that runs.
+
 ## Working on it
 
 ```bash
@@ -79,8 +82,12 @@ The notebooks are stored with their outputs, and the build does not run them. Af
 or the behaviour it shows, re-run it in place:
 
 ```bash
-cd docs/02_substation_builder && uv run jupyter nbconvert --to notebook --execute --inplace 2_*.ipynb
+(cd docs/02_substation_builder && uv run jupyter nbconvert --to notebook --execute --inplace 2_*.ipynb)
+(cd docs/03_object_builder && uv run jupyter nbconvert --to notebook --execute --inplace 3_*.ipynb)
 ```
+
+In a notebook's Markdown cells, mkdocs-jupyter escapes a mermaid arrow (`-->`) twice, which breaks the
+diagram, so connect nodes with `---` there. Arrows work as usual in the `.md` pages.
 
 The theme lives in `docs/stylesheets/extra.css` and uses only Material's CSS variables. It is the same file
 as the [CIM-Tables](https://pnnl-cim-tools.github.io/CIM-Tables/) and

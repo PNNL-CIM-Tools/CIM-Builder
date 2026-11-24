@@ -1,8 +1,8 @@
 # User guide
 
-CIM-Builder builds CIM power system models from scratch. This guide covers installing it and building
-node-breaker substations, with feeders inserted into them. To change CIM-Builder itself, see the
-[developer docs](../developer/index.md).
+CIM-Builder builds CIM power system models from scratch. This guide covers installing it, building
+node-breaker substations with feeders inserted into them, and building any piece of equipment one object at
+a time. To change CIM-Builder itself, see the [developer docs](../developer/index.md).
 
 <div class="grid cards" markdown>
 
@@ -21,6 +21,16 @@ node-breaker substations, with feeders inserted into them. To change CIM-Builder
     then one notebook per layout, from [single bus](../02_substation_builder/2_2_single_bus.ipynb) to
     [breaker and a half](../02_substation_builder/2_7_breaker_and_half.ipynb), and
     [all layouts](../02_substation_builder/2_8_all_layouts.ipynb) in one notebook.
+
+-   __Object builders__
+
+    ---
+
+    [The builder pattern](../03_object_builder/3_1_object_builders.ipynb) and
+    [a feeder from scratch](../03_object_builder/3_2_feeder_from_scratch.ipynb), then one notebook per kind
+    of equipment, from [lines](../03_object_builder/3_4_lines.ipynb) and
+    [transformers](../03_object_builder/3_6_transformers_and_regulators.ipynb) to
+    [measurements and limits](../03_object_builder/3_10_measurements_and_limits.ipynb).
 
 </div>
 

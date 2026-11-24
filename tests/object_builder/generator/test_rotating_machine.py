@@ -16,22 +16,23 @@ def test_synchronous_machine_connectivity(network, container, base_voltage):
     assert terminal.ConductingEquipment is machine
 
 
-def test_synchronous_machine_add_electrical_baseQ_field_does_not_exist(
-    network, container, base_voltage
-):
-    """SynchronousMachineBuilder.add_electrical always calls
-    graph_write.set_attr(machine, EL_BAL, "baseQ", baseQ) unconditionally -
-    EL_BAL.SynchronousMachine has no `baseQ` field anywhere (checked
-    EL_BAL/SSH/SC), and set_attr's field-name lookup runs before its
-    `value is None` short-circuit, so this raises even when baseQ is left
-    at its default. add_electrical is unconditionally broken for every
-    call, not just when baseQ is explicitly passed."""
+def test_synchronous_machine_add_electrical(network, container, base_voltage):
+    """rating and limits only: the profile has no baseQ, which add_electrical used to write"""
     builder = SynchronousMachineBuilder(network=network, container=container)
     machine = builder.create(mRID="gen1", name="gen1")
     builder.add_connectivity(machine, node="gen1_bus", BaseVoltage=base_voltage.mRID)
 
-    with pytest.raises(ValueError, match="baseQ"):
-        builder.add_electrical(machine, ratedS=Qty(2, "MVA"))
+    builder.add_electrical(
+        machine,
+        ratedS=Qty(2, "MVA"),
+        minQ=Qty(-1, "MVAr"),
+        maxQ=Qty(1.2, "MVAr"),
+        minU=Qty(11.8, "kV"),
+        maxU=Qty(13.1, "kV"),
+    )
+    assert float(machine.ratedS.to("MVA")) == 2
+    assert float(machine.minQ.to("MVAr")) == -1
+    assert float(machine.maxU.to("kV")) == pytest.approx(13.1)
 
 
 def test_synchronous_machine_add_ssh(network, container, base_voltage):
@@ -83,8 +84,12 @@ def test_asynchronous_machine_add_electrical(network, container, base_voltage):
     machine = builder.create(mRID="gen2", name="gen2")
     builder.add_connectivity(machine, node="gen2_bus", BaseVoltage=base_voltage.mRID)
 
-    builder.add_electrical(machine, ratedS=Qty(500, "kVA"))
+    builder.add_electrical(
+        machine, ratedS=Qty(500, "kVA"), efficiency=96.5, asynchronousMachineType="generator"
+    )
     assert float(machine.ratedS.to("kVA")) == 500
+    assert float(machine.efficiency) == 96.5
+    assert machine.asynchronousMachineType == network.cim.AsynchronousMachineKind("generator")
 
 
 def test_asynchronous_machine_add_ssh(network, container, base_voltage):

@@ -128,6 +128,17 @@ nav:
           - Ring bus: 02_substation_builder/2_6_ring_bus.ipynb
           - Breaker and a half: 02_substation_builder/2_7_breaker_and_half.ipynb
           - All layouts: 02_substation_builder/2_8_all_layouts.ipynb
+      - Object builders:
+          - The builder pattern: 03_object_builder/3_1_object_builders.ipynb
+          - A feeder from scratch: 03_object_builder/3_2_feeder_from_scratch.ipynb
+          - Containers and nodes: 03_object_builder/3_3_containers_and_nodes.ipynb
+          - Lines: 03_object_builder/3_4_lines.ipynb
+          - Switches: 03_object_builder/3_5_switches.ipynb
+          - Transformers and regulators: 03_object_builder/3_6_transformers_and_regulators.ipynb
+          - Transformer tanks: 03_object_builder/3_7_transformer_tanks.ipynb
+          - Loads and shunts: 03_object_builder/3_8_loads_and_shunts.ipynb
+          - Sources and generation: 03_object_builder/3_9_sources_and_generation.ipynb
+          - Measurements and limits: 03_object_builder/3_10_measurements_and_limits.ipynb
   - Developer docs:
       - developer/index.md
       - Contributing: 01_overview/1_3_contributing.ipynb

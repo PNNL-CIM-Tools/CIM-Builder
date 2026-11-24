@@ -16,6 +16,7 @@ existing distribution feeders into them. Everything lands in a
 JSON-LD.</p>
 
 [Substation builder](02_substation_builder/2_1_substation_builder.ipynb){ .md-button .md-button--primary }
+[Object builders](03_object_builder/3_1_object_builders.ipynb){ .md-button }
 [Installation](01_overview/1_2_installation.ipynb){ .md-button }
 [Developer docs](developer/index.md){ .md-button }
 
@@ -102,6 +103,14 @@ right `VoltageLevel` with its `BaseVoltage`.
 
 Each layout page inserts the IEEE 13 node test feeders into a new 115 kV substation, writes the result to
 CIM XML and reads it back.
+
+## Equipment, one object at a time
+
+Underneath the layouts, there is one [object builder](03_object_builder/3_1_object_builders.ipynb) per CIM
+class: lines, switches, transformers and regulators, loads and capacitors, sources, generators and
+inverters, and their measurements and limits. Each one creates the object, then fills it in one CIM
+profile part at a time, with values in any unit. [A feeder from scratch](03_object_builder/3_2_feeder_from_scratch.ipynb)
+builds a complete small feeder this way.
 
 ## Where it fits
 

@@ -3,7 +3,7 @@ from cimtables.units import Qty
 
 from cimbuilder.object_builder.inverter import (
     BatteryUnitBuilder,
-    ChargingUnitBuilder,
+    ElectricalVehicleUnitBuilder,
     PhotoVoltaicUnitBuilder,
     PowerElectronicsConnectionBuilder,
     PowerElectronicsUnitBuilder,
@@ -41,16 +41,32 @@ def test_power_electronics_unit_add_ssh(network, container):
     assert unit.inService is True
 
 
-def test_charging_unit_cim_class_name_does_not_exist_in_profile(network, container):
-    """ChargingUnitBuilder.cim_class_name = "ChargingUnit", but no such
-    class exists anywhere in cimprofiles.cim18.cim18v17 (closest real
-    classes: ElectricalVehicleUnit, PowerElectronicsUnit, BatteryUnit) -
-    create() always fails before add_electrical is ever reached, since
-    ObjectBuilder.create() looks the class up by this exact name."""
-    builder = ChargingUnitBuilder(network=network, container=container)
+def test_electrical_vehicle_unit(network, container):
+    """replaces ChargingUnitBuilder, whose ChargingUnit class is not in cim18v17"""
+    pec = _make_connection(network, container)
+    builder = ElectricalVehicleUnitBuilder(network=network, container=container)
+    unit = builder.create(mRID="ev1")
 
-    with pytest.raises(AttributeError, match="ChargingUnit"):
-        builder.create(mRID="charger1")
+    builder.add_electrical(
+        unit,
+        minP=Qty(-11, "kW"),
+        maxP=Qty(11, "kW"),
+        ratedE=Qty(75, "kWh"),
+        chargingEfficiency=0.92,
+        v2gCapable=True,
+        PowerElectronicsConnection=pec.mRID,
+    )
+    assert type(unit).__name__ == "ElectricalVehicleUnit"
+    assert unit.PowerElectronicsConnection is pec
+    assert float(unit.ratedE.to("kWh")) == 75
+    assert unit.v2gCapable is True
+
+
+def test_electrical_vehicle_unit_has_no_ssh_part(network, container):
+    builder = ElectricalVehicleUnitBuilder(network=network, container=container)
+    unit = builder.create(mRID="ev1")
+    with pytest.raises(ValueError, match="ElectricalVehicleUnit"):
+        builder.add_ssh(unit, p=Qty(-7, "kW"))
 
 
 def test_battery_unit_add_electrical(network, container):
@@ -73,15 +89,16 @@ def test_battery_unit_add_electrical(network, container):
     assert float(unit.ratedE.to("kWh")) == 400
 
 
-def test_battery_unit_add_ssh_q_kwarg_not_accepted_by_parent(network, container):
-    """BatteryUnitBuilder.add_ssh calls
-    super().add_ssh(unit, p=p, q=q, inService=inService), but
-    PowerElectronicsUnitBuilder.add_ssh's signature only accepts
-    p/inService - it has no `q` parameter at all. This raises TypeError
-    (unexpected keyword argument) for every call, independent of whatever
-    value q holds."""
+def test_battery_unit_add_ssh(network, container):
+    """a BatteryUnit has no q in any profile part, its inverter carries the reactive power"""
     builder = BatteryUnitBuilder(network=network, container=container)
     unit = builder.create(mRID="batt1")
 
+    builder.add_ssh(
+        unit, p=Qty(-50, "kW"), storedE=Qty(200, "kWh"), batteryState="discharging", inService=True
+    )
+    assert float(unit.p.to("kW")) == -50
+    assert float(unit.storedE.to("kWh")) == 200
+    assert unit.batteryState == network.cim.BatteryStateKind("discharging")
     with pytest.raises(TypeError, match="q"):
-        builder.add_ssh(unit, p=Qty(-50, "kW"), q=Qty(-10, "kVAr"), inService=True)
+        builder.add_ssh(unit, q=Qty(-10, "kVAr"))

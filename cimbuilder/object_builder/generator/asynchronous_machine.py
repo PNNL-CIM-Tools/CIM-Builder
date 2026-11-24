@@ -14,12 +14,22 @@ class AsynchronousMachineBuilder(RotatingMachineBuilder):
         machine: EL_BAL.AsynchronousMachine,
         *,
         ratedS: float | Qty | None = None,
-        efficiency:float|None=None,
-        asynchronousMachineType:str|None=None
+        efficiency: float | None = None,
+        asynchronousMachineType: str | None = None,
     ) -> EL_BAL.AsynchronousMachine:
+        """Adds electrical_balanced.AsynchronousMachine's rating and kind.
+        * ratedS: nameplate apparent power rating, float in VA or Qty('kVA'|'MVA')
+        * efficiency: efficiency of the machine at nominal operation, in percent
+        * asynchronousMachineType: generator|motor
+        """
         super().add_electrical(machine, ratedS=ratedS)
-
-
+        graph_write.set_attr(machine, EL_BAL, "efficiency", efficiency)
+        graph_write.set_attr(
+            machine,
+            EL_BAL,
+            "asynchronousMachineType",
+            self._enum("AsynchronousMachineKind", asynchronousMachineType),
+        )
         return machine
 
     def add_short_circuit(
@@ -33,9 +43,4 @@ class AsynchronousMachineBuilder(RotatingMachineBuilder):
         super().add_short_circuit(
             machine, ratedU=ratedU, ratedPowerFactor=ratedPowerFactor
         )
-
-
         return machine
-
-    def add_dynamics(self):
-        pass

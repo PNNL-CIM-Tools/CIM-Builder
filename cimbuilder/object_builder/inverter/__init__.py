@@ -13,7 +13,7 @@ from cimbuilder.object_builder.inverter.power_electronics_connection_phase impor
 )
 from cimbuilder.object_builder.inverter.power_electronics_unit import (
     BatteryUnitBuilder,
-    ChargingUnitBuilder,
+    ElectricalVehicleUnitBuilder,
     PhotoVoltaicUnitBuilder,
     PowerElectronicsUnitBuilder,
     PowerElectronicsWindUnitBuilder,
@@ -23,7 +23,7 @@ from cimbuilder.object_builder.inverter.solar_panel_info import SolarPanelInfoBu
 __all__ = [
     "BatteryInfoBuilder",
     "BatteryUnitBuilder",
-    "ChargingUnitBuilder",
+    "ElectricalVehicleUnitBuilder",
     "GenerationInverterInfoBuilder",
     "InverterInfoBuilder",
     "PhotoVoltaicUnitBuilder",

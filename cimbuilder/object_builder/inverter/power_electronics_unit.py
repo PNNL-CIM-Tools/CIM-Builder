@@ -82,10 +82,6 @@ class PowerElectronicsWindUnitBuilder(PowerElectronicsUnitBuilder):
     cim_class_name = "PowerElectronicsWindUnit"
 
 
-class ChargingUnitBuilder(PowerElectronicsUnitBuilder):
-    cim_class_name = "ChargingUnit"
-
-
 class BatteryUnitBuilder(PowerElectronicsUnitBuilder):
     cim_class_name = "BatteryUnit"
 
@@ -138,4 +134,28 @@ class BatteryUnitBuilder(PowerElectronicsUnitBuilder):
             graph_write.set_attr(
                 unit, SSH, "batteryState", ssh.BatteryStateKind(batteryState)
             )
+        return unit
+
+
+class ElectricalVehicleUnitBuilder(BatteryUnitBuilder):
+    """
+    An electric vehicle's battery behind its charger. cim18v17 has electrical_balanced data for it
+    but no steady_state_hypothesis part, so add_ssh raises
+    """
+
+    cim_class_name = "ElectricalVehicleUnit"
+
+    def add_electrical(
+        self,
+        unit: EL_BAL.ElectricalVehicleUnit,
+        *,
+        v2gCapable: bool | None = None,
+        **battery,
+    ) -> EL_BAL.ElectricalVehicleUnit:
+        """
+        Adds the BatteryUnit values (minP, maxP, ratedE, ..., PowerElectronicsConnection), plus
+        * v2gCapable: boolean, the vehicle can discharge into the grid (vehicle-to-grid) if true
+        """
+        super().add_electrical(unit, **battery)
+        graph_write.set_attr(unit, EL_BAL, "v2gCapable", v2gCapable)
         return unit

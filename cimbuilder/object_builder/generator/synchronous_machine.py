@@ -15,14 +15,17 @@ class SynchronousMachineBuilder(RotatingMachineBuilder):
         machine: EL_BAL.RotatingMachine,
         *,
         ratedS: float | Qty | None = None,
-        baseQ: float | Qty | None = None,
         minQ: float | Qty | None = None,
         maxQ: float | Qty | None = None,
         minU: float | Qty | None = None,
         maxU: float | Qty | None = None,
     ) -> EL_BAL.RotatingMachine:
+        """Adds electrical_balanced.SynchronousMachine's rating and operating limits.
+        * ratedS: nameplate apparent power rating, float in VA or Qty('kVA'|'MVA')
+        * minQ, maxQ: reactive power limits, float in VAr or Qty('kVAr'|'MVAr')
+        * minU, maxU: voltage limits of the regulating range, float in V or Qty('kV')
+        """
         super().add_electrical(machine, ratedS=ratedS)
-        graph_write.set_attr(machine, EL_BAL, "baseQ", baseQ)
         graph_write.set_attr(machine, EL_BAL, "minQ", minQ)
         graph_write.set_attr(machine, EL_BAL, "maxQ", maxQ)
         graph_write.set_attr(machine, EL_BAL, "minU", minU)
@@ -79,6 +82,3 @@ class SynchronousMachineBuilder(RotatingMachineBuilder):
         graph_write.set_attr(machine, SC, "earthingStarPointX", earthingStarPointX)
 
         return machine
-
-    def add_dynamics(self):
-        pass
